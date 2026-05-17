@@ -724,11 +724,7 @@
     margin-top: 6px;
     margin-bottom: 2px;
   }
-  .sa-bits {
-    display: flex;
-    gap: 2px;
-    flex-wrap: nowrap;
-  }
+  .sa-bits { display: flex; gap: 2px; flex-wrap: nowrap; }
   .sa-octet { display: flex; gap: 2px; }
   .sa-dot {
     width: 6px;
@@ -748,17 +744,9 @@
     justify-content: center;
     font-weight: 700;
     font-size: 0.72rem;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: opacity 0.25s, transform 0.25s, background 0.3s;
+    transition: opacity 0.3s, transform 0.3s, background 0.3s, border-color 0.3s, box-shadow 0.3s;
   }
-  .sa-bit.visible { opacity: 1; transform: scale(1); }
-
-  .sa-decimal-row {
-    display: flex;
-    gap: 2px;
-    align-items: center;
-  }
+  .sa-decimal-row { display: flex; gap: 2px; align-items: center; }
   .sa-dec-val {
     width: 22px;
     height: 22px;
@@ -768,17 +756,9 @@
     font-weight: 700;
     font-size: 0.62rem;
     border-radius: 4px;
-    opacity: 0;
-    transition: opacity 0.4s;
+    transition: opacity 0.4s, background 0.3s;
   }
-  .sa-dec-val.visible { opacity: 1; }
-  .sa-dec-dot {
-    width: 6px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.8rem;
-  }
-
+  .sa-dec-dot { width: 6px; text-align: center; color: var(--muted); font-size: 0.8rem; }
   .sa-operator {
     text-align: center;
     font-size: 0.8rem;
@@ -786,21 +766,15 @@
     color: var(--yellow);
     padding: 4px 0;
     letter-spacing: 2px;
-    opacity: 0;
-    transition: opacity 0.4s;
+    transition: opacity 0.5s;
   }
-  .sa-operator.visible { opacity: 1; }
-
   .sa-divider {
     height: 2px;
     background: linear-gradient(90deg, #00d4ff, #cc66ff, #00ff88);
     border-radius: 99px;
     margin: 4px 0;
-    opacity: 0;
-    transition: opacity 0.4s;
+    transition: opacity 0.5s;
   }
-  .sa-divider.visible { opacity: 1; }
-
   .sa-result-label {
     font-size: 0.82rem;
     font-weight: 700;
@@ -810,12 +784,9 @@
     background: rgba(0,255,136,0.08);
     border: 1px solid rgba(0,255,136,0.3);
     border-radius: 8px;
-    opacity: 0;
-    transition: opacity 0.5s;
+    transition: opacity 0.6s;
     margin-top: 4px;
   }
-  .sa-result-label.visible { opacity: 1; }
-
   .sa-legend {
     display: flex;
     gap: 12px;
@@ -826,27 +797,114 @@
   }
   .sa-legend-item { display: flex; align-items: center; gap: 5px; color: var(--muted); }
   .sa-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
-
+  .sa-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
   .sa-replay {
     background: none;
     border: 1px solid var(--border);
     color: var(--muted);
     font-size: 0.75rem;
     border-radius: 6px;
-    padding: 5px 12px;
+    padding: 5px 14px;
     cursor: pointer;
-    margin-top: 8px;
-    align-self: center;
     transition: border-color 0.2s, color 0.2s;
   }
   .sa-replay:hover { border-color: var(--accent); color: var(--accent); }
-
+  .sa-step-btn {
+    background: none;
+    border: 1px solid #7b4fff88;
+    color: #cc99ff;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .sa-step-btn:hover { border-color: #7b4fff; color: #e0bbff; }
+  .sa-step-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .sa-step-nav {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.75rem;
+    border-radius: 6px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .sa-step-nav:hover { border-color: var(--accent); color: var(--accent); }
+  .sa-step-counter {
+    font-size: 0.72rem;
+    color: var(--muted);
+    min-width: 90px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+  }
+  .sa-step-info { margin-top: 8px; }
+  .sa-step-box {
+    background: rgba(123,79,255,0.08);
+    border: 1px solid rgba(123,79,255,0.25);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: system-ui, sans-serif;
+    font-size: 0.82rem;
+  }
+  .sa-step-title {
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+  }
+  .sa-step-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+  .sa-step-label { font-weight: 600; min-width: 90px; font-size: 0.78rem; }
+  .sa-step-val {
+    font-family: 'Courier New', monospace;
+    font-size: 1.05rem;
+    font-weight: 900;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+  }
+  .sa-step-op {
+    text-align: center;
+    font-weight: 700;
+    color: var(--yellow);
+    letter-spacing: 2px;
+    font-size: 0.75rem;
+    padding: 3px 0;
+  }
+  .sa-step-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 6px 0; }
+  .sa-step-tag {
+    font-size: 0.65rem;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .sa-step-done {
+    background: rgba(0,255,136,0.08) !important;
+    border-color: rgba(0,255,136,0.3) !important;
+  }
   @keyframes bitPop {
-    0% { transform: scale(1.4); }
-    60% { transform: scale(0.9); }
+    0%   { transform: scale(1.4); }
+    60%  { transform: scale(0.9); }
     100% { transform: scale(1); }
   }
-  .sa-bit.pop { animation: bitPop 0.3s ease forwards; }
 
   @media (max-width: 420px) {
     .topic-grid { grid-template-columns: 1fr; }
@@ -2142,70 +2200,85 @@ function renderLayerLesson(layerNum) {
 
 // ── Subnet Animation ─────────────────────────────────────────────────────────
 function buildSubnetAnim(root) {
-  const IP   = [192, 168, 1, 130];
-  const MASK = [255, 255, 255, 128];
+  const IP     = [192, 168, 1, 130];
+  const MASK   = [255, 255, 255, 128];
   const RESULT = IP.map((b, i) => b & MASK[i]);
   const PREFIX = 25;
 
-  function toBits(n) {
-    return Array.from({length:8}, (_, i) => (n >> (7 - i)) & 1);
-  }
+  function toBits(n) { return Array.from({length:8}, (_,i) => (n>>(7-i))&1); }
+  const ipFlat   = IP.flatMap(toBits);
+  const maskFlat = MASK.flatMap(toBits);
+  const resFlat  = RESULT.flatMap(toBits);
 
-  // Colors for each octet
   const octColors = ['#00d4ff','#7b4fff','#ff6ec7','#ff9900'];
-  const maskColor  = '#ffcc00';
-  const netColor   = '#00ff88';
-  const hostColor  = '#444466';
+  const maskColor = '#ffcc00';
+  const netColor  = '#00ff88';
+  const hostColor = '#666688';
 
-  function bitColor(globalIdx, row) {
-    if (row === 'ip')   return octColors[Math.floor(globalIdx / 8)];
-    if (row === 'mask') return globalIdx < PREFIX ? maskColor : '#555';
-    if (row === 'res')  return globalIdx < PREFIX ? netColor : hostColor;
+  function bitColor(idx, row) {
+    if (row === 'ip')   return octColors[Math.floor(idx/8)];
+    if (row === 'mask') return idx < PREFIX ? maskColor : '#666';
+    if (row === 'res')  return idx < PREFIX ? netColor : hostColor;
     return '#888';
   }
 
-  function renderBitRow(values, rowId, rowLabel) {
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `<div class="sa-row-label">${rowLabel}</div>`;
+  // ── DOM build ──────────────────────────────────────────────────────────────
+  const wrap = document.createElement('div');
+  wrap.className = 'subnet-anim';
+
+  const legend = document.createElement('div');
+  legend.className = 'sa-legend';
+  legend.innerHTML = `
+    <div class="sa-legend-item"><div class="sa-legend-dot" style="background:#00ff8866;border:1px solid #00ff88"></div>Network bits (1–${PREFIX})</div>
+    <div class="sa-legend-item"><div class="sa-legend-dot" style="background:#66668866;border:1px solid #666688"></div>Host bits (${PREFIX+1}–32)</div>`;
+  wrap.appendChild(legend);
+
+  function buildBitRow(values, rowId, label) {
+    const outer = document.createElement('div');
+    const lbl = document.createElement('div');
+    lbl.className = 'sa-row-label';
+    lbl.textContent = label;
+    outer.appendChild(lbl);
     const bits = document.createElement('div');
     bits.className = 'sa-bits';
     bits.id = rowId;
     values.forEach((oct, oi) => {
-      if (oi > 0) {
-        const dot = document.createElement('div');
-        dot.className = 'sa-dot';
-        dot.textContent = '·';
-        bits.appendChild(dot);
-      }
+      if (oi > 0) { const d=document.createElement('div'); d.className='sa-dot'; d.textContent='·'; bits.appendChild(d); }
       const g = document.createElement('div');
       g.className = 'sa-octet';
-      toBits(oct).forEach((b, bi) => {
+      for (let bi=0; bi<8; bi++) {
+        const gIdx = oi*8+bi;
+        const c = bitColor(gIdx, rowId);
         const span = document.createElement('div');
-        const gIdx = oi * 8 + bi;
         span.className = 'sa-bit';
-        span.textContent = b;
-        span.style.background = bitColor(gIdx, rowId) + '33';
-        span.style.border = '1px solid ' + bitColor(gIdx, rowId) + '66';
-        span.style.color = bitColor(gIdx, rowId);
-        span.dataset.final = bitColor(gIdx, rowId);
+        span.textContent = (oct>>(7-bi))&1;
+        span.dataset.color = c;
+        span.style.opacity = '0';
+        span.style.transform = 'scale(0.5)';
+        span.style.background = c+'22';
+        span.style.border = '1px solid '+c+'44';
+        span.style.color = c+'88';
         g.appendChild(span);
-      });
+      }
       bits.appendChild(g);
     });
-    wrap.appendChild(bits);
-    return wrap;
+    outer.appendChild(bits);
+    return outer;
   }
 
-  function renderDecRow(values, colors) {
+  function buildDecRow(values, colors) {
     const d = document.createElement('div');
     d.className = 'sa-decimal-row';
     values.forEach((v, i) => {
-      if (i > 0) { const dot = document.createElement('div'); dot.className = 'sa-dec-dot'; dot.textContent = '.'; d.appendChild(dot); }
+      if (i > 0) { const dot=document.createElement('div'); dot.className='sa-dec-dot'; dot.textContent='.'; d.appendChild(dot); }
       const sp = document.createElement('div');
       sp.className = 'sa-dec-val';
-      sp.style.background = (colors[i] || '#888') + '22';
-      sp.style.color = colors[i] || '#888';
-      sp.style.border = '1px solid ' + (colors[i] || '#888') + '55';
+      const c = colors[i]||'#888';
+      sp.dataset.color = c;
+      sp.style.opacity = '0.15';
+      sp.style.background = c+'22';
+      sp.style.color = c+'55';
+      sp.style.border = '1px solid '+c+'22';
       sp.style.minWidth = '36px';
       sp.textContent = v;
       d.appendChild(sp);
@@ -2213,117 +2286,226 @@ function buildSubnetAnim(root) {
     return d;
   }
 
-  // Build DOM
-  const wrap = document.createElement('div');
-  wrap.className = 'subnet-anim';
-
-  // Legend
-  const legend = document.createElement('div');
-  legend.className = 'sa-legend';
-  legend.innerHTML = `
-    <div class="sa-legend-item"><div class="sa-legend-dot" style="background:#00ff8888;border:1px solid #00ff88"></div>Network bits (1–${PREFIX})</div>
-    <div class="sa-legend-item"><div class="sa-legend-dot" style="background:#44446688;border:1px solid #666"></div>Host bits (${PREFIX+1}–32)</div>`;
-  wrap.appendChild(legend);
-
-  // IP row
-  const ipRow = renderBitRow(IP, 'ip', '📘 IP Address — 192.168.1.130');
+  const ipRow = buildBitRow(IP, 'ip', '📘 IP Address — 192.168.1.130');
   wrap.appendChild(ipRow);
-  wrap.appendChild(renderDecRow(IP, octColors));
+  const ipDec = buildDecRow(IP, octColors);
+  wrap.appendChild(ipDec);
 
-  // Operator
   const op = document.createElement('div');
   op.className = 'sa-operator';
   op.textContent = '⊕  AND  (&)';
+  op.style.opacity = '0';
   wrap.appendChild(op);
 
-  // Mask row
-  const maskRow = renderBitRow(MASK, 'mask', '🟡 Subnet Mask — 255.255.255.128  (/25)');
+  const maskRow = buildBitRow(MASK, 'mask', '🟡 Subnet Mask — 255.255.255.128  (/25)');
   wrap.appendChild(maskRow);
-  wrap.appendChild(renderDecRow(MASK, [maskColor, maskColor, maskColor, maskColor]));
+  const maskDec = buildDecRow(MASK, [maskColor,maskColor,maskColor,maskColor]);
+  wrap.appendChild(maskDec);
 
-  // Divider
-  const div = document.createElement('div');
-  div.className = 'sa-divider';
-  wrap.appendChild(div);
+  const divider = document.createElement('div');
+  divider.className = 'sa-divider';
+  divider.style.opacity = '0';
+  wrap.appendChild(divider);
 
-  // Result row
-  const resRow = renderBitRow(RESULT, 'res', '✅ Network Address — Result');
+  const resRow = buildBitRow(RESULT, 'res', '✅ Network Address — Result');
   wrap.appendChild(resRow);
-  wrap.appendChild(renderDecRow(RESULT, [netColor, netColor, netColor, netColor]));
+  const resDec = buildDecRow(RESULT, [netColor,netColor,netColor,netColor]);
+  wrap.appendChild(resDec);
 
-  // Final label
-  const lbl = document.createElement('div');
-  lbl.className = 'sa-result-label';
-  lbl.innerHTML = '🌐 Network Address: <strong>192.168.1.128</strong> &nbsp;·&nbsp; Broadcast: <strong>192.168.1.255</strong> &nbsp;·&nbsp; Hosts: <strong>.129 – .254</strong>';
-  wrap.appendChild(lbl);
+  const resultLabel = document.createElement('div');
+  resultLabel.className = 'sa-result-label';
+  resultLabel.style.opacity = '0';
+  resultLabel.innerHTML = '🌐 Network Address: <strong>192.168.1.128</strong> &nbsp;·&nbsp; Broadcast: <strong>192.168.1.255</strong> &nbsp;·&nbsp; Hosts: <strong>.129 – .254</strong>';
+  wrap.appendChild(resultLabel);
 
-  // Replay button
-  const replay = document.createElement('button');
-  replay.className = 'sa-replay';
-  replay.textContent = '▶ Replay Animation';
-  wrap.appendChild(replay);
+  const stepInfo = document.createElement('div');
+  stepInfo.className = 'sa-step-info';
+  stepInfo.style.display = 'none';
+  wrap.appendChild(stepInfo);
+
+  const controls = document.createElement('div');
+  controls.className = 'sa-controls';
+  controls.innerHTML = `<button class="sa-replay" id="sa-auto">▶ Auto Play</button>
+    <button class="sa-step-btn" id="sa-stepmode">👆 Step by Step</button>`;
+  wrap.appendChild(controls);
+
+  const stepControls = document.createElement('div');
+  stepControls.className = 'sa-step-controls';
+  stepControls.style.display = 'none';
+  stepControls.innerHTML = `
+    <button class="sa-step-nav" id="sa-prev">◀ Prev</button>
+    <span class="sa-step-counter" id="sa-counter">Ready</span>
+    <button class="sa-step-nav" id="sa-next">Next ▶</button>
+    <button class="sa-step-nav" id="sa-exit" style="color:#ff6ec7;border-color:#ff6ec755">✕ Exit</button>`;
+  wrap.appendChild(stepControls);
 
   root.appendChild(wrap);
 
-  function runAnim() {
-    // Reset all
-    wrap.querySelectorAll('.sa-bit, .sa-dec-val').forEach(el => {
-      el.classList.remove('visible', 'pop');
-      el.style.background = el.dataset.final ? el.dataset.final + '33' : '';
-    });
-    op.classList.remove('visible');
-    div.classList.remove('visible');
-    lbl.classList.remove('visible');
-    wrap.querySelectorAll('.sa-dec-val').forEach(el => el.classList.remove('visible'));
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const getBits = rowId => [...wrap.querySelectorAll('#'+rowId+' .sa-bit')];
+  const getVals = dec   => [...dec.querySelectorAll('.sa-dec-val')];
 
-    // Phase 1: IP bits appear (0–400ms)
-    wrap.querySelectorAll('#ip .sa-bit').forEach((bit, i) => {
-      setTimeout(() => { bit.classList.add('visible', 'pop'); }, i * 18);
-    });
-    // IP decimals
-    wrap.querySelectorAll('.sa-decimal-row')[0]?.querySelectorAll('.sa-dec-val').forEach((el, i) => {
-      setTimeout(() => el.classList.add('visible'), 150 + i * 60);
-    });
-
-    // Phase 2: AND operator (450ms)
-    setTimeout(() => op.classList.add('visible'), 500);
-
-    // Phase 3: Mask bits (550–950ms)
-    wrap.querySelectorAll('#mask .sa-bit').forEach((bit, i) => {
-      setTimeout(() => { bit.classList.add('visible', 'pop'); }, 600 + i * 18);
-    });
-    wrap.querySelectorAll('.sa-decimal-row')[1]?.querySelectorAll('.sa-dec-val').forEach((el, i) => {
-      setTimeout(() => el.classList.add('visible'), 750 + i * 60);
-    });
-
-    // Phase 4: Divider (1000ms)
-    setTimeout(() => div.classList.add('visible'), 1050);
-
-    // Phase 5: Result bits light up one by one with color burst (1100–1700ms)
-    const resBits = wrap.querySelectorAll('#res .sa-bit');
-    resBits.forEach((bit, i) => {
-      setTimeout(() => {
-        bit.classList.add('visible', 'pop');
-        // Network bits get full bright color
-        if (i < PREFIX) {
-          bit.style.background = netColor + 'aa';
-          bit.style.border = '1px solid ' + netColor;
-          bit.style.color = '#000';
-          bit.style.fontWeight = '900';
-        }
-      }, 1150 + i * 22);
-    });
-    wrap.querySelectorAll('.sa-decimal-row')[2]?.querySelectorAll('.sa-dec-val').forEach((el, i) => {
-      setTimeout(() => el.classList.add('visible'), 1350 + i * 70);
-    });
-
-    // Phase 6: Final label (1850ms)
-    setTimeout(() => lbl.classList.add('visible'), 1900);
+  function dimBit(rowId, idx) {
+    const b = getBits(rowId)[idx]; if (!b) return;
+    const c = b.dataset.color;
+    b.style.opacity='0.2'; b.style.transform='scale(1)';
+    b.style.background=c+'22'; b.style.border='1px solid '+c+'44';
+    b.style.color=c+'66'; b.style.fontWeight='600'; b.style.boxShadow='';
   }
 
-  replay.addEventListener('click', runAnim);
-  // Auto-play after short delay on first render
-  setTimeout(runAnim, 300);
+  function revealBit(rowId, idx) {
+    const b = getBits(rowId)[idx]; if (!b) return;
+    const c = b.dataset.color;
+    const isNet = rowId==='res' && idx<PREFIX;
+    b.style.opacity='1'; b.style.transform='scale(1)'; b.style.boxShadow='';
+    if (isNet) {
+      b.style.background=c+'bb'; b.style.border='1px solid '+c;
+      b.style.color='#000'; b.style.fontWeight='900';
+    } else {
+      b.style.background=c+'55'; b.style.border='1px solid '+c+'cc';
+      b.style.color=c; b.style.fontWeight='700';
+    }
+  }
+
+  function highlightBit(rowId, idx) {
+    const b = getBits(rowId)[idx]; if (!b) return;
+    const c = b.dataset.color;
+    b.style.opacity='1'; b.style.transform='scale(1.35)';
+    b.style.background=c+'dd'; b.style.border='2px solid '+c;
+    b.style.color=(rowId==='res'&&idx<PREFIX)?'#000':'#fff';
+    b.style.fontWeight='900'; b.style.boxShadow='0 0 12px '+c+'99';
+  }
+
+  function revealDec(dec, oi) {
+    const v = getVals(dec)[oi]; if (!v) return;
+    const c = v.dataset.color;
+    v.style.opacity='1'; v.style.background=c+'33';
+    v.style.color=c; v.style.border='1px solid '+c+'88';
+  }
+
+  function resetAll() {
+    ['ip','mask','res'].forEach(r => getBits(r).forEach(b => {
+      const c = b.dataset.color;
+      b.style.opacity='0'; b.style.transform='scale(0.5)';
+      b.style.background=c+'22'; b.style.border='1px solid '+c+'44';
+      b.style.color=c+'88'; b.style.boxShadow='';
+    }));
+    [ipDec,maskDec,resDec].forEach(dec => getVals(dec).forEach(v => {
+      const c=v.dataset.color;
+      v.style.opacity='0.15'; v.style.background=c+'22';
+      v.style.color=c+'55'; v.style.border='1px solid '+c+'22';
+    }));
+    op.style.opacity='0'; divider.style.opacity='0'; resultLabel.style.opacity='0';
+  }
+
+  // ── Auto Play ──────────────────────────────────────────────────────────────
+  const DELAY = 70;
+  let timers = [];
+  const t = (ms, fn) => timers.push(setTimeout(fn, ms));
+
+  function runAutoPlay() {
+    timers.forEach(clearTimeout); timers = [];
+    resetAll();
+    stepInfo.style.display='none'; stepControls.style.display='none'; controls.style.display='flex';
+
+    // Phase 1: IP bits
+    for (let i=0; i<32; i++) t(i*DELAY, () => revealBit('ip', i));
+    for (let oi=0; oi<4; oi++) { const o=oi; t((o*8+8)*DELAY+100, () => revealDec(ipDec, o)); }
+
+    const p2 = 32*DELAY+250;
+    t(p2, () => { op.style.opacity='1'; });
+
+    // Phase 3: Mask bits
+    for (let i=0; i<32; i++) { const ii=i; t(p2+200+ii*DELAY, () => revealBit('mask', ii)); }
+    for (let oi=0; oi<4; oi++) { const o=oi; t(p2+200+(o*8+8)*DELAY+100, () => revealDec(maskDec, o)); }
+
+    const p4 = p2+200+32*DELAY+250;
+    t(p4, () => { divider.style.opacity='1'; });
+
+    // Phase 5: Result bits
+    for (let i=0; i<32; i++) { const ii=i; t(p4+200+ii*DELAY, () => revealBit('res', ii)); }
+    for (let oi=0; oi<4; oi++) { const o=oi; t(p4+200+(o*8+8)*DELAY+100, () => revealDec(resDec, o)); }
+
+    t(p4+200+32*DELAY+350, () => { resultLabel.style.opacity='1'; });
+  }
+
+  // ── Step Mode ──────────────────────────────────────────────────────────────
+  let stepCurrent = -1;
+
+  function enterStepMode() {
+    timers.forEach(clearTimeout); timers = [];
+    resetAll();
+    ['ip','mask','res'].forEach(r => getBits(r).forEach((_,i) => dimBit(r,i)));
+    op.style.opacity='0.25'; divider.style.opacity='0.25';
+    stepCurrent = -1;
+    controls.style.display='none'; stepControls.style.display='flex'; stepInfo.style.display='block';
+    updateStep();
+  }
+
+  function updateStep() {
+    const counter = wrap.querySelector('#sa-counter');
+    const idx = stepCurrent;
+
+    if (idx < 0) {
+      counter.textContent = 'Ready';
+      stepInfo.innerHTML = `<div class="sa-step-box">Press <strong>Next ▶</strong> to step through the AND operation one bit at a time.</div>`;
+      return;
+    }
+    if (idx >= 32) {
+      counter.textContent = 'Complete!';
+      resultLabel.style.opacity='1';
+      for (let oi=0; oi<4; oi++) { revealDec(ipDec,oi); revealDec(maskDec,oi); revealDec(resDec,oi); }
+      stepInfo.innerHTML = `<div class="sa-step-box sa-step-done">✅ All 32 bits processed! Network address: <strong>192.168.1.128</strong></div>`;
+      return;
+    }
+
+    counter.textContent = `Bit ${idx+1} / 32`;
+    op.style.opacity='1'; divider.style.opacity='1';
+
+    for (let i=0; i<32; i++) {
+      if (i < idx)      { revealBit('ip',i);    revealBit('mask',i);    revealBit('res',i);    }
+      else if (i===idx) { highlightBit('ip',i); highlightBit('mask',i); highlightBit('res',i); }
+      else              { dimBit('ip',i);        dimBit('mask',i);        dimBit('res',i);        }
+    }
+    for (let oi=0; oi<4; oi++) {
+      if ((oi+1)*8 <= idx) { revealDec(ipDec,oi); revealDec(maskDec,oi); revealDec(resDec,oi); }
+    }
+
+    const ipB=ipFlat[idx], mB=maskFlat[idx], rB=resFlat[idx];
+    const isNet=idx<PREFIX, rColor=isNet?netColor:hostColor;
+    const oc=octColors[Math.floor(idx/8)];
+
+    stepInfo.innerHTML = `<div class="sa-step-box">
+      <div class="sa-step-title">Bit ${idx+1} of 32 &nbsp;·&nbsp; Octet ${Math.floor(idx/8)+1}, position ${idx%8+1}</div>
+      <div class="sa-step-row">
+        <span class="sa-step-label" style="color:${oc}">📘 IP bit:</span>
+        <span class="sa-step-val" style="background:${oc}33;border:1px solid ${oc}88;color:${oc}">${ipB}</span>
+      </div>
+      <div class="sa-step-op">AND (&amp;)</div>
+      <div class="sa-step-row">
+        <span class="sa-step-label" style="color:${maskColor}">🟡 Mask bit:</span>
+        <span class="sa-step-val" style="background:${maskColor}33;border:1px solid ${maskColor}88;color:${maskColor}">${mB}</span>
+      </div>
+      <div class="sa-step-divider"></div>
+      <div class="sa-step-row">
+        <span class="sa-step-label" style="color:${rColor}">✅ Result:</span>
+        <span class="sa-step-val" style="background:${rColor}33;border:1px solid ${rColor}88;color:${rColor}">${rB}</span>
+        <span class="sa-step-tag" style="background:${rColor}18;color:${rColor};border:1px solid ${rColor}44">${isNet?'🌐 Network bit':'💻 Host bit'}</span>
+      </div>
+    </div>`;
+  }
+
+  wrap.querySelector('#sa-auto').addEventListener('click', runAutoPlay);
+  wrap.querySelector('#sa-stepmode').addEventListener('click', enterStepMode);
+  wrap.querySelector('#sa-next').addEventListener('click', () => { if(stepCurrent<32){stepCurrent++; updateStep();} });
+  wrap.querySelector('#sa-prev').addEventListener('click', () => { if(stepCurrent>-1){stepCurrent--; updateStep();} });
+  wrap.querySelector('#sa-exit').addEventListener('click', () => {
+    timers.forEach(clearTimeout); timers=[];
+    resetAll(); stepInfo.style.display='none';
+    stepControls.style.display='none'; controls.style.display='flex';
+  });
+
+  setTimeout(runAutoPlay, 300);
 }
 
 // ── Layer 3 Protocol Deep-Dive Lessons ───────────────────────────────────────
