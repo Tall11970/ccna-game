@@ -1,0 +1,3216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetQuest – CCNA Training</title>
+<style>
+  :root {
+    --bg: #0f1729;
+    --panel: #162035;
+    --border: #243a60;
+    --accent: #00d4ff;
+    --accent2: #0066cc;
+    --green: #00bb66;
+    --red: #ff4466;
+    --yellow: #ffcc00;
+    --text: #e0eeff;
+    --muted: #6b8ab0;
+    --bg-gradient1: rgba(0,100,200,0.08);
+    --bg-gradient2: rgba(0,212,255,0.05);
+  }
+
+  body.light {
+    --bg: #f0f4fb;
+    --panel: #ffffff;
+    --border: #c5d5ea;
+    --accent: #0066cc;
+    --accent2: #004499;
+    --green: #008844;
+    --red: #cc2244;
+    --yellow: #996600;
+    --text: #0a1628;
+    --muted: #5570a0;
+    --bg-gradient1: rgba(0,80,180,0.05);
+    --bg-gradient2: rgba(0,120,220,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, var(--bg-gradient1) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, var(--bg-gradient2) 0%, transparent 60%);
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ── Header ── */
+  header {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 20px;
+  }
+
+  .logo {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .logo span { color: var(--text); }
+
+  .theme-toggle {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: border-color 0.2s, transform 0.15s;
+    line-height: 1;
+  }
+  .theme-toggle:hover { border-color: var(--accent); transform: scale(1.08); }
+
+  .hud {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .hud-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .hud-item strong {
+    font-size: 1.1rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* ── XP Bar ── */
+  .xp-bar-wrap {
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 20px;
+  }
+  .xp-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .xp-bar {
+    height: 6px;
+    background: var(--panel);
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 99px;
+    transition: width 0.5s ease;
+  }
+
+  /* ── Screen system ── */
+  .screen { display: none; width: 100%; max-width: 640px; }
+  .screen.active { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── Topic Select ── */
+  .screen-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .screen-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .topic-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .topic-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .topic-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0,212,255,0.1);
+  }
+  .topic-card .icon { font-size: 2rem; margin-bottom: 8px; }
+  .topic-card .name { font-size: 0.9rem; font-weight: 600; }
+  .topic-card .count { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+  .topic-card .badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: var(--accent2);
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 99px;
+    font-weight: 600;
+  }
+  .topic-card.completed .badge { background: var(--green); color: #000; }
+
+  /* ── Quiz Screen ── */
+  .quiz-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .timer-ring {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .timer-ring.urgent { color: var(--red); animation: pulse 0.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--panel);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent2);
+    border-radius: 99px;
+    transition: width 0.3s;
+  }
+
+  .question-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+  }
+
+  .q-category {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .q-text {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+
+  .answers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .answer-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(0,212,255,0.05);
+  }
+  .answer-btn .letter {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .answer-btn.correct {
+    border-color: var(--green);
+    background: rgba(0,255,136,0.08);
+    color: var(--green);
+  }
+  .answer-btn.correct .letter { background: var(--green); color: #000; }
+  .answer-btn.wrong {
+    border-color: var(--red);
+    background: rgba(255,68,102,0.08);
+    color: var(--red);
+  }
+  .answer-btn.wrong .letter { background: var(--red); color: #fff; }
+  .answer-btn:disabled { cursor: default; }
+
+  /* ── Explanation ── */
+  .explanation {
+    background: rgba(0,212,255,0.05);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text);
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--accent); }
+
+  /* ── Next btn ── */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #000;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    display: none;
+    align-self: flex-end;
+  }
+  .btn-primary.show { display: block; }
+  .btn-primary:hover { opacity: 0.85; }
+
+  /* ── Result Screen ── */
+  .result-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .result-icon { font-size: 3.5rem; margin-bottom: 12px; }
+  .result-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+  .result-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 8px;
+  }
+  .stat-box .val { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+  .stat-box .lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+
+  .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.9rem;
+    border-radius: 10px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 0.85rem;
+    transition: transform 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Streaks / badges ── */
+  .streak-banner {
+    background: linear-gradient(135deg, #ff6b00, #ffcc00);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #000;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+    display: none;
+  }
+  .streak-banner.show { display: block; }
+
+  /* ── Review Panel ── */
+  .review-link {
+    color: var(--accent);
+    text-decoration: underline;
+    cursor: pointer;
+    font-style: normal;
+  }
+  .review-link:hover { color: #fff; }
+
+  .review-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .review-item .ri-q {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .review-item .ri-wrong {
+    font-size: 0.82rem;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+  .review-item .ri-correct {
+    font-size: 0.82rem;
+    color: var(--green);
+    margin-bottom: 10px;
+  }
+  .review-item .ri-explain {
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--text);
+    background: rgba(0,212,255,0.05);
+    border-left: 2px solid var(--accent);
+    padding: 10px 12px;
+    border-radius: 6px;
+  }
+  .review-header {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 0;
+  }
+
+  /* ── Learn Screen ── */
+  .learn-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .learn-back {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: border-color 0.2s;
+  }
+  .learn-back:hover { border-color: var(--accent); }
+
+  .lesson-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .lesson-section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .lesson-body {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .lesson-body strong { color: var(--accent); }
+  .lesson-body p { margin-bottom: 10px; }
+  .lesson-body p:last-child { margin-bottom: 0; }
+
+  .lesson-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin-top: 6px;
+  }
+  .lesson-table th {
+    background: rgba(0,212,255,0.1);
+    color: var(--accent);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .lesson-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text);
+    vertical-align: top;
+  }
+  .lesson-table tr:last-child td { border-bottom: none; }
+  .lesson-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .lesson-tip {
+    background: rgba(255,204,0,0.07);
+    border: 1px solid rgba(255,204,0,0.25);
+    border-left: 3px solid var(--yellow);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .lesson-tip strong { color: var(--yellow); }
+
+  .lesson-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .layer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+  }
+  .layer-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+  .layer-name { font-weight: 700; min-width: 100px; }
+  .layer-link {
+    font-weight: 700;
+    min-width: 100px;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .layer-link:hover { opacity: 0.75; }
+  .layer-row { cursor: pointer; transition: filter 0.15s; }
+  .layer-row:hover { filter: brightness(1.15); }
+  .layer-detail { color: var(--muted); font-size: 0.78rem; }
+
+  .topic-card .card-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    justify-content: center;
+  }
+  .btn-learn, .btn-quiz-sm {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+  }
+  .btn-learn {
+    background: rgba(0,212,255,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(0,212,255,0.3);
+  }
+  .btn-learn:hover { background: rgba(0,212,255,0.22); }
+  .btn-quiz-sm {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #000;
+  }
+  .btn-quiz-sm:hover { opacity: 0.85; }
+
+  .btn-start-quiz {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #000;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    padding: 16px 24px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    width: 100%;
+  }
+  .btn-start-quiz:hover { opacity: 0.85; }
+
+  /* ── Visual Diagram Elements ── */
+  .pkt-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin: 10px 0;
+    font-size: 0.72rem;
+  }
+  .pkt-field {
+    padding: 7px 6px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #000;
+  }
+  .pkt-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+    justify-content: center;
+  }
+  .flow-node {
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    min-width: 70px;
+  }
+  .flow-arrow {
+    color: var(--accent);
+    font-size: 1.1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .state-chain {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 10px 0;
+    align-items: center;
+  }
+  .state-box {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    color: #000;
+  }
+  .state-arrow { color: var(--muted); font-size: 0.9rem; }
+
+  .bar-chart { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+  .bar-row { display: flex; align-items: center; gap: 8px; }
+  .bar-label { font-size: 0.75rem; font-weight: 600; min-width: 70px; color: var(--text); }
+  .bar-track { flex: 1; background: var(--border); border-radius: 99px; height: 14px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 0.65rem; font-weight: 700; color: #000; transition: width 0.6s ease; }
+  .bar-val { font-size: 0.72rem; color: var(--muted); min-width: 40px; }
+
+  .topo-diagram {
+    display: grid;
+    gap: 6px;
+    margin: 10px 0;
+    font-size: 0.75rem;
+  }
+  .topo-node {
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 700;
+    border: 2px solid;
+  }
+  .topo-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 0.7rem;
+    gap: 4px;
+  }
+  .as-box {
+    border: 2px dashed;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  .as-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  /* ── Subnet Animation ── */
+  .subnet-anim {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+  }
+  .sa-row-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 6px;
+    margin-bottom: 2px;
+  }
+  .sa-bits {
+    display: flex;
+    gap: 2px;
+    flex-wrap: nowrap;
+  }
+  .sa-octet { display: flex; gap: 2px; }
+  .sa-dot {
+    width: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+  .sa-bit {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.72rem;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.25s, transform 0.25s, background 0.3s;
+  }
+  .sa-bit.visible { opacity: 1; transform: scale(1); }
+
+  .sa-decimal-row {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .sa-dec-val {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.62rem;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .sa-dec-val.visible { opacity: 1; }
+  .sa-dec-dot {
+    width: 6px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .sa-operator {
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--yellow);
+    padding: 4px 0;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .sa-operator.visible { opacity: 1; }
+
+  .sa-divider {
+    height: 2px;
+    background: linear-gradient(90deg, #00d4ff, #cc66ff, #00ff88);
+    border-radius: 99px;
+    margin: 4px 0;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .sa-divider.visible { opacity: 1; }
+
+  .sa-result-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--green);
+    text-align: center;
+    padding: 8px;
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.5s;
+    margin-top: 4px;
+  }
+  .sa-result-label.visible { opacity: 1; }
+
+  .sa-legend {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    font-size: 0.7rem;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .sa-legend-item { display: flex; align-items: center; gap: 5px; color: var(--muted); }
+  .sa-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  .sa-replay {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.75rem;
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+    margin-top: 8px;
+    align-self: center;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .sa-replay:hover { border-color: var(--accent); color: var(--accent); }
+
+  @keyframes bitPop {
+    0% { transform: scale(1.4); }
+    60% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+  .sa-bit.pop { animation: bitPop 0.3s ease forwards; }
+
+  @media (max-width: 420px) {
+    .topic-grid { grid-template-columns: 1fr; }
+    .result-stats { grid-template-columns: repeat(3,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo" id="logo-home" style="cursor:pointer;text-decoration:none;">Net<span>Quest</span></div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+    <div class="hud">
+      <div class="hud-item"><strong id="hud-level">1</strong>Level</div>
+      <div class="hud-item"><strong id="hud-xp">0</strong>XP</div>
+      <div class="hud-item"><strong id="hud-streak">0🔥</strong>Streak</div>
+    </div>
+  </div>
+</header>
+
+<div class="xp-bar-wrap">
+  <div class="xp-label">
+    <span id="xp-label-left">Level 1</span>
+    <span id="xp-label-right">0 / 100 XP</span>
+  </div>
+  <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+</div>
+
+<!-- Topic Select -->
+<div class="screen active" id="screen-topics">
+  <div class="screen-title">Choose a Topic</div>
+  <div class="screen-sub">Master each domain to earn your CCNA</div>
+  <div class="topic-grid" id="topic-grid"></div>
+</div>
+
+<!-- Learn -->
+<div class="screen" id="screen-learn">
+  <div class="learn-nav">
+    <button class="learn-back" id="btn-learn-back">← Topics</button>
+    <span id="learn-topic-name"></span>
+  </div>
+  <div id="lesson-content"></div>
+  <button class="btn-start-quiz" id="btn-start-quiz">Take the Quiz →</button>
+</div>
+
+<!-- Layer Detail -->
+<div class="screen" id="screen-layer">
+  <div class="learn-nav">
+    <button class="learn-back" id="btn-layer-back">← OSI Layers</button>
+    <span id="layer-detail-title"></span>
+  </div>
+  <div id="layer-detail-content"></div>
+  <button class="btn-start-quiz" id="btn-layer-quiz">Take the Quiz →</button>
+</div>
+
+<!-- L3 Protocol Detail -->
+<div class="screen" id="screen-l3protocol">
+  <div class="learn-nav">
+    <button class="learn-back" id="btn-l3protocol-back">← Network Layer</button>
+    <span id="l3protocol-detail-title"></span>
+  </div>
+  <div id="l3protocol-detail-content"></div>
+  <button class="btn-start-quiz" id="btn-l3protocol-quiz">Take the Quiz →</button>
+</div>
+
+<!-- Protocol Detail -->
+<div class="screen" id="screen-protocol">
+  <div class="learn-nav">
+    <button class="learn-back" id="btn-protocol-back">← Application Layer</button>
+    <span id="protocol-detail-title"></span>
+  </div>
+  <div id="protocol-detail-content"></div>
+  <button class="btn-start-quiz" id="btn-protocol-quiz">Take the Quiz →</button>
+</div>
+
+<!-- Quiz -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-meta">
+    <span id="q-counter">Question 1 / 10</span>
+    <div class="timer-ring" id="timer-display">⏱ <span id="timer-val">30</span>s</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="q-progress"></div></div>
+  <div class="question-card">
+    <div class="q-category" id="q-category"></div>
+    <div class="q-text" id="q-text"></div>
+  </div>
+  <div class="answers" id="answers"></div>
+  <div class="explanation" id="explanation"></div>
+  <button class="btn-primary" id="btn-next">Next →</button>
+</div>
+
+<!-- Result -->
+<div class="screen" id="screen-result">
+  <div class="streak-banner" id="streak-banner"></div>
+  <div class="result-card">
+    <div class="result-icon" id="result-icon">🎉</div>
+    <div class="result-title" id="result-title">Round Complete!</div>
+    <div class="result-sub" id="result-sub"></div>
+    <div class="result-stats">
+      <div class="stat-box"><div class="val" id="stat-correct">0</div><div class="lbl">Correct</div></div>
+      <div class="stat-box"><div class="val" id="stat-acc">0%</div><div class="lbl">Accuracy</div></div>
+      <div class="stat-box"><div class="val" id="stat-xp">+0</div><div class="lbl">XP Earned</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" id="btn-retry">↩ Retry</button>
+      <button class="btn-primary show" id="btn-topics">All Topics</button>
+    </div>
+  </div>
+  <div id="review-panel" style="display:none; width:100%; display:none; flex-direction:column; gap:12px;"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Question Bank ────────────────────────────────────────────────────────────
+const TOPICS = [
+  {
+    id: 'osi',
+    name: 'OSI Model',
+    icon: '🧱',
+    color: '#00d4ff',
+    lesson: [
+      {
+        title: 'What is the OSI Model?',
+        body: `<p>The <strong>OSI (Open Systems Interconnection) model</strong> is a framework that describes how data travels across a network. It breaks the communication process into <strong>7 layers</strong>, each with a specific job.</p><p>Think of it like mailing a letter — it goes through several steps (writing, enveloping, addressing, shipping) before reaching the recipient who reverses the process.</p>`
+      },
+      {
+        title: 'The 7 Layers',
+        type: 'diagram',
+        layers: [
+          { num:7, name:'Application',   pdu:'Data',    example:'HTTP, FTP, DNS, SMTP',       bg:'rgba(0,212,255,0.15)',  fg:'#00d4ff' },
+          { num:6, name:'Presentation',  pdu:'Data',    example:'SSL/TLS, JPEG, encryption',  bg:'rgba(0,180,220,0.12)',  fg:'#00bcd4' },
+          { num:5, name:'Session',        pdu:'Data',    example:'NetBIOS, RPC, sockets',      bg:'rgba(0,150,200,0.12)',  fg:'#0099cc' },
+          { num:4, name:'Transport',      pdu:'Segment', example:'TCP, UDP',                   bg:'rgba(0,255,136,0.12)',  fg:'#00ff88' },
+          { num:3, name:'Network',        pdu:'Packet',  example:'IP, OSPF, EIGRP, routers',   bg:'rgba(255,153,0,0.12)', fg:'#ff9900' },
+          { num:2, name:'Data Link',      pdu:'Frame',   example:'Ethernet, MAC, switches',    bg:'rgba(204,102,255,0.12)',fg:'#cc66ff' },
+          { num:1, name:'Physical',       pdu:'Bit',     example:'Cables, hubs, signals',      bg:'rgba(255,68,102,0.12)', fg:'#ff4466' },
+        ]
+      },
+      {
+        title: 'Key Devices by Layer',
+        type: 'table',
+        headers: ['Device', 'Layer', 'Why'],
+        rows: [
+          ['Hub / Repeater', 'Layer 1 – Physical', 'Moves raw bits, no intelligence'],
+          ['Switch', 'Layer 2 – Data Link', 'Forwards frames using MAC addresses'],
+          ['Router', 'Layer 3 – Network', 'Routes packets using IP addresses'],
+          ['Firewall', 'Layer 3–7', 'Filters traffic at multiple layers'],
+        ]
+      },
+      {
+        title: 'Memory Trick',
+        type: 'tip',
+        body: '<strong>Bottom→Top:</strong> "Please Do Not Throw Sausage Pizza Away"<br><strong>Top→Bottom:</strong> "All People Seem To Need Data Processing"<br><br>Each first letter = Physical, Data Link, Network, Transport, Session, Presentation, Application.'
+      },
+    ],
+    questions: [
+      {
+        q: 'How many layers does the OSI model have?',
+        a: ['5','7','4','6'],
+        correct: 1,
+        explain: 'The OSI model has <strong>7 layers</strong>: Physical, Data Link, Network, Transport, Session, Presentation, Application.'
+      },
+      {
+        q: 'Which OSI layer is responsible for logical addressing (IP addresses)?',
+        a: ['Data Link','Transport','Network','Session'],
+        correct: 2,
+        explain: '<strong>Layer 3 – Network</strong> handles logical (IP) addressing and routing between networks.'
+      },
+      {
+        q: 'What PDU (Protocol Data Unit) is used at the Data Link layer?',
+        a: ['Segment','Packet','Frame','Bit'],
+        correct: 2,
+        explain: '<strong>Frames</strong> are the PDU at Layer 2 (Data Link). They include MAC addresses for local delivery.'
+      },
+      {
+        q: 'TCP and UDP operate at which OSI layer?',
+        a: ['Layer 2','Layer 3','Layer 4','Layer 5'],
+        correct: 2,
+        explain: '<strong>Layer 4 – Transport</strong> handles end-to-end communication. TCP provides reliable delivery; UDP is connectionless.'
+      },
+      {
+        q: 'Which layer converts data into electrical signals or light pulses?',
+        a: ['Data Link','Physical','Network','Transport'],
+        correct: 1,
+        explain: '<strong>Layer 1 – Physical</strong> deals with the physical transmission of raw bits over a medium (copper, fiber, wireless).'
+      },
+      {
+        q: 'HTTP and FTP operate at which OSI layer?',
+        a: ['Layer 4','Layer 5','Layer 6','Layer 7'],
+        correct: 3,
+        explain: '<strong>Layer 7 – Application</strong> is where user-facing protocols like HTTP, FTP, DNS, and SMTP operate.'
+      },
+      {
+        q: 'MAC addresses are used at which OSI layer?',
+        a: ['Layer 1','Layer 2','Layer 3','Layer 4'],
+        correct: 1,
+        explain: '<strong>Layer 2 – Data Link</strong> uses MAC addresses to identify devices on the same local network segment.'
+      },
+      {
+        q: 'Which layer establishes, maintains, and terminates sessions between applications?',
+        a: ['Transport','Presentation','Session','Application'],
+        correct: 2,
+        explain: '<strong>Layer 5 – Session</strong> manages dialog control and session setup/teardown between communicating hosts.'
+      },
+      {
+        q: 'Encryption and data formatting occur at which OSI layer?',
+        a: ['Layer 4','Layer 5','Layer 6','Layer 7'],
+        correct: 2,
+        explain: '<strong>Layer 6 – Presentation</strong> handles data formatting, encryption, and compression (e.g., SSL/TLS).'
+      },
+      {
+        q: 'A router operates primarily at which OSI layer?',
+        a: ['Layer 1','Layer 2','Layer 3','Layer 4'],
+        correct: 2,
+        explain: 'Routers operate at <strong>Layer 3 – Network</strong>, making forwarding decisions based on IP addresses.'
+      },
+    ]
+  },
+  {
+    id: 'subnetting',
+    name: 'Subnetting',
+    icon: '🔢',
+    color: '#00ff88',
+    lesson: [
+      {
+        title: 'What is Subnetting?',
+        body: `<p>An <strong>IP address</strong> is a 32-bit number written as four octets (e.g. 192.168.1.10). It has two parts: the <strong>network portion</strong> (identifies the network) and the <strong>host portion</strong> (identifies the device).</p><p><strong>Subnetting</strong> means dividing a large network into smaller ones. This improves security, reduces broadcast traffic, and uses IP addresses efficiently.</p>`
+      },
+      {
+        title: 'Subnet Mask Cheat Sheet',
+        type: 'table',
+        headers: ['CIDR', 'Subnet Mask', 'Hosts', 'Use Case'],
+        rows: [
+          ['/30', '255.255.255.252', '2', 'Point-to-point links'],
+          ['/29', '255.255.255.248', '6', 'Small segments'],
+          ['/28', '255.255.255.240', '14', 'Small office'],
+          ['/27', '255.255.255.224', '30', 'Small LAN'],
+          ['/26', '255.255.255.192', '62', 'Medium LAN'],
+          ['/25', '255.255.255.128', '126', 'Medium LAN'],
+          ['/24', '255.255.255.0', '254', 'Standard LAN'],
+          ['/16', '255.255.0.0', '65,534', 'Large network'],
+        ]
+      },
+      {
+        title: 'How to Find the Network Address',
+        type: 'subnet_anim',
+        body: `<p>Perform a bitwise AND between the IP address and the subnet mask.</p><p><strong>Example:</strong> IP = 192.168.1.130, Mask = /25 (255.255.255.128)<br>• 130 in binary = 10000010<br>• 128 in binary = 10000000<br>• AND result  = 10000000 = 128<br>• <strong>Network: 192.168.1.128</strong>, Broadcast: 192.168.1.255, Hosts: .129–.254</p>`
+      },
+      {
+        title: 'IP Address Classes (legacy)',
+        type: 'table',
+        headers: ['Class', 'First Octet', 'Default Mask', 'Private Range'],
+        rows: [
+          ['A', '1–126', '/8  (255.0.0.0)', '10.0.0.0 – 10.255.255.255'],
+          ['B', '128–191', '/16 (255.255.0.0)', '172.16.0.0 – 172.31.255.255'],
+          ['C', '192–223', '/24 (255.255.255.0)', '192.168.0.0 – 192.168.255.255'],
+        ]
+      },
+      {
+        title: 'Quick Formula',
+        type: 'tip',
+        body: '<strong>Usable hosts</strong> = 2<sup>host bits</sup> − 2<br><strong>Host bits</strong> = 32 − CIDR prefix<br><strong>Subnets created</strong> = 2<sup>borrowed bits</sup><br><br>Example: /26 → host bits = 6 → 2⁶−2 = <strong>62 usable hosts</strong>'
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the subnet mask for a /24 network in dotted decimal?',
+        a: ['255.0.0.0','255.255.0.0','255.255.255.0','255.255.255.128'],
+        correct: 2,
+        explain: '<strong>/24</strong> means 24 bits are set to 1. In dotted decimal: <strong>255.255.255.0</strong>. This gives 254 usable hosts.'
+      },
+      {
+        q: 'How many usable host addresses are in a /30 subnet?',
+        a: ['2','4','6','8'],
+        correct: 0,
+        explain: 'A /30 has 4 total addresses (2²). Subtract the network and broadcast addresses = <strong>2 usable hosts</strong>. Common for point-to-point links.'
+      },
+      {
+        q: 'What is the broadcast address of the network 192.168.1.0/24?',
+        a: ['192.168.1.0','192.168.1.1','192.168.1.254','192.168.1.255'],
+        correct: 3,
+        explain: 'In a /24 network, the last address is the broadcast: <strong>192.168.1.255</strong>. The first (192.168.1.0) is the network address.'
+      },
+      {
+        q: 'Which address class traditionally uses the subnet mask 255.255.0.0?',
+        a: ['Class A','Class B','Class C','Class D'],
+        correct: 1,
+        explain: '<strong>Class B</strong> networks (128.x.x.x – 191.x.x.x) use the default mask 255.255.0.0 (/16).'
+      },
+      {
+        q: 'How many host bits are in a /26 subnet mask?',
+        a: ['4','5','6','8'],
+        correct: 2,
+        explain: '32 total bits – 26 network bits = <strong>6 host bits</strong>. This gives 2⁶ = 64 addresses, 62 usable.'
+      },
+      {
+        q: 'What CIDR notation represents 255.255.255.128?',
+        a: ['/25','/26','/27','/28'],
+        correct: 0,
+        explain: '255.255.255.128 = 11111111.11111111.11111111.10000000 = <strong>/25</strong>. There are 25 network bits.'
+      },
+      {
+        q: 'How many subnets can you create by borrowing 3 bits from the host portion?',
+        a: ['4','6','8','16'],
+        correct: 2,
+        explain: 'Borrowing 3 bits = 2³ = <strong>8 subnets</strong>. Each subnet has fewer hosts but you gain more network segments.'
+      },
+      {
+        q: 'What is the network address of 172.16.45.14/20?',
+        a: ['172.16.45.0','172.16.32.0','172.16.0.0','172.16.44.0'],
+        correct: 1,
+        explain: '/20 means the 4th octet and part of the 3rd are host bits. 45 in binary = 00101101. Mask the lower 4 bits = 00100000 = 32. So <strong>172.16.32.0</strong>.'
+      },
+      {
+        q: 'Which IP address is a valid host on the 10.0.0.0/8 network?',
+        a: ['10.0.0.0','10.255.255.255','10.1.2.3','192.168.1.1'],
+        correct: 2,
+        explain: 'The network address is 10.0.0.0 and broadcast is 10.255.255.255. <strong>10.1.2.3</strong> falls in between — it\'s a valid host.'
+      },
+      {
+        q: 'How many total IP addresses are in a /29 subnet?',
+        a: ['4','6','8','16'],
+        correct: 2,
+        explain: '32 – 29 = 3 host bits. 2³ = <strong>8 total addresses</strong> (6 usable hosts, 1 network, 1 broadcast).'
+      },
+    ]
+  },
+  {
+    id: 'routing',
+    name: 'Routing',
+    icon: '🗺️',
+    color: '#ff9900',
+    lesson: [
+      {
+        title: 'What is Routing?',
+        body: `<p>A <strong>router</strong> connects different networks and decides the best path for packets to travel. It looks up the destination IP in its <strong>routing table</strong> and forwards the packet out the right interface.</p><p>Routes come from three sources: <strong>connected</strong> networks (automatic), <strong>static</strong> routes (manually configured), and <strong>dynamic</strong> routing protocols (learned automatically from other routers).</p>`
+      },
+      {
+        title: 'Administrative Distance (AD)',
+        body: '<p>When a router learns the same route from multiple sources, it uses <strong>Administrative Distance</strong> to choose the most trustworthy one. <strong>Lower AD = more preferred.</strong></p>',
+        type: 'table_after',
+      },
+      {
+        type: 'table',
+        headers: ['Source', 'AD', 'Notes'],
+        rows: [
+          ['Connected interface', '0', 'Always preferred — directly attached'],
+          ['Static route', '1', 'Manually configured by admin'],
+          ['EIGRP (internal)', '90', 'Cisco proprietary, fast convergence'],
+          ['OSPF', '110', 'Open standard, link-state'],
+          ['RIP', '120', 'Oldest, limited to 15 hops'],
+          ['EIGRP (external)', '170', 'Routes redistributed into EIGRP'],
+          ['Unknown / unreachable', '255', 'Never used'],
+        ]
+      },
+      {
+        title: 'Routing Protocol Comparison',
+        type: 'table',
+        headers: ['Protocol', 'Type', 'Metric', 'Max Hops'],
+        rows: [
+          ['RIP v2', 'Distance Vector', 'Hop count', '15'],
+          ['EIGRP', 'Hybrid', 'Bandwidth + Delay', 'None (224)'],
+          ['OSPF', 'Link State', 'Cost (bandwidth)', 'None'],
+        ]
+      },
+      {
+        title: 'Reading the Routing Table',
+        body: `<p>Run <strong>show ip route</strong> to see routes. Each entry starts with a letter:</p><p><strong>C</strong> = Connected &nbsp;|&nbsp; <strong>S</strong> = Static &nbsp;|&nbsp; <strong>O</strong> = OSPF &nbsp;|&nbsp; <strong>D</strong> = EIGRP &nbsp;|&nbsp; <strong>R</strong> = RIP</p><p>Example: <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">O 10.1.0.0/24 [110/2] via 192.168.1.1</code><br>= OSPF route, AD=110, cost=2, next-hop=192.168.1.1</p>`
+      },
+      {
+        title: 'Default Static Route',
+        type: 'tip',
+        body: '<strong>ip route 0.0.0.0 0.0.0.0 [next-hop]</strong><br><br>This "quad-zero" route is the gateway of last resort — used when no more specific route matches. Always configure this on edge routers pointing toward the internet.'
+      },
+    ],
+    questions: [
+      {
+        q: 'What command shows the routing table on a Cisco router?',
+        a: ['show ip route','show routes','display ip routes','show routing-table'],
+        correct: 0,
+        explain: '<strong>show ip route</strong> displays the routing table, showing all known networks and how to reach them.'
+      },
+      {
+        q: 'What does the "C" prefix mean in a Cisco routing table?',
+        a: ['Configured route','Connected route','CISCO route','Custom route'],
+        correct: 1,
+        explain: '"<strong>C</strong>" stands for <strong>Connected</strong> — the router is directly connected to that network via one of its interfaces.'
+      },
+      {
+        q: 'OSPF uses which algorithm to calculate the best path?',
+        a: ['Bellman-Ford','Diffusing Update Algorithm','Dijkstra (SPF)','Distance Vector'],
+        correct: 2,
+        explain: 'OSPF uses <strong>Dijkstra\'s Shortest Path First (SPF)</strong> algorithm. It builds a complete map (LSDB) and calculates the shortest path tree.'
+      },
+      {
+        q: 'What is the default administrative distance for OSPF?',
+        a: ['90','100','110','120'],
+        correct: 2,
+        explain: 'OSPF has an administrative distance of <strong>110</strong>. Lower AD = more trustworthy. Connected=0, Static=1, EIGRP=90, OSPF=110, RIP=120.'
+      },
+      {
+        q: 'Which routing protocol uses bandwidth and delay as its default metric?',
+        a: ['RIP','OSPF','EIGRP','BGP'],
+        correct: 2,
+        explain: '<strong>EIGRP</strong> uses a composite metric based on bandwidth and delay by default (load and reliability can be added but aren\'t used by default).'
+      },
+      {
+        q: 'What is the maximum hop count for RIPv2?',
+        a: ['10','15','16','255'],
+        correct: 1,
+        explain: 'RIP has a maximum hop count of <strong>15</strong>. A route with 16 hops is considered unreachable. This severely limits RIP\'s scalability.'
+      },
+      {
+        q: 'What type of routing protocol is OSPF?',
+        a: ['Distance Vector','Path Vector','Link State','Hybrid'],
+        correct: 2,
+        explain: 'OSPF is a <strong>Link State</strong> routing protocol. Each router builds a complete topology map (LSDB) and runs SPF to find the best paths.'
+      },
+      {
+        q: 'Which command adds a default static route on a Cisco router toward the next hop 10.0.0.1?',
+        a: ['ip route default 10.0.0.1','ip route 0.0.0.0 255.255.255.255 10.0.0.1','ip route 0.0.0.0 0.0.0.0 10.0.0.1','default-route 10.0.0.1'],
+        correct: 2,
+        explain: '<strong>ip route 0.0.0.0 0.0.0.0 10.0.0.1</strong> creates a default route (quad-zero route). Any traffic with no more specific match gets forwarded to 10.0.0.1.'
+      },
+      {
+        q: 'What is EIGRP\'s administrative distance for internal routes?',
+        a: ['90','100','110','170'],
+        correct: 0,
+        explain: 'EIGRP internal routes have an AD of <strong>90</strong>. External EIGRP routes (redistributed from another protocol) have an AD of 170.'
+      },
+      {
+        q: 'Which OSPF packet type is used to discover and maintain neighbors?',
+        a: ['DBD','LSR','Hello','LSU'],
+        correct: 2,
+        explain: '<strong>Hello packets</strong> are sent to 224.0.0.5 to discover neighbors and verify they\'re still alive. They also elect DR/BDR on multi-access networks.'
+      },
+    ]
+  },
+  {
+    id: 'switching',
+    name: 'VLANs & Switching',
+    icon: '🔀',
+    color: '#cc66ff',
+    lesson: [
+      {
+        title: 'How Switches Work',
+        body: `<p>A switch operates at <strong>Layer 2</strong> and uses <strong>MAC addresses</strong> to forward frames. When a frame arrives, the switch records the source MAC and port in its <strong>MAC address table</strong>. It looks up the destination MAC and forwards out only the correct port — or floods to all ports if unknown.</p>`
+      },
+      {
+        title: 'What are VLANs?',
+        body: `<p>A <strong>VLAN (Virtual LAN)</strong> logically segments a switch into separate networks. Devices in VLAN 10 cannot talk to VLAN 20 without going through a <strong>router or Layer 3 switch</strong> — even if they're on the same physical switch.</p><p>Benefits: better security, less broadcast traffic, easier management.</p>`
+      },
+      {
+        title: 'Access vs Trunk Ports',
+        type: 'table',
+        headers: ['Port Type', 'Carries', 'Used For', 'Key Command'],
+        rows: [
+          ['Access', 'One VLAN (untagged)', 'End devices (PCs, phones)', 'switchport mode access'],
+          ['Trunk', 'Multiple VLANs (tagged)', 'Switch-to-switch, switch-to-router', 'switchport mode trunk'],
+        ]
+      },
+      {
+        title: 'VLAN Configuration Commands',
+        body: `<p><strong>Create a VLAN:</strong><br><code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">vlan 10 → name SALES</code></p>
+<p><strong>Assign access port:</strong><br><code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">switchport mode access → switchport access vlan 10</code></p>
+<p><strong>Configure trunk:</strong><br><code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">switchport mode trunk → switchport trunk allowed vlan 10,20</code></p>`
+      },
+      {
+        title: 'Spanning Tree Protocol (STP)',
+        body: `<p>STP prevents <strong>Layer 2 loops</strong> by blocking redundant paths. It elects a <strong>Root Bridge</strong> (lowest Bridge ID wins), then blocks ports that would create loops.</p>`,
+      },
+      {
+        title: 'STP Port States',
+        type: 'table',
+        headers: ['State', 'Forwards?', 'Learns MACs?', 'Duration'],
+        rows: [
+          ['Blocking', 'No', 'No', '20 sec (max age)'],
+          ['Listening', 'No', 'No', '15 sec'],
+          ['Learning', 'No', 'Yes', '15 sec'],
+          ['Forwarding', 'Yes', 'Yes', 'Normal operation'],
+          ['Disabled', 'No', 'No', 'Shutdown'],
+        ]
+      },
+      {
+        title: 'Key Tips',
+        type: 'tip',
+        body: '<strong>Native VLAN</strong> traffic crosses trunks untagged. Both ends must match or you get VLAN hopping attacks.<br><br><strong>VLAN 1</strong> is the default — never use it for user traffic. Best practice: change the native VLAN to an unused VLAN.<br><br><strong>BPDU Guard</strong> + <strong>PortFast</strong> should be enabled on all access ports to speed up convergence and prevent rogue switches.'
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the purpose of a VLAN?',
+        a: ['Increase physical bandwidth','Segment a network logically','Connect different IP subnets','Replace routing protocols'],
+        correct: 1,
+        explain: 'VLANs (Virtual LANs) <strong>logically segment a network</strong> without requiring separate physical hardware. Devices in different VLANs can\'t communicate without a router or Layer 3 switch.'
+      },
+      {
+        q: 'What Cisco command creates VLAN 10 on a switch?',
+        a: ['vlan add 10','create vlan 10','vlan 10','switchport vlan 10'],
+        correct: 2,
+        explain: 'From global config, type <strong>vlan 10</strong> to create the VLAN. You can also optionally add "name SALES" to name it.'
+      },
+      {
+        q: 'What is the default VLAN on Cisco switches?',
+        a: ['VLAN 0','VLAN 1','VLAN 100','VLAN 1024'],
+        correct: 1,
+        explain: '<strong>VLAN 1</strong> is the default VLAN. All ports are in VLAN 1 by default. It cannot be deleted or renamed, but it\'s best practice not to use it.'
+      },
+      {
+        q: 'Which port mode carries traffic for multiple VLANs simultaneously?',
+        a: ['Access','Trunk','Hybrid','Uplink'],
+        correct: 1,
+        explain: '<strong>Trunk ports</strong> carry traffic from multiple VLANs using 802.1Q tagging. Access ports carry only one VLAN (for end devices).'
+      },
+      {
+        q: 'What protocol is used for VLAN tagging on trunk links?',
+        a: ['ISL','802.1Q','802.3','STP'],
+        correct: 1,
+        explain: '<strong>IEEE 802.1Q</strong> is the industry standard for VLAN tagging. It inserts a 4-byte tag into the Ethernet frame containing the VLAN ID. Cisco\'s old ISL is proprietary and no longer used.'
+      },
+      {
+        q: 'What is the Spanning Tree Protocol (STP) designed to prevent?',
+        a: ['IP conflicts','Routing loops','Layer 2 broadcast storms / switching loops','Unauthorized access'],
+        correct: 2,
+        explain: 'STP prevents <strong>Layer 2 loops</strong>. Without it, broadcast frames would loop forever, consuming all bandwidth and crashing the network.'
+      },
+      {
+        q: 'Which STP port state forwards traffic AND learns MAC addresses?',
+        a: ['Blocking','Listening','Learning','Forwarding'],
+        correct: 3,
+        explain: 'The <strong>Forwarding</strong> state is the normal operational state — the port sends/receives data and learns MAC addresses.'
+      },
+      {
+        q: 'What command sets a switch port to access mode for VLAN 20?',
+        a: ['switchport mode trunk vlan 20','switchport access vlan 20','vlan access 20','port vlan-id 20'],
+        correct: 1,
+        explain: 'First set the mode: <strong>switchport mode access</strong>, then assign the VLAN: <strong>switchport access vlan 20</strong>.'
+      },
+      {
+        q: 'A switch learns MAC addresses by examining which part of incoming frames?',
+        a: ['Destination MAC','Source MAC','IP header','VLAN tag'],
+        correct: 1,
+        explain: 'Switches learn by reading the <strong>source MAC address</strong> of incoming frames and mapping it to the port it arrived on. This builds the MAC address table.'
+      },
+      {
+        q: 'What is a "native VLAN" on a trunk port?',
+        a: ['The management VLAN','The VLAN whose traffic is sent untagged on a trunk','The default VLAN for new ports','VLAN 1 always'],
+        correct: 1,
+        explain: 'The <strong>native VLAN</strong> is sent <strong>without an 802.1Q tag</strong> on a trunk. Both ends must match or frames may end up in the wrong VLAN (VLAN hopping attack).'
+      },
+    ]
+  },
+  {
+    id: 'security',
+    name: 'Network Security',
+    icon: '🔒',
+    color: '#ff4466',
+    lesson: [
+      {
+        title: 'Access Control Lists (ACLs)',
+        body: `<p>ACLs are ordered lists of <strong>permit/deny</strong> rules applied to router interfaces. Traffic is checked top-to-bottom — the first match wins. All ACLs end with an implicit <strong>deny any</strong>.</p>
+<p><strong>Standard ACL</strong> — filters by source IP only. Place <em>close to the destination</em>.<br>
+<strong>Extended ACL</strong> — filters by source IP, destination IP, protocol, and port. Place <em>close to the source</em>.</p>`
+      },
+      {
+        title: 'ACL Placement Rule',
+        type: 'tip',
+        body: '<strong>Standard ACLs</strong> → place close to the <strong>destination</strong> (they only match source IP, so placing them near the source could block too much traffic).<br><br><strong>Extended ACLs</strong> → place close to the <strong>source</strong> (they can be very specific, so block traffic early before it wastes bandwidth).'
+      },
+      {
+        title: 'Securing Device Access',
+        type: 'table',
+        headers: ['Method', 'Port', 'Secure?', 'Command'],
+        rows: [
+          ['Console', 'Physical port', 'Local only', 'line con 0 → password → login'],
+          ['Telnet', 'TCP 23', 'No — cleartext', 'line vty 0 4 → transport input telnet'],
+          ['SSH', 'TCP 22', 'Yes — encrypted', 'crypto key generate rsa → ip ssh version 2'],
+        ]
+      },
+      {
+        title: 'Enabling SSH — Steps',
+        body: `<p>1. Set a hostname: <code style="background:rgba(0,0,0,0.3);padding:2px 5px;border-radius:4px;">hostname R1</code><br>
+2. Set a domain name: <code style="background:rgba(0,0,0,0.3);padding:2px 5px;border-radius:4px;">ip domain-name lab.local</code><br>
+3. Generate RSA key: <code style="background:rgba(0,0,0,0.3);padding:2px 5px;border-radius:4px;">crypto key generate rsa modulus 2048</code><br>
+4. Create user: <code style="background:rgba(0,0,0,0.3);padding:2px 5px;border-radius:4px;">username admin secret cisco</code><br>
+5. Set SSH on VTY: <code style="background:rgba(0,0,0,0.3);padding:2px 5px;border-radius:4px;">line vty 0 4 → transport input ssh → login local</code></p>`
+      },
+      {
+        title: 'AAA Framework',
+        type: 'table',
+        headers: ['Component', 'Question it answers', 'Example'],
+        rows: [
+          ['Authentication', 'Who are you?', 'Username + password, certificates'],
+          ['Authorization', 'What can you do?', 'Admin can change config; readonly can only view'],
+          ['Accounting', 'What did you do?', 'Log all commands entered per session'],
+        ]
+      },
+      {
+        title: 'Port Security',
+        type: 'tip',
+        body: '<strong>Port Security</strong> limits which/how many MAC addresses can use a switch port.<br><br>Violation modes: <strong>Shutdown</strong> (err-disable port) | <strong>Restrict</strong> (drop + log) | <strong>Protect</strong> (drop silently)<br><br>Command: <code style="background:rgba(0,0,0,0.2);padding:2px 5px;border-radius:4px;">switchport port-security maximum 2</code>'
+      },
+    ],
+    questions: [
+      {
+        q: 'What does ACL stand for in networking?',
+        a: ['Automatic Configuration List','Access Control List','Advanced Cisco Language','Application Control Layer'],
+        correct: 1,
+        explain: '<strong>Access Control List (ACL)</strong> — a set of permit/deny rules applied to router interfaces to filter traffic based on source/destination IP, port, or protocol.'
+      },
+      {
+        q: 'Where should a standard ACL be placed relative to the traffic source?',
+        a: ['As close to the source as possible','As close to the destination as possible','Always on the WAN interface','On the core switch'],
+        correct: 1,
+        explain: 'Standard ACLs filter by source IP only, so place them <strong>close to the destination</strong> to avoid blocking too much traffic. Extended ACLs (filter src+dst+port) go close to the source.'
+      },
+      {
+        q: 'What is the implicit rule at the end of every Cisco ACL?',
+        a: ['Permit any','Log any','Deny any (deny all)','Forward any'],
+        correct: 2,
+        explain: 'Every ACL ends with an invisible <strong>deny any</strong> statement. If no rule matches the traffic, it\'s dropped. Always add a permit rule if needed!'
+      },
+      {
+        q: 'Which protocol does SSH use for secure remote management?',
+        a: ['UDP 22','TCP 22','TCP 23','UDP 23'],
+        correct: 1,
+        explain: '<strong>SSH uses TCP port 22</strong>. It encrypts the management session. Telnet uses TCP port 23 but sends data in cleartext — never use it over untrusted networks.'
+      },
+      {
+        q: 'What does the "enable secret" command do on a Cisco device?',
+        a: ['Creates a VTY password','Encrypts all passwords in config','Sets a hashed privileged EXEC password','Enables AAA authentication'],
+        correct: 2,
+        explain: '<strong>enable secret</strong> sets the privileged EXEC (enable) password using MD5 hashing. It\'s more secure than the older "enable password" which stored passwords in cleartext.'
+      },
+      {
+        q: 'Which AAA component determines what an authenticated user is allowed to do?',
+        a: ['Authentication','Authorization','Accounting','Access'],
+        correct: 1,
+        explain: '<strong>Authorization</strong> (the second A in AAA) determines user permissions after they\'ve been authenticated. Authentication=who you are, Authorization=what you can do, Accounting=what you did.'
+      },
+      {
+        q: 'What type of attack involves flooding a switch\'s MAC address table?',
+        a: ['ARP Spoofing','MAC Flooding','VLAN Hopping','STP Manipulation'],
+        correct: 1,
+        explain: '<strong>MAC Flooding</strong> overwhelms the MAC table. When full, the switch acts like a hub and broadcasts all frames, allowing an attacker to capture traffic. Port security mitigates this.'
+      },
+      {
+        q: 'Which switch security feature limits the number of MAC addresses on a port?',
+        a: ['BPDU Guard','Root Guard','Port Security','Storm Control'],
+        correct: 2,
+        explain: '<strong>Port Security</strong> restricts the number (and optionally specific MACs) of devices on a port. Violations can shutdown the port, restrict traffic, or send a syslog alert.'
+      },
+      {
+        q: 'What does BPDU Guard do when enabled on a switch port?',
+        a: ['Blocks VLANs','Shuts down the port if a BPDU is received','Prevents MAC learning','Encrypts STP packets'],
+        correct: 1,
+        explain: '<strong>BPDU Guard</strong> err-disables a port immediately if it receives a BPDU. Enable it on PortFast ports (connecting to end devices) to prevent rogue switches from affecting STP topology.'
+      },
+      {
+        q: 'Which command enables SSH on a Cisco device?',
+        a: ['crypto key generate rsa','ssh enable','ip ssh version 2 enable','service ssh on'],
+        correct: 0,
+        explain: '<strong>crypto key generate rsa</strong> generates the RSA key pair needed for SSH. You also need a hostname, domain name, and local user accounts (or AAA). Then use "ip ssh version 2".'
+      },
+    ]
+  },
+  {
+    id: 'protocols',
+    name: 'TCP/IP & Protocols',
+    icon: '📡',
+    color: '#ffcc00',
+    lesson: [
+      {
+        title: 'TCP vs UDP',
+        type: 'table',
+        headers: ['Feature', 'TCP', 'UDP'],
+        rows: [
+          ['Connection', 'Connection-oriented (3-way handshake)', 'Connectionless'],
+          ['Reliability', 'Guaranteed delivery, retransmits', 'Best-effort, no retransmit'],
+          ['Speed', 'Slower (overhead)', 'Faster (less overhead)'],
+          ['Use cases', 'HTTP, FTP, SSH, email', 'DNS, DHCP, video streaming, VoIP'],
+          ['PDU', 'Segment', 'Datagram'],
+        ]
+      },
+      {
+        title: 'TCP 3-Way Handshake',
+        body: `<p>Before TCP sends data, it establishes a connection:</p>
+<p><strong>1. SYN</strong> — Client says "I want to connect"<br>
+<strong>2. SYN-ACK</strong> — Server replies "OK, I'm ready"<br>
+<strong>3. ACK</strong> — Client confirms "Great, let's go"</p>
+<p>To close: FIN → FIN-ACK → ACK (4-way teardown)</p>`
+      },
+      {
+        title: 'Common Port Numbers',
+        type: 'table',
+        headers: ['Port', 'Protocol', 'Transport', 'Notes'],
+        rows: [
+          ['20/21', 'FTP', 'TCP', 'Data (20) / Control (21)'],
+          ['22', 'SSH', 'TCP', 'Secure remote management'],
+          ['23', 'Telnet', 'TCP', 'Insecure — avoid!'],
+          ['25', 'SMTP', 'TCP', 'Send email'],
+          ['53', 'DNS', 'TCP/UDP', 'UDP for queries, TCP for zone transfers'],
+          ['67/68', 'DHCP', 'UDP', 'Server (67) / Client (68)'],
+          ['69', 'TFTP', 'UDP', 'Trivial File Transfer'],
+          ['80', 'HTTP', 'TCP', 'Web (unencrypted)'],
+          ['110', 'POP3', 'TCP', 'Receive email'],
+          ['443', 'HTTPS', 'TCP', 'Secure web (TLS)'],
+          ['161/162', 'SNMP', 'UDP', 'Network monitoring'],
+          ['514', 'Syslog', 'UDP', 'Log messages'],
+        ]
+      },
+      {
+        title: 'DHCP — The DORA Process',
+        body: `<p>DHCP automatically assigns IP addresses using four steps:</p>
+<p><strong>D</strong>iscover — Client broadcasts "Is there a DHCP server?"<br>
+<strong>O</strong>ffer — Server replies with an available IP address<br>
+<strong>R</strong>equest — Client formally requests that IP<br>
+<strong>A</strong>ck — Server confirms the lease</p>`
+      },
+      {
+        title: 'DNS & NAT',
+        body: `<p><strong>DNS</strong> translates domain names to IPs. Your device asks a DNS server "what is the IP of cisco.com?" and gets back 72.163.4.185. Uses port 53.</p>
+<p><strong>NAT</strong> (Network Address Translation) allows many devices with <em>private</em> IPs (10.x, 172.16–31.x, 192.168.x) to share one <em>public</em> IP to reach the internet. PAT (Port Address Translation) is the most common form — also called "NAT overload."</p>`
+      },
+      {
+        title: 'Must-Know Protocols',
+        type: 'tip',
+        body: '<strong>ARP</strong> — maps IP → MAC on local network<br><strong>ICMP</strong> — used by ping and traceroute<br><strong>NTP</strong> — synchronizes clocks (port 123)<br><strong>Syslog</strong> — centralized logging (port 514)<br><strong>SNMP</strong> — network monitoring/management (port 161)'
+      },
+    ],
+    questions: [
+      {
+        q: 'Which protocol automatically assigns IP addresses to hosts?',
+        a: ['DNS','ARP','DHCP','NAT'],
+        correct: 2,
+        explain: '<strong>DHCP (Dynamic Host Configuration Protocol)</strong> automatically provides IP addresses, subnet masks, default gateways, and DNS server info to clients.'
+      },
+      {
+        q: 'What is the purpose of ARP?',
+        a: ['Translate domain names to IPs','Map IP addresses to MAC addresses','Assign dynamic IP addresses','Encrypt network traffic'],
+        correct: 1,
+        explain: '<strong>ARP (Address Resolution Protocol)</strong> resolves a known IP address to its corresponding MAC address on the local network segment.'
+      },
+      {
+        q: 'Which protocol provides reliable, connection-oriented transport?',
+        a: ['UDP','ICMP','TCP','IP'],
+        correct: 2,
+        explain: '<strong>TCP (Transmission Control Protocol)</strong> provides reliability via the three-way handshake (SYN, SYN-ACK, ACK), sequencing, and retransmission. UDP is faster but unreliable.'
+      },
+      {
+        q: 'What port does HTTPS use by default?',
+        a: ['80','443','8080','8443'],
+        correct: 1,
+        explain: '<strong>HTTPS uses port 443</strong>. HTTP uses port 80. HTTPS encrypts the session using TLS (formerly SSL) to protect data in transit.'
+      },
+      {
+        q: 'What is the purpose of NAT?',
+        a: ['Assign VLAN IDs','Translate private IPs to public IPs','Encrypt routing updates','Filter ACL traffic'],
+        correct: 1,
+        explain: '<strong>NAT (Network Address Translation)</strong> allows multiple devices with private IP addresses (RFC 1918) to share one or more public IP addresses to access the internet.'
+      },
+      {
+        q: 'Which command tests basic IP connectivity from a Cisco router?',
+        a: ['trace','connect','ping','test ip'],
+        correct: 2,
+        explain: '<strong>ping</strong> sends ICMP Echo Request messages and waits for Echo Replies. "!" = success, "." = timeout. Great first step in troubleshooting connectivity.'
+      },
+      {
+        q: 'What does DNS do?',
+        a: ['Assigns IP addresses','Translates domain names to IP addresses','Routes packets between networks','Encrypts web traffic'],
+        correct: 1,
+        explain: '<strong>DNS (Domain Name System)</strong> resolves human-readable domain names (like cisco.com) into IP addresses that routers can use to forward traffic.'
+      },
+      {
+        q: 'Which TCP/IP model layer corresponds to OSI Layers 5, 6, and 7?',
+        a: ['Network Access','Internet','Transport','Application'],
+        correct: 3,
+        explain: 'The TCP/IP <strong>Application layer</strong> covers the top three OSI layers (Session, Presentation, Application). The TCP/IP model has 4 layers vs OSI\'s 7.'
+      },
+      {
+        q: 'What is the well-known port for DNS?',
+        a: ['53','67','68','69'],
+        correct: 0,
+        explain: '<strong>DNS uses port 53</strong> (both TCP and UDP). UDP for normal queries, TCP for zone transfers or large responses. Port 67/68 = DHCP, port 69 = TFTP.'
+      },
+      {
+        q: 'Which protocol is used to send log messages from network devices to a central server?',
+        a: ['SNMP','TFTP','Syslog','NTP'],
+        correct: 2,
+        explain: '<strong>Syslog</strong> sends log messages (severity 0–7) from routers/switches to a central syslog server. Use "logging host <ip>" on Cisco devices to configure it.'
+      },
+    ]
+  },
+];
+
+// ── State ────────────────────────────────────────────────────────────────────
+const state = {
+  xp: 0,
+  level: 1,
+  streak: 0,
+  topicScores: {},
+  currentTopic: null,
+  currentQuestions: [],
+  currentIndex: 0,
+  currentCorrect: 0,
+  missedQuestions: [],
+  timer: null,
+  timeLeft: 30,
+  answered: false,
+  xpThresholds: [0,100,250,450,700,1000,1400,1900,2500,3200],
+};
+
+function loadState() {
+  const s = localStorage.getItem('netquest_state');
+  if (s) {
+    const saved = JSON.parse(s);
+    Object.assign(state, saved);
+  }
+}
+
+function saveState() {
+  localStorage.setItem('netquest_state', JSON.stringify({
+    xp: state.xp,
+    level: state.level,
+    streak: state.streak,
+    topicScores: state.topicScores,
+  }));
+}
+
+// ── UI Helpers ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toast(msg, duration = 2000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+function updateHUD() {
+  document.getElementById('hud-level').textContent = state.level;
+  document.getElementById('hud-xp').textContent = state.xp;
+  document.getElementById('hud-streak').textContent = state.streak + '🔥';
+
+  const currentThreshold = state.xpThresholds[state.level - 1] || 0;
+  const nextThreshold = state.xpThresholds[state.level] || (currentThreshold + 500);
+  const progress = ((state.xp - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
+
+  document.getElementById('xp-fill').style.width = Math.min(100, Math.max(0, progress)) + '%';
+  document.getElementById('xp-label-left').textContent = 'Level ' + state.level;
+  document.getElementById('xp-label-right').textContent = state.xp + ' / ' + nextThreshold + ' XP';
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── Topic Screen ─────────────────────────────────────────────────────────────
+// ── Layer Deep-Dive Lessons ───────────────────────────────────────────────────
+const LAYER_LESSONS = {
+  7: {
+    num: 7, name: 'Application Layer', color: '#00d4ff',
+    sections: [
+      {
+        title: 'What is the Application Layer?',
+        body: `<p>The <strong>Application Layer</strong> is the topmost layer of the OSI model and the one you interact with every day — whether you realize it or not. To begin with, it's important to understand that this layer does <em>not</em> refer to the application itself (like Chrome or Outlook). Instead, it provides the <strong>interface and protocols</strong> that allow software to communicate over a network.</p>
+<p>In other words, when you type a URL into your browser, the Application Layer is what kicks the whole process off by selecting the right protocol — in this case, HTTP or HTTPS.</p>`
+      },
+      {
+        title: 'Real-World Analogy',
+        body: `<p>Think of the Application Layer as a <strong>translator at a front desk</strong>. When you walk in and say "I need to send this document," the translator knows which language and format to use before handing it down to the rest of the team. Similarly, this layer selects the correct protocol and prepares your data for transmission — before passing it down to Layer 6.</p>`
+      },
+      {
+        title: 'Key Protocols',
+        type: 'protocol_table',
+        headers: ['Protocol', 'Port', 'Purpose'],
+        rows: [
+          ['HTTP',    '80',     'Web browsing — transfers web pages (unencrypted)'],
+          ['HTTPS',   '443',    'Secure web browsing via TLS encryption'],
+          ['FTP',     '20/21',  'File transfer — control (21) and data (20)'],
+          ['SSH',     '22',     'Secure encrypted remote management of devices'],
+          ['Telnet',  '23',     'Remote management — insecure, sends cleartext'],
+          ['SMTP',    '25',     'Sends outgoing email between mail servers'],
+          ['DNS',     '53',     'Resolves domain names (cisco.com) to IP addresses'],
+          ['DHCP',    '67/68',  'Automatically assigns IP addresses to hosts'],
+          ['SNMP',    '161',    'Monitors and manages network devices remotely'],
+          ['Syslog',  '514',    'Collects log messages from network devices'],
+        ]
+      },
+      {
+        title: 'How it Works — Step by Step',
+        body: `<p>First, your application (say, a web browser) makes a request — for example, "GET the homepage of example.com." Next, the Application Layer selects HTTP as the protocol to use and formats the request accordingly.</p>
+<p>From there, it passes the formatted request down to the Presentation Layer (Layer 6), which handles any encoding or encryption. Ultimately, the data flows all the way down through each layer until it becomes raw bits transmitted over the wire.</p>
+<p>On the receiving end, the process reverses — the data travels back up through each layer until the Application Layer delivers the response to the user's browser as a rendered web page.</p>`
+      },
+      {
+        title: 'CCNA Exam Tip',
+        type: 'tip',
+        body: 'The Application Layer <strong>does not</strong> include user applications like Firefox or Outlook. It includes the <strong>protocols</strong> those apps use. On the exam, focus on memorizing port numbers for HTTP (80), HTTPS (443), FTP (20/21), SSH (22), Telnet (23), DNS (53), and DHCP (67/68). These appear frequently in both multiple-choice and simulation questions.'
+      },
+    ]
+  },
+  6: {
+    num: 6, name: 'Presentation Layer', color: '#00bcd4',
+    sections: [
+      {
+        title: 'What is the Presentation Layer?',
+        body: `<p>The <strong>Presentation Layer</strong> acts as a <strong>data translator</strong> between the network and the application. To put it simply, it ensures that data sent by one system can be read and understood by another — regardless of differences in how each system stores or encodes data internally.</p>
+<p>Additionally, this layer is responsible for three key functions: <strong>data formatting</strong>, <strong>encryption/decryption</strong>, and <strong>compression/decompression</strong>.</p>`
+      },
+      {
+        title: 'Real-World Analogy',
+        body: `<p>Imagine you write a letter in English, but the recipient only reads Spanish. Before you send it, a translator converts it into the right language. In the same way, the Presentation Layer converts data into a common format both systems can understand. Furthermore, if you seal the letter in an envelope so no one can read it in transit, that's the equivalent of <strong>encryption</strong> at this layer.</p>`
+      },
+      {
+        title: 'Three Core Functions',
+        type: 'table',
+        headers: ['Function', 'What it does', 'Example'],
+        rows: [
+          ['Data Formatting', 'Converts data into a common format', 'ASCII, Unicode, EBCDIC, JPEG, MP4'],
+          ['Encryption / Decryption', 'Protects data confidentiality', 'SSL/TLS (used by HTTPS)'],
+          ['Compression / Decompression', 'Reduces data size for efficient transfer', 'ZIP, GZIP, JPEG compression'],
+        ]
+      },
+      {
+        title: 'SSL and TLS — The Big Names',
+        body: `<p>The most well-known Presentation Layer technology is <strong>TLS (Transport Layer Security)</strong> — and its predecessor, SSL. When you see HTTPS in a browser URL, TLS is what's happening at this layer. First, TLS negotiates an encryption algorithm between the client and server. Then, it encrypts all data before it's passed down to the Transport Layer, ensuring nobody can read your passwords or credit card numbers in transit.</p>
+<p>It's worth noting that while TLS is often said to operate at Layer 6, it technically spans Layers 4–6 depending on the implementation. For CCNA purposes, associate TLS/SSL with the Presentation Layer.</p>`
+      },
+      {
+        title: 'Common Data Formats at Layer 6',
+        type: 'table',
+        headers: ['Format', 'Type', 'Used For'],
+        rows: [
+          ['ASCII / Unicode', 'Text encoding', 'Representing characters as numbers'],
+          ['JPEG / PNG / GIF', 'Image compression', 'Compressed image formats'],
+          ['MP3 / MP4', 'Audio/Video', 'Compressed media formats'],
+          ['SSL / TLS', 'Encryption', 'Securing HTTPS, email, VPNs'],
+          ['GZIP / ZIP', 'Compression', 'Reducing file sizes for transfer'],
+        ]
+      },
+      {
+        title: 'CCNA Exam Tip',
+        type: 'tip',
+        body: 'The Presentation Layer is the <strong>least tested</strong> OSI layer on the CCNA exam, but you should still know its three functions: <strong>formatting, encryption, and compression</strong>. If a question mentions SSL, TLS, or data encoding — think Layer 6. Also remember that encryption can occur at multiple layers (Layer 2 with MACsec, Layer 3 with IPsec) — but for the OSI model, encryption is associated with Layer 6.'
+      },
+    ]
+  },
+  5: {
+    num: 5, name: 'Session Layer', color: '#0099cc',
+    sections: [
+      {
+        title: 'What is the Session Layer?',
+        body: `<p>The <strong>Session Layer</strong> is responsible for <strong>establishing, managing, and terminating communication sessions</strong> between two devices. To clarify, a "session" is a persistent connection between two applications — like a login session on a website or a video call.</p>
+<p>In essence, this layer acts as a <strong>traffic controller</strong> that keeps different application conversations organized and separated so they don't get mixed up with each other.</p>`
+      },
+      {
+        title: 'Real-World Analogy',
+        body: `<p>Consider a phone call. First, you dial and wait for the other person to pick up — that's session establishment. Then, you have your conversation with turn-taking — that's session management. Finally, you both say goodbye and hang up — that's session termination. The Session Layer handles the same three phases for network communications.</p>`
+      },
+      {
+        title: 'Three Session Functions',
+        type: 'table',
+        headers: ['Phase', 'What Happens', 'Example'],
+        rows: [
+          ['Establishment', 'Create and authenticate the session', 'Logging into a remote server via SSH'],
+          ['Maintenance', 'Keep the session alive, manage dialog', 'Sending/receiving data, handling checkpoints'],
+          ['Termination', 'Gracefully close the session', 'Logging out, closing a connection'],
+        ]
+      },
+      {
+        title: 'Dialog Control',
+        body: `<p>Beyond managing the session lifecycle, the Session Layer also controls <strong>how data flows</strong> between the two parties through a concept called <em>dialog control</em>. There are three modes:</p>
+<p><strong>Simplex</strong> — One direction only (like a broadcast radio). <br>
+<strong>Half-Duplex</strong> — Both directions, but only one at a time (like a walkie-talkie). <br>
+<strong>Full-Duplex</strong> — Both directions simultaneously (like a phone call). Most modern network communications use full-duplex.</p>`
+      },
+      {
+        title: 'Protocols and Technologies',
+        type: 'table',
+        headers: ['Technology', 'Purpose'],
+        rows: [
+          ['NetBIOS', 'Windows session layer for file/printer sharing'],
+          ['RPC (Remote Procedure Call)', 'Allows programs to run code on a remote server'],
+          ['SQL sessions', 'Manages database query connections'],
+          ['NFS (Network File System)', 'Manages file-sharing sessions between systems'],
+          ['PPTP', 'VPN protocol that establishes tunnel sessions'],
+        ]
+      },
+      {
+        title: 'CCNA Exam Tip',
+        type: 'tip',
+        body: 'The Session Layer is tested lightly, but you should know it handles <strong>session setup, maintenance, and teardown</strong>. More importantly, understand the difference between it and the Transport Layer: <strong>Transport (Layer 4)</strong> handles reliability and segmentation, while <strong>Session (Layer 5)</strong> handles the conversation itself — who talks when, and for how long.'
+      },
+    ]
+  },
+  4: {
+    num: 4, name: 'Transport Layer', color: '#00ff88',
+    sections: [
+      {
+        title: 'What is the Transport Layer?',
+        body: `<p>The <strong>Transport Layer</strong> is one of the most important layers for the CCNA exam. To start, it is responsible for <strong>end-to-end communication</strong> between two hosts — ensuring data gets from the source application to the destination application reliably (or quickly, depending on the protocol chosen).</p>
+<p>Furthermore, the Transport Layer uses <strong>port numbers</strong> to identify which application the data belongs to, since multiple apps can be communicating at the same time on one device.</p>`
+      },
+      {
+        title: 'TCP vs UDP',
+        type: 'table',
+        headers: ['Feature', 'TCP', 'UDP'],
+        rows: [
+          ['Full Name', 'Transmission Control Protocol', 'User Datagram Protocol'],
+          ['Connection', 'Connection-oriented (3-way handshake)', 'Connectionless — just sends'],
+          ['Reliability', 'Guaranteed delivery with ACKs', 'Best-effort, no guarantee'],
+          ['Error checking', 'Yes — retransmits lost data', 'Checksum only, no retransmit'],
+          ['Speed', 'Slower due to overhead', 'Faster — less overhead'],
+          ['PDU name', 'Segment', 'Datagram'],
+          ['Use when…', 'Accuracy matters', 'Speed matters'],
+          ['Examples', 'HTTP, SSH, FTP, email', 'DNS, DHCP, streaming, VoIP'],
+        ]
+      },
+      {
+        title: 'The TCP 3-Way Handshake',
+        body: `<p>Before TCP can transfer any data, it first establishes a connection through a <strong>3-way handshake</strong>:</p>
+<p><strong>Step 1 — SYN:</strong> The client sends a SYN (synchronize) packet to the server, saying "I want to connect."</p>
+<p><strong>Step 2 — SYN-ACK:</strong> The server replies with a SYN-ACK (synchronize-acknowledge), saying "I got your request and I'm ready."</p>
+<p><strong>Step 3 — ACK:</strong> Finally, the client sends an ACK (acknowledge), confirming "Great, let's start." At this point, data transfer begins.</p>
+<p>To close the connection, a <strong>4-way FIN/ACK sequence</strong> is used — both sides must agree to terminate.</p>`
+      },
+      {
+        title: 'Port Numbers',
+        body: `<p>Port numbers allow a single device to run multiple network services simultaneously. Think of an IP address as a <strong>building's street address</strong> and a port number as a specific <strong>apartment number</strong> within that building.</p>
+<p>Port ranges are divided into three groups:</p>`,
+        type: 'body_then_table',
+        headers: ['Range', 'Name', 'Examples'],
+        rows: [
+          ['0 – 1023', 'Well-Known Ports', 'HTTP (80), HTTPS (443), SSH (22), DNS (53)'],
+          ['1024 – 49151', 'Registered Ports', 'MySQL (3306), RDP (3389), HTTPS alt (8443)'],
+          ['49152 – 65535', 'Dynamic / Ephemeral', 'Randomly assigned by OS for outbound connections'],
+        ]
+      },
+      {
+        title: 'Flow Control and Windowing',
+        body: `<p>TCP also manages <strong>flow control</strong> using a technique called <em>windowing</em>. In short, the receiver tells the sender how much data it can handle at once (the "window size"). As a result, the sender won't overwhelm the receiver by sending too much too fast.</p>
+<p>Additionally, TCP uses <strong>sequence numbers</strong> to reassemble segments in the correct order at the destination — even if they arrive out of order through the network.</p>`
+      },
+      {
+        title: 'CCNA Exam Tip',
+        type: 'tip',
+        body: 'TCP and UDP are heavily tested. Key facts to memorize:<br><br><strong>TCP</strong> = reliable, connection-oriented, uses 3-way handshake (SYN/SYN-ACK/ACK)<br><strong>UDP</strong> = fast, connectionless, no guarantee of delivery<br><br>Also know that <strong>both TCP and UDP operate at Layer 4</strong>, and that the PDU at Layer 4 is called a <strong>Segment</strong> (TCP) or <strong>Datagram</strong> (UDP).'
+      },
+    ]
+  },
+  3: {
+    num: 3, name: 'Network Layer', color: '#ff9900',
+    sections: [
+      {
+        title: 'What is the Network Layer?',
+        body: `<p>The <strong>Network Layer</strong> is responsible for <strong>logical addressing and routing</strong> — the process of moving packets from one network to another across an internetwork. In contrast to Layer 2 (which only moves frames within a single network), Layer 3 enables communication between networks that may be geographically far apart.</p>
+<p>The primary protocol at this layer is <strong>IP (Internet Protocol)</strong>, which assigns logical addresses (IP addresses) to each device so routers can determine where to forward packets.</p>`
+      },
+      {
+        title: 'Real-World Analogy',
+        body: `<p>Think of the Network Layer as the <strong>postal system's routing infrastructure</strong>. First, each location has a unique address (an IP address). Then, when you send a package, it passes through several postal hubs (routers), each one reading the destination address and deciding which direction to send it next. Finally, it arrives at the destination network, where Layer 2 takes over to deliver it to the specific device.</p>`
+      },
+      {
+        title: 'IP Addressing',
+        body: `<p>Every device on a network needs a <strong>unique IP address</strong>. An IPv4 address is 32 bits long, written as four octets separated by dots — for example, <strong>192.168.1.10</strong>.</p>
+<p>The address has two parts: the <strong>network portion</strong> (identifies which network) and the <strong>host portion</strong> (identifies the specific device). A <strong>subnet mask</strong> defines where one ends and the other begins. For instance, 192.168.1.10 with mask /24 (255.255.255.0) means the network is 192.168.1.0 and the host is .10.</p>`
+      },
+      {
+        title: 'Key Layer 3 Protocols',
+        type: 'l3protocol_table',
+        headers: ['Protocol', 'Purpose'],
+        rows: [
+          ['IPv4',  'Core addressing and packet delivery (32-bit addresses)'],
+          ['IPv6',  'Next-gen addressing with 128-bit addresses (virtually unlimited)'],
+          ['ICMP',  'Error messages and diagnostics — used by ping and traceroute'],
+          ['OSPF',  'Link-state routing protocol — builds a map of the entire network'],
+          ['EIGRP', 'Cisco hybrid routing protocol — uses bandwidth + delay as metric'],
+          ['RIP',   'Distance-vector protocol — simple but limited to 15 hops'],
+          ['BGP',   'Routes traffic between autonomous systems on the internet'],
+        ]
+      },
+      {
+        title: 'How Routers Forward Packets',
+        body: `<p>When a packet arrives, the router performs these steps:</p>
+<p><strong>First</strong>, it strips the Layer 2 frame to extract the IP packet inside. <strong>Next</strong>, it reads the destination IP address. <strong>Then</strong>, it looks up the destination in its <strong>routing table</strong> to find the best matching route. <strong>After that</strong>, it encapsulates the packet in a new Layer 2 frame addressed to the next hop. <strong>Finally</strong>, it forwards the frame out the correct interface toward the destination.</p>
+<p>This process repeats at every router along the path until the packet reaches its destination network.</p>`
+      },
+      {
+        title: 'CCNA Exam Tip',
+        type: 'tip',
+        body: 'The Network Layer is <strong>heavily tested</strong>. Know these cold:<br><br>• Routers operate at <strong>Layer 3</strong><br>• IP addressing and subnetting are Layer 3 concepts<br>• ICMP is Layer 3 (ping uses ICMP Echo Request/Reply)<br>• The PDU at Layer 3 is a <strong>Packet</strong><br>• Routing protocols (OSPF, EIGRP, RIP) operate at Layer 3<br>• "<strong>show ip route</strong>" displays the Layer 3 routing table'
+      },
+    ]
+  },
+  2: {
+    num: 2, name: 'Data Link Layer', color: '#cc66ff',
+    sections: [
+      {
+        title: 'What is the Data Link Layer?',
+        body: `<p>The <strong>Data Link Layer</strong> handles communication between devices on the <strong>same local network</strong>. While Layer 3 uses IP addresses to route packets between networks, Layer 2 uses <strong>MAC addresses</strong> to deliver frames to the right device within a network segment.</p>
+<p>Additionally, this layer is responsible for detecting and correcting errors that may occur in the Physical Layer — ensuring that the bits received are the same as the bits that were sent.</p>`
+      },
+      {
+        title: 'Two Sub-layers',
+        body: `<p>The Data Link Layer is divided into two sub-layers:</p>
+<p><strong>LLC (Logical Link Control)</strong> — The upper sub-layer. It communicates with the Network Layer above and identifies which Layer 3 protocol is being carried (e.g., IPv4 or IPv6).</p>
+<p><strong>MAC (Media Access Control)</strong> — The lower sub-layer. It handles physical addressing (MAC addresses), frame delimiting, and media access control (how devices share the wire).</p>`
+      },
+      {
+        title: 'MAC Addresses',
+        body: `<p>A <strong>MAC address</strong> is a 48-bit hardware address burned into every network interface card (NIC) at the factory. It's written as six pairs of hexadecimal digits — for example, <strong>00:1A:2B:3C:4D:5E</strong>.</p>
+<p>The first three pairs identify the <strong>manufacturer (OUI)</strong>, while the last three pairs are a <strong>unique serial number</strong>. For instance, a MAC beginning with 00:1A:2B belongs to a specific vendor.</p>
+<p>When a switch receives a frame, it reads the <strong>source MAC</strong> and adds it to its MAC address table, mapping it to the incoming port. Subsequently, when it needs to forward a frame, it looks up the <strong>destination MAC</strong> in that table.</p>`
+      },
+      {
+        title: 'Ethernet Frame Structure',
+        type: 'table',
+        headers: ['Field', 'Size', 'Purpose'],
+        rows: [
+          ['Preamble', '7 bytes', 'Synchronizes receiver clocking'],
+          ['SFD (Start Frame Delimiter)', '1 byte', 'Marks the start of the frame'],
+          ['Destination MAC', '6 bytes', 'MAC address of the recipient'],
+          ['Source MAC', '6 bytes', 'MAC address of the sender'],
+          ['EtherType / Length', '2 bytes', 'Identifies Layer 3 protocol (e.g., 0x0800 = IPv4)'],
+          ['Data / Payload', '46–1500 bytes', 'The actual data being carried'],
+          ['FCS (Frame Check Sequence)', '4 bytes', 'CRC error detection'],
+        ]
+      },
+      {
+        title: 'Switches vs Hubs',
+        body: `<p>To understand Layer 2, it helps to contrast switches and hubs. A <strong>hub</strong> (Layer 1 device) simply broadcasts every frame out all ports — it has no intelligence. By contrast, a <strong>switch</strong> (Layer 2 device) learns MAC addresses and forwards frames only to the correct port. As a result, switches dramatically reduce unnecessary traffic and improve network performance.</p>
+<p>Furthermore, switches create separate <strong>collision domains</strong> per port, while a hub creates one shared collision domain for all devices.</p>`
+      },
+      {
+        title: 'CCNA Exam Tip',
+        type: 'tip',
+        body: 'Layer 2 is tested heavily in the switching and VLAN sections. Key facts:<br><br>• The PDU at Layer 2 is a <strong>Frame</strong><br>• Switches use <strong>MAC addresses</strong>, routers use <strong>IP addresses</strong><br>• <strong>ARP</strong> resolves IP addresses to MAC addresses (bridges Layer 3 and Layer 2)<br>• <strong>802.1Q</strong> is the VLAN tagging standard at Layer 2<br>• STP prevents Layer 2 loops'
+      },
+    ]
+  },
+  1: {
+    num: 1, name: 'Physical Layer', color: '#ff4466',
+    sections: [
+      {
+        title: 'What is the Physical Layer?',
+        body: `<p>The <strong>Physical Layer</strong> is the foundation of the OSI model — it deals with the actual, tangible transmission of raw <strong>binary bits (0s and 1s)</strong> across a physical medium. To put it plainly, this layer is concerned with cables, connectors, voltages, and radio waves — not with the meaning of the data being transmitted.</p>
+<p>In other words, if Layer 2 decides <em>what</em> to send and <em>where</em> to send it, Layer 1 is responsible for <em>how</em> it physically gets there.</p>`
+      },
+      {
+        title: 'Physical Media Types',
+        type: 'table',
+        headers: ['Medium', 'Type', 'Max Speed', 'Max Distance', 'Notes'],
+        rows: [
+          ['Cat5e UTP', 'Copper cable', '1 Gbps', '100m', 'Common for LAN connections'],
+          ['Cat6 UTP', 'Copper cable', '10 Gbps', '55m (10G) / 100m (1G)', 'Better performance than Cat5e'],
+          ['Cat6a UTP', 'Copper cable', '10 Gbps', '100m', 'Augmented Cat6'],
+          ['Single-Mode Fiber', 'Fiber optic', '100 Gbps+', 'Up to 100km', 'Long-distance, laser light source'],
+          ['Multi-Mode Fiber', 'Fiber optic', '10–100 Gbps', 'Up to 2km', 'Shorter distances, LED light source'],
+          ['Wi-Fi (802.11ac)', 'Wireless', 'Up to 3.5 Gbps', '~50m indoors', 'Half-duplex shared medium'],
+        ]
+      },
+      {
+        title: 'Signaling and Encoding',
+        body: `<p>At the Physical Layer, digital data (bits) must be converted into <strong>signals</strong> that can travel across the chosen medium. The method of conversion is called <strong>encoding</strong>.</p>
+<p>For copper cables, data is represented as <strong>electrical voltage changes</strong>. For fiber optic cables, data is carried as <strong>pulses of light</strong>. For wireless, data is encoded in <strong>radio frequency (RF) waves</strong>.</p>
+<p>Furthermore, the Physical Layer defines other important characteristics such as <strong>bit rate</strong> (how many bits per second), <strong>synchronization</strong> (keeping sender and receiver in sync), and <strong>topology</strong> (the physical arrangement of devices — bus, star, ring, mesh).</p>`
+      },
+      {
+        title: 'Physical Layer Devices',
+        type: 'table',
+        headers: ['Device', 'Function'],
+        rows: [
+          ['Hub', 'Repeats signal to all ports — no intelligence, creates one collision domain'],
+          ['Repeater', 'Regenerates and amplifies weak signals for longer cable runs'],
+          ['Modem', 'Modulates/demodulates signals between digital and analog'],
+          ['Transceiver (SFP)', 'Converts electrical signals to optical (and back) for fiber connections'],
+          ['Cable (UTP/fiber)', 'The physical medium itself that carries the signals'],
+        ]
+      },
+      {
+        title: 'Common Connector Types',
+        body: `<p>Physical Layer knowledge also includes <strong>connector types</strong>:</p>
+<p><strong>RJ-45</strong> — The standard 8-pin connector used with UTP Ethernet cables. You'll see this on the back of every PC, switch, and router.<br>
+<strong>SFP / SFP+</strong> — Small Form-factor Pluggable transceivers used in switches and routers for fiber or high-speed copper connections.<br>
+<strong>LC / SC</strong> — Fiber optic connectors. LC (Lucent Connector) is small and popular in data centers; SC (Subscriber Connector) is square-shaped and older.<br>
+<strong>DB-9 / DB-25</strong> — Serial connectors used on older console/rollover cables.</p>`
+      },
+      {
+        title: 'Straight-Through vs Crossover Cables',
+        body: `<p>UTP cables come in two wiring configurations:</p>
+<p><strong>Straight-through</strong> — Pins are wired identically on both ends. Used to connect <em>unlike</em> devices: PC to switch, router to switch. This is the most common cable type.</p>
+<p><strong>Crossover</strong> — Transmit and receive pairs are swapped. Traditionally used to connect <em>like</em> devices: switch to switch, PC to PC. However, most modern devices support <strong>Auto-MDIX</strong>, which automatically detects and adjusts — making crossover cables rarely needed today.</p>`
+      },
+      {
+        title: 'CCNA Exam Tip',
+        type: 'tip',
+        body: 'Layer 1 questions are common in the physical installation and troubleshooting sections. Key facts:<br><br>• The PDU at Layer 1 is a <strong>Bit</strong><br>• UTP cable max length = <strong>100 meters</strong><br>• Fiber optic is immune to <strong>EMI (electromagnetic interference)</strong><br>• Hubs operate at Layer 1; switches operate at Layer 2<br>• <strong>Auto-MDIX</strong> eliminates the need for crossover cables on modern equipment'
+      },
+    ]
+  },
+};
+
+function renderLayerLesson(layerNum) {
+  const lesson = LAYER_LESSONS[layerNum];
+  document.getElementById('layer-detail-title').textContent = 'Layer ' + lesson.num;
+  const container = document.getElementById('layer-detail-content');
+  container.innerHTML = '';
+
+  // Layer banner
+  const banner = document.createElement('div');
+  banner.style.cssText = `background:${lesson.color}18;border:1px solid ${lesson.color}44;border-left:4px solid ${lesson.color};border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:4px;`;
+  banner.innerHTML = `<div style="width:44px;height:44px;border-radius:50%;background:${lesson.color};color:#000;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;flex-shrink:0">${lesson.num}</div>
+    <div><div style="font-size:1.15rem;font-weight:700;color:${lesson.color}">${lesson.name}</div>
+    <div style="font-size:0.8rem;color:var(--muted)">OSI Layer ${lesson.num}</div></div>`;
+  container.appendChild(banner);
+
+  for (const section of lesson.sections) {
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+
+    if (section.type === 'l3protocol_table') {
+      const rows = section.rows.map(r =>
+        `<tr><td><a class="proto-link review-link" data-l3proto="${r[0]}" style="cursor:pointer">${r[0]}</a></td>${r.slice(1).map(c=>`<td>${c}</td>`).join('')}</tr>`
+      ).join('');
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">Tap a protocol to learn more →</div>
+        <table class="lesson-table">
+          <thead><tr>${section.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      card.querySelectorAll('[data-l3proto]').forEach(link => {
+        link.addEventListener('click', () => renderL3ProtocolLesson(link.dataset.l3proto));
+      });
+    } else if (section.type === 'protocol_table') {
+      const rows = section.rows.map(r =>
+        `<tr><td><a class="proto-link review-link" data-proto="${r[0]}" style="cursor:pointer">${r[0]}</a></td>${r.slice(1).map(c=>`<td>${c}</td>`).join('')}</tr>`
+      ).join('');
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">Tap a protocol to learn more →</div>
+        <table class="lesson-table">
+          <thead><tr>${section.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      card.querySelectorAll('.proto-link').forEach(link => {
+        link.addEventListener('click', () => renderProtocolLesson(link.dataset.proto));
+      });
+    } else if (section.type === 'subnet_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div class="lesson-body">${section.body}</div>
+        <div id="subnet-anim-root"></div>`;
+      container.appendChild(card);
+      buildSubnetAnim(document.getElementById('subnet-anim-root'));
+      continue;
+    } else if (section.type === 'table') {
+      const rows = section.rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <table class="lesson-table">
+          <thead><tr>${section.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    } else if (section.type === 'tip') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div class="lesson-tip">💡 ${section.body}</div>`;
+    } else if (section.type === 'body_then_table') {
+      const rows = section.rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div class="lesson-body">${section.body}</div>
+        <table class="lesson-table" style="margin-top:10px">
+          <thead><tr>${section.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    } else {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div class="lesson-body">${section.body}</div>`;
+    }
+    container.appendChild(card);
+  }
+
+  showScreen('screen-layer');
+  window.scrollTo(0, 0);
+}
+
+// ── Subnet Animation ─────────────────────────────────────────────────────────
+function buildSubnetAnim(root) {
+  const IP   = [192, 168, 1, 130];
+  const MASK = [255, 255, 255, 128];
+  const RESULT = IP.map((b, i) => b & MASK[i]);
+  const PREFIX = 25;
+
+  function toBits(n) {
+    return Array.from({length:8}, (_, i) => (n >> (7 - i)) & 1);
+  }
+
+  // Colors for each octet
+  const octColors = ['#00d4ff','#7b4fff','#ff6ec7','#ff9900'];
+  const maskColor  = '#ffcc00';
+  const netColor   = '#00ff88';
+  const hostColor  = '#444466';
+
+  function bitColor(globalIdx, row) {
+    if (row === 'ip')   return octColors[Math.floor(globalIdx / 8)];
+    if (row === 'mask') return globalIdx < PREFIX ? maskColor : '#555';
+    if (row === 'res')  return globalIdx < PREFIX ? netColor : hostColor;
+    return '#888';
+  }
+
+  function renderBitRow(values, rowId, rowLabel) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="sa-row-label">${rowLabel}</div>`;
+    const bits = document.createElement('div');
+    bits.className = 'sa-bits';
+    bits.id = rowId;
+    values.forEach((oct, oi) => {
+      if (oi > 0) {
+        const dot = document.createElement('div');
+        dot.className = 'sa-dot';
+        dot.textContent = '·';
+        bits.appendChild(dot);
+      }
+      const g = document.createElement('div');
+      g.className = 'sa-octet';
+      toBits(oct).forEach((b, bi) => {
+        const span = document.createElement('div');
+        const gIdx = oi * 8 + bi;
+        span.className = 'sa-bit';
+        span.textContent = b;
+        span.style.background = bitColor(gIdx, rowId) + '33';
+        span.style.border = '1px solid ' + bitColor(gIdx, rowId) + '66';
+        span.style.color = bitColor(gIdx, rowId);
+        span.dataset.final = bitColor(gIdx, rowId);
+        g.appendChild(span);
+      });
+      bits.appendChild(g);
+    });
+    wrap.appendChild(bits);
+    return wrap;
+  }
+
+  function renderDecRow(values, colors) {
+    const d = document.createElement('div');
+    d.className = 'sa-decimal-row';
+    values.forEach((v, i) => {
+      if (i > 0) { const dot = document.createElement('div'); dot.className = 'sa-dec-dot'; dot.textContent = '.'; d.appendChild(dot); }
+      const sp = document.createElement('div');
+      sp.className = 'sa-dec-val';
+      sp.style.background = (colors[i] || '#888') + '22';
+      sp.style.color = colors[i] || '#888';
+      sp.style.border = '1px solid ' + (colors[i] || '#888') + '55';
+      sp.style.minWidth = '36px';
+      sp.textContent = v;
+      d.appendChild(sp);
+    });
+    return d;
+  }
+
+  // Build DOM
+  const wrap = document.createElement('div');
+  wrap.className = 'subnet-anim';
+
+  // Legend
+  const legend = document.createElement('div');
+  legend.className = 'sa-legend';
+  legend.innerHTML = `
+    <div class="sa-legend-item"><div class="sa-legend-dot" style="background:#00ff8888;border:1px solid #00ff88"></div>Network bits (1–${PREFIX})</div>
+    <div class="sa-legend-item"><div class="sa-legend-dot" style="background:#44446688;border:1px solid #666"></div>Host bits (${PREFIX+1}–32)</div>`;
+  wrap.appendChild(legend);
+
+  // IP row
+  const ipRow = renderBitRow(IP, 'ip', '📘 IP Address — 192.168.1.130');
+  wrap.appendChild(ipRow);
+  wrap.appendChild(renderDecRow(IP, octColors));
+
+  // Operator
+  const op = document.createElement('div');
+  op.className = 'sa-operator';
+  op.textContent = '⊕  AND  (&)';
+  wrap.appendChild(op);
+
+  // Mask row
+  const maskRow = renderBitRow(MASK, 'mask', '🟡 Subnet Mask — 255.255.255.128  (/25)');
+  wrap.appendChild(maskRow);
+  wrap.appendChild(renderDecRow(MASK, [maskColor, maskColor, maskColor, maskColor]));
+
+  // Divider
+  const div = document.createElement('div');
+  div.className = 'sa-divider';
+  wrap.appendChild(div);
+
+  // Result row
+  const resRow = renderBitRow(RESULT, 'res', '✅ Network Address — Result');
+  wrap.appendChild(resRow);
+  wrap.appendChild(renderDecRow(RESULT, [netColor, netColor, netColor, netColor]));
+
+  // Final label
+  const lbl = document.createElement('div');
+  lbl.className = 'sa-result-label';
+  lbl.innerHTML = '🌐 Network Address: <strong>192.168.1.128</strong> &nbsp;·&nbsp; Broadcast: <strong>192.168.1.255</strong> &nbsp;·&nbsp; Hosts: <strong>.129 – .254</strong>';
+  wrap.appendChild(lbl);
+
+  // Replay button
+  const replay = document.createElement('button');
+  replay.className = 'sa-replay';
+  replay.textContent = '▶ Replay Animation';
+  wrap.appendChild(replay);
+
+  root.appendChild(wrap);
+
+  function runAnim() {
+    // Reset all
+    wrap.querySelectorAll('.sa-bit, .sa-dec-val').forEach(el => {
+      el.classList.remove('visible', 'pop');
+      el.style.background = el.dataset.final ? el.dataset.final + '33' : '';
+    });
+    op.classList.remove('visible');
+    div.classList.remove('visible');
+    lbl.classList.remove('visible');
+    wrap.querySelectorAll('.sa-dec-val').forEach(el => el.classList.remove('visible'));
+
+    // Phase 1: IP bits appear (0–400ms)
+    wrap.querySelectorAll('#ip .sa-bit').forEach((bit, i) => {
+      setTimeout(() => { bit.classList.add('visible', 'pop'); }, i * 18);
+    });
+    // IP decimals
+    wrap.querySelectorAll('.sa-decimal-row')[0]?.querySelectorAll('.sa-dec-val').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), 150 + i * 60);
+    });
+
+    // Phase 2: AND operator (450ms)
+    setTimeout(() => op.classList.add('visible'), 500);
+
+    // Phase 3: Mask bits (550–950ms)
+    wrap.querySelectorAll('#mask .sa-bit').forEach((bit, i) => {
+      setTimeout(() => { bit.classList.add('visible', 'pop'); }, 600 + i * 18);
+    });
+    wrap.querySelectorAll('.sa-decimal-row')[1]?.querySelectorAll('.sa-dec-val').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), 750 + i * 60);
+    });
+
+    // Phase 4: Divider (1000ms)
+    setTimeout(() => div.classList.add('visible'), 1050);
+
+    // Phase 5: Result bits light up one by one with color burst (1100–1700ms)
+    const resBits = wrap.querySelectorAll('#res .sa-bit');
+    resBits.forEach((bit, i) => {
+      setTimeout(() => {
+        bit.classList.add('visible', 'pop');
+        // Network bits get full bright color
+        if (i < PREFIX) {
+          bit.style.background = netColor + 'aa';
+          bit.style.border = '1px solid ' + netColor;
+          bit.style.color = '#000';
+          bit.style.fontWeight = '900';
+        }
+      }, 1150 + i * 22);
+    });
+    wrap.querySelectorAll('.sa-decimal-row')[2]?.querySelectorAll('.sa-dec-val').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), 1350 + i * 70);
+    });
+
+    // Phase 6: Final label (1850ms)
+    setTimeout(() => lbl.classList.add('visible'), 1900);
+  }
+
+  replay.addEventListener('click', runAnim);
+  // Auto-play after short delay on first render
+  setTimeout(runAnim, 300);
+}
+
+// ── Layer 3 Protocol Deep-Dive Lessons ───────────────────────────────────────
+const L3_PROTOCOL_LESSONS = {
+  IPv4: {
+    name:'IPv4', fullName:'Internet Protocol version 4', color:'#ff9900',
+    sections:[
+      { title:'What is IPv4?', body:`<p><strong>IPv4 (Internet Protocol version 4)</strong> is the core protocol that makes the internet work. To start, every device on a network needs a unique identifier — and IPv4 provides that through <strong>32-bit IP addresses</strong>. It is responsible for addressing packets and routing them across interconnected networks from source to destination.</p><p>Furthermore, IPv4 is a <strong>connectionless, best-effort</strong> protocol — it does not guarantee delivery or order. Instead, those responsibilities fall to the Transport Layer (TCP). Despite being over 40 years old, IPv4 remains the dominant protocol in use today.</p>` },
+      { title:'IPv4 Address Structure', body:`<p>An IPv4 address is <strong>32 bits</strong> long, written as four decimal octets separated by dots. Each octet represents 8 bits, giving a value from 0–255.</p>`,
+        type:'visual', html:`
+<div style="margin:12px 0;">
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">Example: 192.168.1.10 / 24</div>
+  <div class="pkt-header">
+    <div style="flex:1"><div class="pkt-field" style="background:#ff9900">192</div><div class="pkt-label">Network</div></div>
+    <div style="flex:1"><div class="pkt-field" style="background:#ff9900">168</div><div class="pkt-label">Network</div></div>
+    <div style="flex:1"><div class="pkt-field" style="background:#ff9900">1</div><div class="pkt-label">Network</div></div>
+    <div style="flex:1"><div class="pkt-field" style="background:#00d4ff">10</div><div class="pkt-label">Host</div></div>
+  </div>
+  <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">Orange = network portion (defined by /24 mask) &nbsp;·&nbsp; Blue = host portion</div>
+</div>` },
+      { title:'IPv4 Packet Header Fields', body:`<p>Every IPv4 packet carries a header that routers read to make forwarding decisions. The key fields are:</p>`,
+        type:'visual', html:`
+<div class="pkt-header" style="margin:10px 0;">
+  <div style="flex:0 0 calc(25% - 3px)"><div class="pkt-field" style="background:#ff9900;font-size:0.65rem">Version (4)</div></div>
+  <div style="flex:0 0 calc(25% - 3px)"><div class="pkt-field" style="background:#ffcc00;font-size:0.65rem">IHL</div></div>
+  <div style="flex:0 0 calc(50% - 3px)"><div class="pkt-field" style="background:#f0a050;font-size:0.65rem">DSCP / ECN</div></div>
+  <div style="flex:0 0 100%"><div class="pkt-field" style="background:#e08040;font-size:0.65rem">Total Length (up to 65,535 bytes)</div></div>
+  <div style="flex:0 0 calc(40% - 3px)"><div class="pkt-field" style="background:#cc6600;font-size:0.65rem">Identification</div></div>
+  <div style="flex:0 0 calc(20% - 3px)"><div class="pkt-field" style="background:#aa4400;font-size:0.65rem">Flags</div></div>
+  <div style="flex:0 0 calc(40% - 3px)"><div class="pkt-field" style="background:#cc6600;font-size:0.65rem">Fragment Offset</div></div>
+  <div style="flex:0 0 calc(25% - 3px)"><div class="pkt-field" style="background:#ff6600;font-size:0.65rem">TTL</div></div>
+  <div style="flex:0 0 calc(25% - 3px)"><div class="pkt-field" style="background:#ff9933;font-size:0.65rem">Protocol</div></div>
+  <div style="flex:0 0 calc(50% - 3px)"><div class="pkt-field" style="background:#ffaa44;font-size:0.65rem">Header Checksum</div></div>
+  <div style="flex:0 0 100%"><div class="pkt-field" style="background:#00aaff;font-size:0.65rem">Source IP Address (32 bits)</div></div>
+  <div style="flex:0 0 100%"><div class="pkt-field" style="background:#0088cc;font-size:0.65rem">Destination IP Address (32 bits)</div></div>
+  <div style="flex:0 0 100%"><div class="pkt-field" style="background:#888;font-size:0.65rem">Data (Payload)</div></div>
+</div>` },
+      { title:'Critical Header Fields Explained', type:'table', headers:['Field','Size','Purpose'],
+        rows:[['Version','4 bits','Always "4" for IPv4'],['TTL (Time to Live)','8 bits','Decremented by 1 at each router. Packet dropped at 0 — prevents infinite loops'],['Protocol','8 bits','Identifies Layer 4 payload: 6=TCP, 17=UDP, 1=ICMP'],['Source IP','32 bits','IP of the sending device'],['Destination IP','32 bits','IP of the intended recipient'],['Flags','3 bits','Controls fragmentation: DF (Don\'t Fragment), MF (More Fragments)']] },
+      { title:'How a Packet Travels the Network', body:`<p>To illustrate how IPv4 works end-to-end, consider a packet traveling from PC A (192.168.1.10) to a web server (8.8.8.8):</p>`,
+        type:'visual', html:`
+<div class="flow-diagram" style="flex-direction:column;align-items:stretch;gap:8px;margin:10px 0;">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="flow-node" style="background:rgba(0,212,255,0.1);border-color:#00d4ff;flex:1">💻 PC A<br><span style="font-weight:400;font-size:0.7rem">192.168.1.10</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" style="background:rgba(255,153,0,0.1);border-color:#ff9900;flex:1">🔀 Router 1<br><span style="font-weight:400;font-size:0.7rem">Checks routing table</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" style="background:rgba(255,153,0,0.1);border-color:#ff9900;flex:1">🔀 Router 2<br><span style="font-weight:400;font-size:0.7rem">TTL decremented</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div style="flex:1"></div>
+    <div class="flow-arrow" style="transform:rotate(90deg)">→</div>
+    <div style="flex:1"></div>
+    <div class="flow-arrow" style="visibility:hidden">→</div>
+    <div style="flex:1"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;">
+    <div class="flow-node" style="background:rgba(0,255,136,0.1);border-color:#00ff88;flex:1">🌐 Web Server<br><span style="font-weight:400;font-size:0.7rem">8.8.8.8</span></div>
+    <div class="flow-arrow">←</div>
+    <div class="flow-node" style="background:rgba(255,153,0,0.1);border-color:#ff9900;flex:1">🔀 Router N<br><span style="font-weight:400;font-size:0.7rem">Final hop delivery</span></div>
+  </div>
+</div>
+<p style="font-size:0.8rem;color:var(--muted)">At each router: L2 frame is stripped → destination IP checked → new L2 frame built → forwarded out correct interface</p>` },
+      { title:'Private IP Address Ranges', type:'table', headers:['Range','Class','Subnet Mask','Typical Use'],
+        rows:[['10.0.0.0 – 10.255.255.255','A','/8','Large enterprises, data centers'],['172.16.0.0 – 172.31.255.255','B','/12','Medium networks'],['192.168.0.0 – 192.168.255.255','C','/16','Home networks, small offices'],['127.0.0.0 – 127.255.255.255','—','—','Loopback (localhost) — never routed']] },
+      { title:'CCNA Exam Tip', type:'tip', body:'Know the <strong>TTL field</strong> — each router decrements it by 1. When it hits 0, the router drops the packet and sends an ICMP "Time Exceeded" message back. This is exactly how <strong>traceroute</strong> works. Also know: <strong>Protocol field 1=ICMP, 6=TCP, 17=UDP</strong>. These values appear in Wireshark captures and ACL questions.' },
+    ]
+  },
+  IPv6: {
+    name:'IPv6', fullName:'Internet Protocol version 6', color:'#00d4ff',
+    sections:[
+      { title:'Why IPv6?', body:`<p><strong>IPv4 is running out of addresses.</strong> With only ~4.3 billion possible addresses, and billions of smartphones, IoT devices, and computers all needing IPs, the supply was essentially exhausted by 2011. In response, the industry developed <strong>IPv6</strong>, which uses <strong>128-bit addresses</strong> — providing 340 undecillion addresses (3.4 × 10³⁸). To put that in perspective, there are enough IPv6 addresses to give every grain of sand on Earth its own IP address — millions of times over.</p>` },
+      { title:'IPv4 vs IPv6 at a Glance', body:`<p>Rather than replacing IPv4 overnight, the two protocols coexist during a long transition period. Here's how they compare:</p>`,
+        type:'visual', html:`
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;font-size:0.78rem;">
+  <div style="padding:10px;background:rgba(255,153,0,0.1);border:1px solid #ff9900;border-radius:8px;">
+    <div style="font-weight:700;color:#ff9900;margin-bottom:8px;">IPv4</div>
+    <div style="line-height:2;">📏 32-bit address<br>🔢 ~4.3 billion addresses<br>📝 Dotted decimal<br>⚙️ Manual or DHCP config<br>🧩 Header: 20–60 bytes<br>🔀 Routers can fragment<br>📡 Broadcast supported</div>
+  </div>
+  <div style="padding:10px;background:rgba(0,212,255,0.1);border:1px solid #00d4ff;border-radius:8px;">
+    <div style="font-weight:700;color:#00d4ff;margin-bottom:8px;">IPv6</div>
+    <div style="line-height:2;">📏 128-bit address<br>🔢 340 undecillion addresses<br>📝 Colon-hex notation<br>⚙️ SLAAC (auto-config)<br>🧩 Header: fixed 40 bytes<br>🔀 Endpoints fragment only<br>📡 Multicast replaces broadcast</div>
+  </div>
+</div>` },
+      { title:'IPv6 Address Format', body:`<p>IPv6 addresses are written as <strong>eight groups of four hexadecimal digits</strong>, separated by colons. For example:</p><p style="text-align:center;font-size:1rem;font-weight:700;color:var(--accent);margin:12px 0;">2001:0DB8:AC10:FE01:0000:0000:0000:0001</p><p>Two shortening rules apply: <strong>First</strong>, leading zeros in each group can be dropped: <code>0DB8 → DB8</code>. <strong>Additionally</strong>, one sequence of all-zero groups can be replaced with <code>::</code>: the address above becomes <strong>2001:DB8:AC10:FE01::1</strong></p>` },
+      { title:'IPv6 Address Types', type:'table', headers:['Type','Prefix','Purpose','Example'],
+        rows:[['Global Unicast','2000::/3','Routable on the internet — like public IPv4','2001:DB8::/32'],['Link-Local','FE80::/10','Only within one network segment — auto-assigned','FE80::1'],['Loopback','::1/128','Same as 127.0.0.1 in IPv4','::1'],['Multicast','FF00::/8','One-to-many — replaces broadcast','FF02::1 = all nodes'],['Unique Local','FC00::/7','Private use — like RFC 1918','FD00::/8']] },
+      { title:'IPv6 Header — Simpler Than IPv4', body:`<p>One major improvement in IPv6 is a <strong>simplified, fixed-length 40-byte header</strong>. In contrast to IPv4's variable-length header with fragmentation fields, IPv6 streamlines routing by removing rarely-used fields.</p>`,
+        type:'visual', html:`
+<div class="pkt-header" style="margin:10px 0;">
+  <div style="flex:0 0 calc(12% - 3px)"><div class="pkt-field" style="background:#00d4ff;font-size:0.62rem">Ver (6)</div></div>
+  <div style="flex:0 0 calc(20% - 3px)"><div class="pkt-field" style="background:#00bbdd;font-size:0.62rem">Traffic Class</div></div>
+  <div style="flex:0 0 calc(68% - 3px)"><div class="pkt-field" style="background:#0099cc;font-size:0.62rem">Flow Label (20 bits)</div></div>
+  <div style="flex:0 0 calc(40% - 3px)"><div class="pkt-field" style="background:#0077aa;font-size:0.62rem">Payload Length</div></div>
+  <div style="flex:0 0 calc(30% - 3px)"><div class="pkt-field" style="background:#005588;font-size:0.62rem">Next Header</div></div>
+  <div style="flex:0 0 calc(30% - 3px)"><div class="pkt-field" style="background:#0077aa;font-size:0.62rem">Hop Limit (=TTL)</div></div>
+  <div style="flex:0 0 100%"><div class="pkt-field" style="background:#00aaff;font-size:0.62rem">Source Address (128 bits — 16 bytes)</div></div>
+  <div style="flex:0 0 100%"><div class="pkt-field" style="background:#0088cc;font-size:0.62rem">Destination Address (128 bits — 16 bytes)</div></div>
+  <div style="flex:0 0 100%"><div class="pkt-field" style="background:#555;font-size:0.62rem">Payload / Data</div></div>
+</div>
+<div style="font-size:0.7rem;color:var(--muted)">No checksum, no fragmentation fields — routers process IPv6 headers faster as a result</div>` },
+      { title:'SLAAC — Stateless Auto-Configuration', body:`<p>One of IPv6's most practical features is <strong>SLAAC (Stateless Address Autoconfiguration)</strong>. Instead of needing a DHCP server, a device can automatically generate its own IPv6 address by combining:</p><p>1. The <strong>network prefix</strong> (from the router's Router Advertisement message)<br>2. The device's own <strong>MAC address</strong> (converted to a 64-bit EUI-64 identifier)</p><p>As a result, devices can configure themselves the moment they connect — no DHCP server required.</p>` },
+      { title:'CCNA Exam Tip', type:'tip', body:'Key IPv6 facts for the exam:<br><br>• IPv6 uses <strong>128-bit addresses</strong> in colon-hex notation<br>• <strong>::</strong> replaces consecutive all-zero groups (only once per address)<br>• Link-local addresses start with <strong>FE80::</strong> and are auto-assigned<br>• Loopback is <strong>::1</strong> (not 127.0.0.1)<br>• <strong>No broadcast</strong> in IPv6 — multicast is used instead<br>• ICMPv6 handles neighbor discovery (replaces ARP)' },
+    ]
+  },
+  ICMP: {
+    name:'ICMP', fullName:'Internet Control Message Protocol', color:'#00ff88',
+    sections:[
+      { title:'What is ICMP?', body:`<p><strong>ICMP (Internet Control Message Protocol)</strong> is a Layer 3 protocol that network devices use to send <strong>error messages and operational information</strong>. To put it simply, when something goes wrong in the network — a router can't forward a packet, a host is unreachable, or a TTL expires — ICMP is the mechanism that reports it back to the sender.</p><p>Furthermore, ICMP is the engine behind two of the most commonly used network troubleshooting tools: <strong>ping</strong> and <strong>traceroute</strong>.</p>` },
+      { title:'How Ping Works', body:`<p>Ping tests basic reachability between two devices using <strong>ICMP Echo Request and Echo Reply</strong> messages:</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+    <div class="flow-node" style="background:rgba(0,212,255,0.1);border-color:#00d4ff;min-width:80px;text-align:center;">💻 Source<br><span style="font-size:0.68rem;font-weight:400">192.168.1.1</span></div>
+    <div style="flex:1;text-align:center;">
+      <div style="background:rgba(0,255,136,0.1);border:1px solid #00ff88;border-radius:6px;padding:5px 8px;font-size:0.72rem;font-weight:600;color:#00ff88;margin-bottom:4px;">→ ICMP Echo Request (Type 8)</div>
+      <div style="background:rgba(0,212,255,0.1);border:1px solid #00d4ff;border-radius:6px;padding:5px 8px;font-size:0.72rem;font-weight:600;color:#00d4ff;">← ICMP Echo Reply (Type 0)</div>
+    </div>
+    <div class="flow-node" style="background:rgba(0,255,136,0.1);border-color:#00ff88;min-width:80px;text-align:center;">🌐 Dest<br><span style="font-size:0.68rem;font-weight:400">8.8.8.8</span></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;font-size:0.7rem;text-align:center;">
+    <div style="padding:6px;background:rgba(0,255,136,0.1);border-radius:6px;"><strong style="color:#00ff88;">!</strong><br>Success</div>
+    <div style="padding:6px;background:rgba(255,68,102,0.1);border-radius:6px;"><strong style="color:#ff4466;">.</strong><br>Timeout</div>
+    <div style="padding:6px;background:rgba(255,153,0,0.1);border-radius:6px;"><strong style="color:#ff9900;">U</strong><br>Unreachable</div>
+    <div style="padding:6px;background:rgba(255,204,0,0.1);border-radius:6px;"><strong style="color:#ffcc00;">?</strong><br>Unknown</div>
+  </div>
+</div>` },
+      { title:'How Traceroute Works', body:`<p>Traceroute maps the path packets take by exploiting the <strong>TTL field</strong>. Here's how it works step by step:</p><p><strong>First</strong>, it sends a packet with TTL=1. The first router decrements TTL to 0, drops the packet, and sends back an <strong>ICMP Time Exceeded</strong> message — revealing its IP address. <strong>Next</strong>, it sends TTL=2 — identifying the second router. This continues, incrementing TTL each time, until the <strong>destination replies with ICMP Echo Reply</strong> — showing the full path.</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;font-size:0.75rem;">
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="background:rgba(0,212,255,0.15);border:1px solid #00d4ff;border-radius:6px;padding:5px 8px;min-width:50px;text-align:center;font-weight:700;">TTL=1</div>
+      <div class="flow-arrow">→</div>
+      <div style="background:rgba(255,153,0,0.15);border:1px solid #ff9900;border-radius:6px;padding:5px 8px;flex:1;text-align:center;">Router 1 (10.0.0.1)<br><span style="font-size:0.68rem;color:var(--muted)">TTL expires → sends ICMP Time Exceeded</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="background:rgba(0,212,255,0.15);border:1px solid #00d4ff;border-radius:6px;padding:5px 8px;min-width:50px;text-align:center;font-weight:700;">TTL=2</div>
+      <div class="flow-arrow">→</div>
+      <div style="background:rgba(255,153,0,0.15);border:1px solid #ff9900;border-radius:6px;padding:5px 8px;flex:1;text-align:center;">Router 2 (10.1.0.1)<br><span style="font-size:0.68rem;color:var(--muted)">TTL expires → sends ICMP Time Exceeded</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="background:rgba(0,212,255,0.15);border:1px solid #00d4ff;border-radius:6px;padding:5px 8px;min-width:50px;text-align:center;font-weight:700;">TTL=3</div>
+      <div class="flow-arrow">→</div>
+      <div style="background:rgba(0,255,136,0.15);border:1px solid #00ff88;border-radius:6px;padding:5px 8px;flex:1;text-align:center;">Destination (8.8.8.8)<br><span style="font-size:0.68rem;color:var(--muted)">Replies with ICMP Echo Reply ✓</span></div>
+    </div>
+  </div>
+</div>` },
+      { title:'Common ICMP Message Types', type:'table', headers:['Type','Code','Name','Triggered By'],
+        rows:[['0','0','Echo Reply','Response to a ping request'],['3','0–15','Destination Unreachable','Host/network/port unreachable, packet filtered'],['5','0–3','Redirect','Router tells sender to use a better route'],['8','0','Echo Request','The ping itself'],['11','0','Time Exceeded','TTL reached 0 — used by traceroute'],['12','0','Parameter Problem','Malformed IP header']] },
+      { title:'ICMP in ACLs', body:`<p>When writing ACLs, ICMP is identified by <strong>Protocol number 1</strong>. For example, to permit ping through a router:</p><p><code style="background:rgba(0,0,0,0.2);padding:4px 8px;border-radius:4px;display:block;margin:8px 0;">access-list 100 permit icmp any any echo<br>access-list 100 permit icmp any any echo-reply</code></p><p>Note that blocking ICMP entirely can break <strong>Path MTU Discovery</strong>, which relies on ICMP Type 3 Code 4 (Fragmentation Needed). As a result, it's best practice to permit specific ICMP types rather than blocking all ICMP.</p>` },
+      { title:'CCNA Exam Tip', type:'tip', body:'<strong>ICMP = Protocol number 1</strong>. Know that ping uses Type 8 (request) and Type 0 (reply). Traceroute exploits TTL expiration (Type 11). On Cisco routers, <strong>ping</strong> shows ! for success and . for timeout. <strong>Extended ping</strong> (from privileged EXEC) lets you set source IP, count, size, and TTL — very useful for testing specific paths.' },
+    ]
+  },
+  OSPF: {
+    name:'OSPF', fullName:'Open Shortest Path First', color:'#cc66ff',
+    sections:[
+      { title:'What is OSPF?', body:`<p><strong>OSPF (Open Shortest Path First)</strong> is the most widely used interior routing protocol in enterprise networks. To begin with, it's a <strong>link-state protocol</strong> — meaning each router builds a complete map of the network topology, then uses <strong>Dijkstra's Shortest Path First (SPF) algorithm</strong> to calculate the best path to every destination.</p><p>In contrast to distance-vector protocols (like RIP) that only know their neighbors' directions, OSPF routers know the <em>entire</em> network. As a result, OSPF converges faster and scales much better.</p>` },
+      { title:'OSPF Neighbor States', body:`<p>Before exchanging routing information, OSPF routers must become <strong>neighbors</strong> and then progress to the <strong>Full</strong> state. The process follows seven states:</p>`,
+        type:'visual', html:`
+<div class="state-chain" style="justify-content:center;">
+  <div class="state-box" style="background:#444;color:#fff;">Down</div>
+  <div class="state-arrow">→</div>
+  <div class="state-box" style="background:#663399;color:#fff;">Init</div>
+  <div class="state-arrow">→</div>
+  <div class="state-box" style="background:#7744aa;color:#fff;">2-Way</div>
+  <div class="state-arrow">→</div>
+  <div class="state-box" style="background:#8855bb;color:#fff;">ExStart</div>
+  <div class="state-arrow">→</div>
+  <div class="state-box" style="background:#9966cc;color:#fff;">Exchange</div>
+  <div class="state-arrow">→</div>
+  <div class="state-box" style="background:#aa77dd;color:#fff;">Loading</div>
+  <div class="state-arrow">→</div>
+  <div class="state-box" style="background:#00ff88;color:#000;">Full ✓</div>
+</div>
+<div style="margin-top:10px;font-size:0.75rem;line-height:1.8;color:var(--text);">
+  <strong style="color:#cc66ff">Down</strong> — No hellos received yet<br>
+  <strong style="color:#cc66ff">Init</strong> — Hello received but our Router ID not in it<br>
+  <strong style="color:#cc66ff">2-Way</strong> — Bidirectional communication; DR/BDR elected here<br>
+  <strong style="color:#cc66ff">ExStart</strong> — Master/slave negotiated for DBD exchange<br>
+  <strong style="color:#cc66ff">Exchange</strong> — DBD (Database Description) packets exchanged<br>
+  <strong style="color:#cc66ff">Loading</strong> — LSR/LSU packets used to request missing LSAs<br>
+  <strong style="color:#00ff88">Full</strong> — LSDBs are synchronized — routing can begin ✓
+</div>` },
+      { title:'OSPF Packet Types', type:'table', headers:['Type','Name','Purpose'],
+        rows:[['1','Hello','Discover and maintain neighbors; elect DR/BDR'],['2','DBD (Database Description)','Summary of the sender\'s LSDB for comparison'],['3','LSR (Link State Request)','Request specific LSAs the neighbor has that you don\'t'],['4','LSU (Link State Update)','Actual LSA data in response to LSR'],['5','LSAck (LS Acknowledge)','Confirm receipt of LSUs']] },
+      { title:'DR and BDR Election', body:`<p>On multi-access networks (like Ethernet), OSPF elects a <strong>Designated Router (DR)</strong> and <strong>Backup Designated Router (BDR)</strong> to reduce the number of neighbor relationships and LSA flooding.</p><p>Election process: <strong>First</strong>, the router with the highest <strong>OSPF priority</strong> (0–255, default 1) wins. <strong>If priorities are tied</strong>, the router with the highest <strong>Router ID</strong> wins. The Router ID is the highest loopback IP, or if none exists, the highest active interface IP.</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;font-size:0.78rem;">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;">
+    <div style="padding:10px;background:rgba(204,102,255,0.15);border:2px solid #cc66ff;border-radius:8px;"><div style="font-weight:700;color:#cc66ff">Router A</div><div>Priority: 1</div><div>RID: 3.3.3.3</div><div style="margin-top:4px;font-size:0.7rem;color:#888">DROTHER</div></div>
+    <div style="padding:10px;background:rgba(0,255,136,0.15);border:2px solid #00ff88;border-radius:8px;"><div style="font-weight:700;color:#00ff88">Router B</div><div>Priority: 1</div><div>RID: 5.5.5.5</div><div style="margin-top:4px;font-size:0.7rem;font-weight:700;color:#00ff88">DR ⭐</div></div>
+    <div style="padding:10px;background:rgba(0,212,255,0.15);border:2px solid #00d4ff;border-radius:8px;"><div style="font-weight:700;color:#00d4ff">Router C</div><div>Priority: 1</div><div>RID: 4.4.4.4</div><div style="margin-top:4px;font-size:0.7rem;font-weight:700;color:#00d4ff">BDR ⭐</div></div>
+  </div>
+  <div style="text-align:center;margin-top:6px;font-size:0.7rem;color:var(--muted)">Highest Router ID wins when priorities are equal</div>
+</div>` },
+      { title:'OSPF Areas', body:`<p>OSPF uses a <strong>hierarchical area design</strong> to scale to large networks. All areas must connect to <strong>Area 0 (the backbone area)</strong>. Routers connecting areas are called <strong>Area Border Routers (ABRs)</strong>.</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+  <div style="border:2px dashed #ff9900;border-radius:10px;padding:12px;text-align:center;min-width:100px;">
+    <div style="font-size:0.7rem;font-weight:700;color:#ff9900;margin-bottom:6px;">AREA 1</div>
+    <div style="font-size:0.75rem;">R1 · R2 · R3</div>
+  </div>
+  <div style="display:flex;align-items:center;font-size:0.8rem;color:var(--muted);">ABR→</div>
+  <div style="border:3px solid #00ff88;border-radius:10px;padding:12px;text-align:center;min-width:100px;">
+    <div style="font-size:0.7rem;font-weight:700;color:#00ff88;margin-bottom:6px;">AREA 0 ⭐ BACKBONE</div>
+    <div style="font-size:0.75rem;">Core routers</div>
+  </div>
+  <div style="display:flex;align-items:center;font-size:0.8rem;color:var(--muted);">←ABR</div>
+  <div style="border:2px dashed #00d4ff;border-radius:10px;padding:12px;text-align:center;min-width:100px;">
+    <div style="font-size:0.7rem;font-weight:700;color:#00d4ff;margin-bottom:6px;">AREA 2</div>
+    <div style="font-size:0.75rem;">R4 · R5 · R6</div>
+  </div>
+</div>` },
+      { title:'Key OSPF Commands', type:'table', headers:['Command','Purpose'],
+        rows:[['router ospf 1','Enter OSPF process (1 = process ID, local only)'],['network 10.0.0.0 0.0.0.255 area 0','Advertise network into OSPF Area 0'],['router-id 1.1.1.1','Manually set the Router ID'],['show ip ospf neighbor','View neighbor state (want to see Full)'],['show ip ospf database','View the Link State Database (LSDB)'],['show ip route ospf','View only OSPF-learned routes (marked "O")']] },
+      { title:'CCNA Exam Tip', type:'tip', body:'OSPF is <strong>heavily tested</strong>. Critical facts:<br><br>• AD = <strong>110</strong> &nbsp;·&nbsp; Uses <strong>cost</strong> as metric (lower = better)<br>• Cost = <strong>Reference bandwidth ÷ Interface bandwidth</strong> (default ref BW = 100 Mbps)<br>• A GigabitEthernet interface has cost = 1 (100M÷1000M rounds to 1 — change ref BW!)<br>• Hello timer = <strong>10s</strong> on broadcast, dead timer = <strong>40s</strong><br>• Multicast <strong>224.0.0.5</strong> (all OSPF routers), <strong>224.0.0.6</strong> (DR/BDR only)<br>• Neighbors must match: area, hello/dead timers, subnet, MTU, authentication' },
+    ]
+  },
+  EIGRP: {
+    name:'EIGRP', fullName:'Enhanced Interior Gateway Routing Protocol', color:'#00d4ff',
+    sections:[
+      { title:'What is EIGRP?', body:`<p><strong>EIGRP (Enhanced Interior Gateway Routing Protocol)</strong> is a Cisco-developed routing protocol that combines the best characteristics of both distance-vector and link-state protocols — which is why it's often called a <strong>hybrid</strong> or <strong>advanced distance-vector</strong> protocol.</p><p>In contrast to OSPF, EIGRP sends routing updates only when <em>changes</em> occur — not on a periodic timer. As a result, it uses far less bandwidth in stable networks. Furthermore, EIGRP converges extremely fast thanks to its <strong>DUAL algorithm</strong>, which pre-calculates backup paths.</p>` },
+      { title:'EIGRP Metric — How Routes are Scored', body:`<p>EIGRP uses a <strong>composite metric</strong> based on five K-values, though by default only two are used:</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem;">
+    <div style="padding:10px;background:rgba(0,212,255,0.15);border:2px solid #00d4ff;border-radius:8px;">
+      <div style="font-weight:700;color:#00d4ff;margin-bottom:6px;">✅ K1 — Bandwidth</div>
+      <div>Slowest link along the path. Lower bandwidth = higher metric = worse route.</div>
+    </div>
+    <div style="padding:10px;background:rgba(0,212,255,0.15);border:2px solid #00d4ff;border-radius:8px;">
+      <div style="font-weight:700;color:#00d4ff;margin-bottom:6px;">✅ K3 — Delay</div>
+      <div>Cumulative delay along the path. Higher delay = worse route.</div>
+    </div>
+    <div style="padding:10px;background:rgba(100,100,100,0.1);border:1px solid #444;border-radius:8px;">
+      <div style="font-weight:700;color:#888;margin-bottom:6px;">❌ K2 — Load</div>
+      <div style="color:#888">Not used by default (causes instability)</div>
+    </div>
+    <div style="padding:10px;background:rgba(100,100,100,0.1);border:1px solid #444;border-radius:8px;">
+      <div style="font-weight:700;color:#888;margin-bottom:6px;">❌ K4/K5 — Reliability/MTU</div>
+      <div style="color:#888">Not used by default</div>
+    </div>
+  </div>
+</div>` },
+      { title:'The Three EIGRP Tables', type:'table', headers:['Table','Command','Contains'],
+        rows:[['Neighbor Table','show ip eigrp neighbors','All directly connected EIGRP neighbors and their state'],['Topology Table','show ip eigrp topology','All routes learned — both best (Successor) and backup (Feasible Successor)'],['Routing Table','show ip route eigrp','Only the best routes — what\'s actually used to forward packets']] },
+      { title:'Successor vs Feasible Successor', body:`<p>EIGRP's speed advantage comes from pre-computing backup paths:</p><p><strong>Successor (S):</strong> The best path to a destination. Installed in the routing table. <strong>Feasible Successor (FS):</strong> A pre-computed backup path that satisfies the <em>feasibility condition</em>: its Reported Distance must be less than the current Successor's Feasible Distance. If the Successor fails, the FS is instantly promoted — <strong>no recalculation needed</strong>. This is why EIGRP convergence is nearly instantaneous.</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;font-size:0.78rem;">
+  <div style="display:flex;gap:8px;align-items:stretch;">
+    <div style="flex:1;padding:10px;background:rgba(0,255,136,0.1);border:2px solid #00ff88;border-radius:8px;text-align:center;">
+      <div style="font-weight:700;color:#00ff88;margin-bottom:4px;">✅ Successor</div>
+      <div>Best route</div>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">In routing table<br>FD = 10,000</div>
+    </div>
+    <div style="display:flex;align-items:center;font-size:1.5rem;">⚡</div>
+    <div style="flex:1;padding:10px;background:rgba(0,212,255,0.1);border:2px solid #00d4ff;border-radius:8px;text-align:center;">
+      <div style="font-weight:700;color:#00d4ff;margin-bottom:4px;">🔄 Feasible Successor</div>
+      <div>Instant backup</div>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">In topology table<br>RD &lt; 10,000 ✓</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:8px;font-size:0.72rem;color:var(--muted);">If Successor fails → Feasible Successor promoted instantly (no DUAL recalculation)</div>
+</div>` },
+      { title:'EIGRP vs OSPF Comparison', body:`<p>Understanding the difference between EIGRP and OSPF is essential for the CCNA:</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;" class="bar-chart">
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Relative Performance Characteristics</div>
+  <div class="bar-row"><div class="bar-label">Convergence</div><div class="bar-track"><div class="bar-fill" style="width:95%;background:#00d4ff;">EIGRP</div></div><div class="bar-val">Fastest</div></div>
+  <div class="bar-row"><div class="bar-label" style="visibility:hidden">x</div><div class="bar-track"><div class="bar-fill" style="width:80%;background:#cc66ff;">OSPF</div></div><div class="bar-val">Fast</div></div>
+  <div class="bar-row"><div class="bar-label">Scalability</div><div class="bar-track"><div class="bar-fill" style="width:75%;background:#00d4ff;">EIGRP</div></div><div class="bar-val">Good</div></div>
+  <div class="bar-row"><div class="bar-label" style="visibility:hidden">x</div><div class="bar-track"><div class="bar-fill" style="width:95%;background:#cc66ff;">OSPF</div></div><div class="bar-val">Excellent</div></div>
+  <div class="bar-row"><div class="bar-label">Simplicity</div><div class="bar-track"><div class="bar-fill" style="width:85%;background:#00d4ff;">EIGRP</div></div><div class="bar-val">Easier</div></div>
+  <div class="bar-row"><div class="bar-label" style="visibility:hidden">x</div><div class="bar-track"><div class="bar-fill" style="width:55%;background:#cc66ff;">OSPF</div></div><div class="bar-val">Complex</div></div>
+</div>` },
+      { title:'CCNA Exam Tip', type:'tip', body:'EIGRP key facts:<br><br>• AD = <strong>90</strong> (internal), <strong>170</strong> (external)<br>• Metric = <strong>Bandwidth + Delay</strong> by default<br>• Uses <strong>multicast 224.0.0.10</strong> for updates<br>• Protocol number <strong>88</strong> (not TCP or UDP)<br>• "<strong>D</strong>" in routing table = EIGRP route<br>• <strong>show ip eigrp neighbors</strong> — check neighbor state<br>• <strong>show ip eigrp topology</strong> — see Successors and Feasible Successors' },
+    ]
+  },
+  RIP: {
+    name:'RIP', fullName:'Routing Information Protocol', color:'#ffcc00',
+    sections:[
+      { title:'What is RIP?', body:`<p><strong>RIP (Routing Information Protocol)</strong> is one of the oldest routing protocols, first standardized in 1988. To start, it's a classic <strong>distance-vector protocol</strong> — routers only know their neighbors' information, not the full network topology. RIP's simplicity makes it easy to understand and configure, which is why it remains a popular teaching tool.</p><p>However, in practice, RIP has significant limitations that make it unsuitable for most modern networks. Most notably, it has a <strong>maximum hop count of 15</strong> — any destination more than 15 hops away is considered unreachable. Furthermore, it converges slowly and doesn't scale well.</p>` },
+      { title:'The 15-Hop Limit Visualized', body:`<p>RIP uses <strong>hop count</strong> as its only metric — every router along the path adds 1. Destination reached at hop 16+ is "infinite distance" (unreachable):</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;overflow-x:auto;">
+  <div style="display:flex;align-items:center;gap:0;min-width:500px;font-size:0.7rem;">
+    <div style="padding:6px;background:rgba(0,212,255,0.2);border:1px solid #00d4ff;border-radius:4px;text-align:center;min-width:32px;">SRC<br>0</div>
+    ${[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(n => {
+      const pct = n/15;
+      const r = Math.round(255 * pct);
+      const g = Math.round(204 * (1-pct));
+      const bg = 'rgba('+r+','+g+',0,0.3)';
+      const border = 'rgb('+r+','+g+',0)';
+      return '<div class="flow-arrow" style="font-size:0.8rem;">→</div><div style="padding:5px;background:'+bg+';border:1px solid '+border+';border-radius:4px;text-align:center;min-width:28px;">R'+n+'<br>'+n+'</div>';
+    }).join('')}
+    <div class="flow-arrow">→</div>
+    <div style="padding:6px;background:rgba(255,68,102,0.2);border:1px solid #ff4466;border-radius:4px;text-align:center;min-width:36px;font-weight:700;color:#ff4466">16<br>∞</div>
+  </div>
+  <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;">Color shifts green→red as hop count increases. At hop 16 = unreachable (∞ = infinity)</div>
+</div>` },
+      { title:'RIPv1 vs RIPv2', type:'table', headers:['Feature','RIPv1','RIPv2'],
+        rows:[['Standard','RFC 1058 (1988)','RFC 2453 (1998)'],['Classful/Classless','Classful only','Classless (supports CIDR/VLSM)'],['Subnet mask in updates','No','Yes'],['Authentication','No','Yes (MD5)'],['Multicast/Broadcast','Broadcast (255.255.255.255)','Multicast (224.0.0.9)'],['Route summarization','Automatic','Manual or auto']] },
+      { title:'RIP Timers', type:'table', headers:['Timer','Default','Purpose'],
+        rows:[['Update','30 seconds','Send full routing table to neighbors'],['Invalid','180 seconds','Mark route as invalid if no updates received'],['Holddown','180 seconds','Ignore updates for a route that just went down (prevents loops)'],['Flush','240 seconds','Remove invalid route from routing table entirely']] },
+      { title:'RIP Loop Prevention', body:`<p>Distance-vector protocols like RIP are prone to routing loops. To combat this, RIP uses several mechanisms:</p><p><strong>Split Horizon:</strong> Don't advertise a route back to the neighbor you learned it from.<br><strong>Route Poisoning:</strong> When a route fails, advertise it with a metric of 16 (infinity) to immediately tell neighbors it's unreachable.<br><strong>Holddown Timers:</strong> After a route fails, ignore updates for that route for 180 seconds — preventing false recovery information from spreading.</p>` },
+      { title:'CCNA Exam Tip', type:'tip', body:'RIP key facts:<br><br>• AD = <strong>120</strong> (highest of the IGPs — least trusted)<br>• Metric = <strong>hop count only</strong> (max 15, 16 = unreachable)<br>• Updates every <strong>30 seconds</strong> (full table broadcast/multicast)<br>• "<strong>R</strong>" in routing table = RIP route<br>• Use <strong>RIPv2</strong> — it supports classless routing (VLSM/CIDR)<br>• RIP is rarely deployed in production but is tested on CCNA for understanding distance-vector concepts and loop prevention' },
+    ]
+  },
+  BGP: {
+    name:'BGP', fullName:'Border Gateway Protocol', color:'#ff4466',
+    sections:[
+      { title:'What is BGP?', body:`<p><strong>BGP (Border Gateway Protocol)</strong> is the routing protocol that runs the internet. While protocols like OSPF and EIGRP are used <em>within</em> a company's network (interior), BGP is used <em>between</em> different organizations and ISPs (exterior). To put it in perspective, every time you visit a website hosted in another country, your traffic is routed by BGP dozens of times.</p><p>BGP is an <strong>EGP (Exterior Gateway Protocol)</strong> and uses <strong>TCP port 179</strong> for reliable session establishment — making it fundamentally different from OSPF and EIGRP.</p>` },
+      { title:'Autonomous Systems', body:`<p>The internet is divided into <strong>Autonomous Systems (AS)</strong> — networks under a single administrative control, each assigned a unique <strong>AS Number (ASN)</strong> by IANA. For example, Google is AS15169, Cloudflare is AS13335, and Comcast is AS7922.</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;">
+  <div class="as-box" style="border-color:#00d4ff;color:#00d4ff;min-width:90px;">
+    <div class="as-label">AS 65001</div>
+    <div style="font-size:0.75rem;color:var(--text);">Your Company<br>R1 · R2 · R3</div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:0.75rem;font-weight:700;color:#ff4466;">eBGP</div>
+    <div style="font-size:1.5rem;color:#ff4466;">⟷</div>
+  </div>
+  <div class="as-box" style="border-color:#ff9900;color:#ff9900;min-width:90px;">
+    <div class="as-label">AS 7922</div>
+    <div style="font-size:0.75rem;color:var(--text);">ISP (Comcast)<br>Core routers</div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:0.75rem;font-weight:700;color:#ff4466;">eBGP</div>
+    <div style="font-size:1.5rem;color:#ff4466;">⟷</div>
+  </div>
+  <div class="as-box" style="border-color:#00ff88;color:#00ff88;min-width:90px;">
+    <div class="as-label">AS 15169</div>
+    <div style="font-size:0.75rem;color:var(--text);">Google<br>Data centers</div>
+  </div>
+</div>
+<div style="text-align:center;font-size:0.7rem;color:var(--muted);margin-top:4px;">eBGP runs between different AS • iBGP runs between routers within the same AS</div>` },
+      { title:'eBGP vs iBGP', type:'table', headers:['Feature','eBGP','iBGP'],
+        rows:[['Runs between','Different Autonomous Systems','Routers within the same AS'],['AD','20 (very trusted)','200 (least trusted — use IGP instead)'],['TTL','1 (direct connection required by default)','255 (can traverse multiple hops)'],['Next-hop behavior','Next-hop changes to the eBGP peer IP','Next-hop unchanged (use next-hop-self to fix)'],['Route propagation','Advertised to all peers','Not re-advertised to other iBGP peers (split horizon)']] },
+      { title:'BGP Path Selection', body:`<p>BGP doesn't just find the <em>shortest</em> path — it selects paths based on <strong>policy attributes</strong>. When multiple paths exist to the same destination, BGP evaluates attributes in this order (remember: <strong>"We Love Oranges As Oranges Mean Pure Refreshment"</strong>):</p>`,
+        type:'visual', html:`
+<div style="margin:10px 0;display:flex;flex-direction:column;gap:4px;font-size:0.78rem;">
+  ${[
+    ['1','Weight','Highest wins • Cisco-proprietary • Local to router only','#ff4466'],
+    ['2','Local Preference','Highest wins • Used within an AS to prefer exit points','#ff9900'],
+    ['3','Originated locally','Prefer routes originated on this router (network cmd / redistribute)','#ffcc00'],
+    ['4','AS Path','Shortest AS path wins • Fewer AS hops = better','#00ff88'],
+    ['5','Origin','IGP > EGP > Incomplete','#00d4ff'],
+    ['6','MED','Lowest wins • Hint to neighboring AS about preferred entry','#cc66ff'],
+    ['7','eBGP over iBGP','Prefer eBGP learned routes over iBGP','#00aaff'],
+    ['8','IGP metric','Lowest metric to next-hop wins (for iBGP)','#aaaaaa'],
+  ].map(([n,attr,desc,c]) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px;background:${c}15;border:1px solid ${c}44;border-radius:6px;">
+      <div style="width:22px;height:22px;background:${c};color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.7rem;flex-shrink:0">${n}</div>
+      <div><strong style="color:${c}">${attr}</strong> <span style="color:var(--muted);font-size:0.72rem;">— ${desc}</span></div>
+    </div>`).join('')}
+</div>` },
+      { title:'BGP States', type:'table', headers:['State','Meaning'],
+        rows:[['Idle','BGP process started — waiting to initiate TCP connection'],['Connect','Attempting TCP connection to peer on port 179'],['Active','TCP connection failed — retrying'],['OpenSent','TCP connected; OPEN message sent to peer'],['OpenConfirm','OPEN received and accepted; waiting for KEEPALIVE'],['Established','BGP session fully up — routing updates can flow ✓']] },
+      { title:'CCNA Exam Tip', type:'tip', body:'BGP is only lightly tested on the CCNA — focus on concepts, not deep configuration:<br><br>• BGP uses <strong>TCP port 179</strong><br>• <strong>eBGP</strong> = between ASes (AD 20) &nbsp;·&nbsp; <strong>iBGP</strong> = within an AS (AD 200)<br>• BGP selects routes based on <strong>attributes</strong>, not just shortest path<br>• <strong>AS Path</strong> is the most important attribute to know — shorter = preferred<br>• The fully established state is called <strong>"Established"</strong> (not "Full" like OSPF)' },
+    ]
+  },
+};
+
+function renderL3ProtocolLesson(key) {
+  const lesson = L3_PROTOCOL_LESSONS[key];
+  if (!lesson) return;
+  document.getElementById('l3protocol-detail-title').textContent = lesson.name;
+  const container = document.getElementById('l3protocol-detail-content');
+  container.innerHTML = '';
+
+  const banner = document.createElement('div');
+  banner.style.cssText = `background:${lesson.color}18;border:1px solid ${lesson.color}44;border-left:4px solid ${lesson.color};border-radius:12px;padding:16px 20px;margin-bottom:4px;`;
+  banner.innerHTML = `<div style="font-size:1.1rem;font-weight:700;color:${lesson.color}">${lesson.name} — ${lesson.fullName}</div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-top:4px;">OSI Layer 3 — Network Layer</div>`;
+  container.appendChild(banner);
+
+  lesson.sections.forEach(section => {
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+    if (section.type === 'table') {
+      const rows = section.rows.map(r => '<tr>' + r.map(c=>`<td>${c}</td>`).join('') + '</tr>').join('');
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <table class="lesson-table"><thead><tr>${section.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+    } else if (section.type === 'tip') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div><div class="lesson-tip">💡 ${section.body}</div>`;
+    } else if (section.type === 'visual') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div class="lesson-body">${section.body || ''}</div>${section.html}`;
+    } else {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div><div class="lesson-body">${section.body}</div>`;
+    }
+    container.appendChild(card);
+  });
+
+  showScreen('screen-l3protocol');
+  window.scrollTo(0, 0);
+}
+
+// ── Protocol Deep-Dive Lessons ────────────────────────────────────────────────
+const PROTOCOL_LESSONS = {
+  HTTP: {
+    name: 'HTTP', fullName: 'HyperText Transfer Protocol', port: '80', color: '#00d4ff',
+    sections: [
+      { title: 'What is HTTP?', body: `<p><strong>HTTP (HyperText Transfer Protocol)</strong> is the foundation of all data communication on the World Wide Web. To put it simply, it defines the rules for how web browsers and web servers talk to each other. Every time you visit a website, HTTP is working behind the scenes.</p><p>It's worth noting, however, that HTTP sends all data in <strong>plaintext</strong> — meaning anyone who intercepts the traffic can read it. For that reason, HTTP has largely been replaced by HTTPS for anything sensitive. Nevertheless, understanding HTTP is essential because HTTPS builds directly on top of it.</p>` },
+      { title: 'Real-World Analogy', body: `<p>Think of HTTP like ordering food at a restaurant counter. <strong>First</strong>, you (the browser) walk up and make a request: "I'd like the homepage, please." <strong>Then</strong>, the kitchen (the web server) prepares your order and hands it back. <strong>Finally</strong>, you receive your meal (the web page) and sit down to enjoy it. If something goes wrong — say the dish isn't available — the kitchen sends back an error message, like "404: Item Not Found."</p>` },
+      { title: 'HTTP Request Methods', type: 'table', headers: ['Method','Purpose','Example Use'],
+        rows: [['GET','Retrieve data from the server','Load a web page or image'],['POST','Send data to the server','Submit a login form'],['PUT','Update an existing resource','Edit a profile picture'],['DELETE','Remove a resource','Delete a social media post'],['HEAD','Like GET but returns headers only','Check if a page exists without downloading it']] },
+      { title: 'HTTP Response Status Codes', type: 'table', headers: ['Code Range','Meaning','Common Examples'],
+        rows: [['1xx','Informational — request received','100 Continue'],['2xx','Success — request completed','200 OK, 201 Created'],['3xx','Redirection — further action needed','301 Moved Permanently, 302 Found'],['4xx','Client error — bad request','400 Bad Request, 403 Forbidden, 404 Not Found'],['5xx','Server error — server failed','500 Internal Server Error, 503 Service Unavailable']] },
+      { title: 'How an HTTP Request Works', body: `<p><strong>Step 1 — DNS Lookup:</strong> Your browser first resolves the domain name (e.g., example.com) to an IP address using DNS.</p><p><strong>Step 2 — TCP Connection:</strong> Next, a TCP connection is established to port 80 on the web server using the 3-way handshake.</p><p><strong>Step 3 — HTTP Request:</strong> Your browser then sends an HTTP GET request: <code style="background:rgba(0,0,0,0.2);padding:2px 6px;border-radius:4px;">GET /index.html HTTP/1.1</code></p><p><strong>Step 4 — HTTP Response:</strong> The server replies with a status code and the requested content. For example: <code style="background:rgba(0,0,0,0.2);padding:2px 6px;border-radius:4px;">HTTP/1.1 200 OK</code> followed by the HTML.</p><p><strong>Finally</strong>, the browser renders the HTML into the page you see.</p>` },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'HTTP uses <strong>TCP port 80</strong>. It is <strong>stateless</strong> — each request is independent and the server doesn\'t remember previous requests. For the exam, remember: HTTP = unencrypted (port 80), HTTPS = encrypted (port 443). Questions about web traffic filtering in ACLs almost always use port 80 or 443.' },
+    ]
+  },
+  HTTPS: {
+    name: 'HTTPS', fullName: 'HTTP Secure', port: '443', color: '#00ff88',
+    sections: [
+      { title: 'What is HTTPS?', body: `<p><strong>HTTPS (HTTP Secure)</strong> is simply HTTP with an added layer of encryption provided by <strong>TLS (Transport Layer Security)</strong>. To begin with, it does everything HTTP does — requesting and delivering web content — but wraps all that communication in encryption so no one can read or tamper with it in transit.</p><p>In today's world, HTTPS is the standard for all websites. Browsers now actively warn users when a site still uses plain HTTP, flagging it as "Not Secure."</p>` },
+      { title: 'Real-World Analogy', body: `<p>If HTTP is like sending a postcard (anyone who handles it can read it), then HTTPS is like sending the same message inside a <strong>sealed, tamper-proof envelope</strong>. Furthermore, the envelope has a wax seal from a trusted authority (a Certificate Authority), so the recipient knows it genuinely came from you and hasn't been opened.</p>` },
+      { title: 'The TLS Handshake — Step by Step', body: `<p>Before any encrypted data flows, TLS performs a handshake to establish trust and agree on encryption:</p><p><strong>Step 1 — Client Hello:</strong> Your browser says "I want a secure connection" and lists the encryption methods it supports.</p><p><strong>Step 2 — Server Hello:</strong> The server responds, picks an encryption method, and sends its <strong>digital certificate</strong>.</p><p><strong>Step 3 — Certificate Verification:</strong> Your browser checks the certificate against trusted Certificate Authorities (CAs). If it's valid, the connection continues.</p><p><strong>Step 4 — Key Exchange:</strong> Next, both sides generate a shared <strong>session key</strong> using asymmetric encryption (like RSA or ECDH). This key is used to encrypt all subsequent data.</p><p><strong>Finally</strong>, symmetric encryption begins — all traffic is now encrypted with the session key.</p>` },
+      { title: 'HTTP vs HTTPS Comparison', type: 'table', headers: ['Feature','HTTP','HTTPS'],
+        rows: [['Port','80','443'],['Encryption','None — plaintext','TLS encrypted'],['Certificate needed','No','Yes (from a CA)'],['Data integrity','Not guaranteed','Guaranteed — tampering detected'],['Use cases','Legacy, internal tools','All modern websites, banking, login pages'],['Browser indicator','None / "Not Secure" warning','Padlock icon in address bar']] },
+      { title: 'Digital Certificates', body: `<p>A <strong>digital certificate</strong> is like an online ID card. It proves the server is who it claims to be. Certificates are issued by trusted third parties called <strong>Certificate Authorities (CAs)</strong> — such as DigiCert, Let's Encrypt, and GlobalSign.</p><p>Additionally, certificates contain the server's <strong>public key</strong>, which is used during the TLS handshake. Without a valid certificate, browsers display a security warning and block the connection.</p>` },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'HTTPS uses <strong>TCP port 443</strong>. For the CCNA, you don\'t need deep TLS knowledge — but you should know: HTTPS = HTTP + TLS, it uses port 443, and it provides <strong>confidentiality, integrity, and authentication</strong>. When writing ACLs to permit web traffic, permit both port 80 (HTTP) and port 443 (HTTPS).' },
+    ]
+  },
+  FTP: {
+    name: 'FTP', fullName: 'File Transfer Protocol', port: '20/21', color: '#ff9900',
+    sections: [
+      { title: 'What is FTP?', body: `<p><strong>FTP (File Transfer Protocol)</strong> is one of the oldest internet protocols, designed specifically for <strong>transferring files</strong> between a client and a server. To illustrate, think of it as a remote file cabinet — you can open it, browse the contents, upload new files, download existing ones, or delete them entirely.</p><p>However, like HTTP, FTP sends data — including usernames and passwords — in <strong>plaintext</strong>. For that reason, SFTP (SSH File Transfer Protocol) or FTPS (FTP over TLS) are used in security-conscious environments.</p>` },
+      { title: 'Active vs Passive Mode', body: `<p>FTP is unique in that it uses <strong>two separate TCP connections</strong> — one for commands and one for data. Furthermore, it operates in two modes that differ in who initiates the data connection:</p><p><strong>Active Mode:</strong> First, the client connects to the server on port 21 (control). Then the <em>server</em> initiates a data connection back to the client on port 20. This often fails through firewalls and NAT because the server is connecting inbound to the client.</p><p><strong>Passive Mode:</strong> Instead, the client initiates <em>both</em> connections. After connecting to port 21, the server tells the client which high port to connect to for data. This works much better with firewalls and is the modern default.</p>` },
+      { title: 'FTP Port Summary', type: 'table', headers: ['Port','Purpose','Direction'],
+        rows: [['21','Control connection — commands and responses','Client → Server'],['20','Data connection (Active mode only)','Server → Client'],['Random high port','Data connection (Passive mode)','Client → Server']] },
+      { title: 'Common FTP Commands', type: 'table', headers: ['Command','What it Does'],
+        rows: [['USER / PASS','Authenticate with username and password'],['LIST','List files in the current directory'],['GET (RETR)','Download a file from the server'],['PUT (STOR)','Upload a file to the server'],['DEL (DELE)','Delete a file on the server'],['CD (CWD)','Change directory'],['QUIT','Close the FTP session']] },
+      { title: 'FTP vs Secure Alternatives', type: 'table', headers: ['Protocol','Port','Encryption','Notes'],
+        rows: [['FTP','20/21','None','Legacy — avoid over untrusted networks'],['FTPS','990','TLS','FTP wrapped in TLS'],['SFTP','22','SSH','Completely different protocol; runs over SSH'],['SCP','22','SSH','Simpler file copy over SSH']] },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'Remember that FTP uses <strong>two ports: 21 for control, 20 for data</strong> (active mode). On the exam, if you see a question about file transfers and two ports, it\'s FTP. Also know that TFTP (Trivial FTP) uses <strong>UDP port 69</strong> and is used by Cisco devices to transfer IOS images and configuration files — it\'s much simpler than FTP with no authentication.' },
+    ]
+  },
+  SSH: {
+    name: 'SSH', fullName: 'Secure Shell', port: '22', color: '#00d4ff',
+    sections: [
+      { title: 'What is SSH?', body: `<p><strong>SSH (Secure Shell)</strong> is a protocol that provides a <strong>secure, encrypted channel</strong> for remotely managing network devices, servers, and computers. In practice, it's the standard way network engineers connect to routers, switches, and Linux servers from across the network — or across the internet.</p><p>In contrast to Telnet, which sends everything in cleartext, SSH encrypts the entire session. As a result, even if someone intercepts the traffic, all they see is unreadable encrypted data.</p>` },
+      { title: 'Real-World Analogy', body: `<p>Imagine you need to control a robot in a different building. With Telnet, you're shouting instructions through an open window — anyone nearby can hear every command. With SSH, by contrast, you're communicating through an encrypted radio channel with a unique frequency only you and the robot know. Furthermore, before the conversation even starts, you both verify each other's identities to ensure you're not talking to an impostor.</p>` },
+      { title: 'How SSH Authentication Works', body: `<p>SSH supports two main authentication methods:</p><p><strong>Password Authentication:</strong> The simplest method — you enter a username and password. While the credentials are encrypted in transit, this method is vulnerable to brute-force attacks if weak passwords are used.</p><p><strong>Key-Based Authentication (more secure):</strong> First, you generate a public/private key pair. Next, you copy the public key to the server. Then, when you connect, the server uses your public key to verify your identity — without you ever sending a password. This is the preferred method for production environments.</p>` },
+      { title: 'Setting Up SSH on a Cisco Device', type: 'table', headers: ['Step','Command','Purpose'],
+        rows: [['1','hostname R1','Set a hostname (required for SSH)'],['2','ip domain-name lab.local','Set a domain name (required for key generation)'],['3','crypto key generate rsa modulus 2048','Generate the RSA encryption key pair'],['4','username admin privilege 15 secret cisco','Create a local user account'],['5','ip ssh version 2','Force SSHv2 (more secure than v1)'],['6','line vty 0 4 → login local → transport input ssh','Apply SSH to VTY lines']] },
+      { title: 'SSH vs Telnet', type: 'table', headers: ['Feature','SSH','Telnet'],
+        rows: [['Port','22','23'],['Encryption','Full session encryption','No encryption — plaintext'],['Authentication','Password or key-based','Password only (cleartext)'],['Security','Secure — use in all environments','Insecure — never use over untrusted networks'],['CCNA recommendation','Always use SSH','Replace with SSH immediately']] },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'SSH is <strong>heavily tested</strong> on the CCNA. Know the four prerequisites: <strong>hostname, domain name, RSA key, local user account</strong>. Also remember: SSH uses <strong>TCP port 22</strong>, SSHv2 is more secure than v1, and "transport input ssh" on VTY lines prevents Telnet access. Simulation questions often ask you to configure SSH from scratch.' },
+    ]
+  },
+  Telnet: {
+    name: 'Telnet', fullName: 'Teletype Network Protocol', port: '23', color: '#ff4466',
+    sections: [
+      { title: 'What is Telnet?', body: `<p><strong>Telnet</strong> is one of the oldest network protocols, dating back to 1969. It allows a user to remotely access and control another device over a network by providing a <strong>text-based command-line interface</strong>. In its time, it was revolutionary — enabling administrators to manage remote systems without being physically present.</p><p>Today, however, Telnet is considered <strong>dangerously insecure</strong> and should never be used in production environments. The fundamental problem is that Telnet transmits <em>everything</em> — including your username and password — in <strong>plain, readable text</strong>.</p>` },
+      { title: 'Why Telnet is Dangerous', body: `<p>To illustrate the risk, consider this scenario: You're configuring a router from your laptop over the corporate network. You type your admin password to log in. With Telnet, that password travels across every network segment as readable text. As a result, anyone running a packet capture tool (like Wireshark) anywhere between you and the router can see your password instantly — no hacking required.</p><p>Furthermore, Telnet provides no way to verify you're connected to the correct device. An attacker could intercept the connection and present a fake prompt — a technique known as a <strong>man-in-the-middle attack</strong>.</p>` },
+      { title: 'Telnet vs SSH Side-by-Side', type: 'table', headers: ['Feature','Telnet','SSH'],
+        rows: [['Port','23','22'],['Year introduced','1969','1995'],['Encryption','None — everything is cleartext','Full AES encryption'],['Password security','Sent in plaintext','Encrypted'],['MITM protection','None','Server identity verified via keys'],['Should you use it?','Never in production','Always — it\'s the standard']] },
+      { title: 'The One Legitimate Use of Telnet Today', body: `<p>While Telnet should never be used for remote management, it does have one remaining practical use: <strong>testing TCP port connectivity</strong>. For instance, you can use Telnet to manually connect to a specific port on a server to verify it's listening:</p><p><code style="background:rgba(0,0,0,0.2);padding:4px 8px;border-radius:4px;display:block;margin:8px 0;">telnet 192.168.1.1 80</code></p><p>If the connection succeeds, port 80 is open. This technique is useful for quickly troubleshooting firewall rules, ACLs, and application connectivity without needing special tools.</p>` },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'Telnet uses <strong>TCP port 23</strong>. For the CCNA, the main things to know are: Telnet is <strong>insecure (cleartext)</strong>, SSH is its secure replacement, and you should use <strong>transport input ssh</strong> on VTY lines to block Telnet. You may also see Telnet used as a connectivity test tool — "telnet &lt;ip&gt; &lt;port&gt;" to verify a port is reachable.' },
+    ]
+  },
+  SMTP: {
+    name: 'SMTP', fullName: 'Simple Mail Transfer Protocol', port: '25', color: '#cc66ff',
+    sections: [
+      { title: 'What is SMTP?', body: `<p><strong>SMTP (Simple Mail Transfer Protocol)</strong> is the protocol responsible for <strong>sending and relaying email</strong> across the internet. To clarify, SMTP only handles the <em>sending</em> side of email — it pushes messages from your email client to your mail server, and then from server to server until the email reaches its destination. For <em>receiving</em> email, different protocols are used: POP3 (port 110) or IMAP (port 143).</p>` },
+      { title: 'Real-World Analogy', body: `<p>Think of SMTP as the <strong>postal delivery system</strong> for email. When you drop a letter in a mailbox (send an email), the post office (your mail server) picks it up. Next, it routes it through a series of sorting facilities (intermediate mail servers) until it arrives at the recipient's local post office (destination mail server). Finally, the recipient collects the mail using POP3 or IMAP — the equivalent of checking your mailbox.</p>` },
+      { title: 'How Email Travels — The Full Journey', body: `<p><strong>Step 1:</strong> You compose an email in your client (Outlook, Gmail) and hit Send. Your client connects to your outgoing mail server via <strong>SMTP on port 587</strong> (or 465 for SMTPS).</p><p><strong>Step 2:</strong> Your mail server looks up the destination domain's <strong>MX (Mail Exchange) DNS record</strong> to find the recipient's mail server address.</p><p><strong>Step 3:</strong> Your server connects to the destination mail server via <strong>SMTP on port 25</strong> and delivers the message.</p><p><strong>Step 4:</strong> Finally, the recipient's mail client retrieves the message using <strong>POP3 or IMAP</strong> from their mail server.</p>` },
+      { title: 'SMTP Port Numbers', type: 'table', headers: ['Port','Use','Notes'],
+        rows: [['25','Server-to-server email relay','Standard SMTP between mail servers'],['587','Client-to-server (submission)','Used by email clients to send mail; requires authentication'],['465','SMTPS — SMTP over SSL/TLS','Older secure port; some clients still use it'],['110','POP3','Receive/download email (deletes from server)'],['143','IMAP','Receive email and sync across devices (keeps on server)']] },
+      { title: 'Email-Related Protocols Summary', type: 'table', headers: ['Protocol','Direction','Port','Purpose'],
+        rows: [['SMTP','Send','25 / 587','Send email from client to server, or server to server'],['POP3','Receive','110','Download email to local device (removes from server)'],['IMAP','Receive','143','Sync email across multiple devices (stays on server)']] },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'For the CCNA, know <strong>SMTP = port 25 = sending email</strong>. You won\'t configure email servers, but you may need to write ACLs that permit SMTP traffic or identify SMTP in a packet capture. Also remember: <strong>POP3 = port 110</strong>, <strong>IMAP = port 143</strong>. A useful memory trick: <strong>SMTP Sends, POP3/IMAP Receives</strong>.' },
+    ]
+  },
+  DNS: {
+    name: 'DNS', fullName: 'Domain Name System', port: '53', color: '#ffcc00',
+    sections: [
+      { title: 'What is DNS?', body: `<p><strong>DNS (Domain Name System)</strong> is often called the "phone book of the internet." Its fundamental job is to translate human-readable domain names — like <em>cisco.com</em> or <em>google.com</em> — into the numerical IP addresses that routers need to forward traffic.</p><p>To put it differently, without DNS, you'd have to memorize the IP address of every website you wanted to visit. Instead, DNS handles that translation automatically and invisibly, every time you type a URL or send an email.</p>` },
+      { title: 'Real-World Analogy', body: `<p>Imagine DNS as a <strong>massive, distributed directory assistance service</strong>. First, you ask the operator (DNS resolver) for the number of "Cisco." Next, if the local operator doesn't know, they escalate the request up through regional and then national directories. Eventually, the authoritative source provides the correct number. Finally, your call goes through — and the result is often cached locally so future lookups are instant.</p>` },
+      { title: 'The DNS Resolution Process', body: `<p><strong>Step 1 — Check Local Cache:</strong> Your computer first checks its own DNS cache. If it has a recent answer for the domain, it uses that immediately.</p><p><strong>Step 2 — Query the Recursive Resolver:</strong> If not cached, your computer asks its configured DNS server (often your ISP or 8.8.8.8). This server is called the <em>recursive resolver</em>.</p><p><strong>Step 3 — Root Name Server:</strong> The resolver then queries a Root Name Server, which directs it to the appropriate Top-Level Domain (TLD) server (e.g., .com, .org).</p><p><strong>Step 4 — TLD Name Server:</strong> The TLD server points the resolver to the <em>authoritative name server</em> for the specific domain.</p><p><strong>Step 5 — Authoritative Answer:</strong> Finally, the authoritative server returns the IP address. The resolver caches it and returns it to your computer.</p>` },
+      { title: 'DNS Record Types', type: 'table', headers: ['Record','Purpose','Example'],
+        rows: [['A','Maps a domain to an IPv4 address','cisco.com → 72.163.4.185'],['AAAA','Maps a domain to an IPv6 address','cisco.com → 2001:db8::1'],['CNAME','Alias — points one domain to another','www.cisco.com → cisco.com'],['MX','Specifies the mail server for a domain','cisco.com → mail.cisco.com'],['NS','Lists the authoritative name servers','cisco.com → ns1.cisco.com'],['PTR','Reverse DNS — IP to domain name','72.163.4.185 → cisco.com'],['TXT','Text information (used for SPF, DKIM)','Spam filtering verification']] },
+      { title: 'DNS and TCP vs UDP', body: `<p>DNS primarily uses <strong>UDP port 53</strong> for regular queries because it's fast and queries/responses are small (fit in one packet). However, DNS switches to <strong>TCP port 53</strong> in two scenarios: when the response is too large for UDP (over 512 bytes), and for <strong>zone transfers</strong> — when a secondary DNS server replicates the entire zone database from the primary server.</p>` },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'DNS uses <strong>port 53 (UDP for queries, TCP for zone transfers)</strong>. Key commands on Cisco devices: <strong>ip name-server 8.8.8.8</strong> sets the DNS server, and <strong>ip domain-lookup</strong> enables DNS resolution (it\'s on by default). If you type a wrong command in the CLI and the router pauses — it\'s trying to DNS-resolve what you typed. Disable with <strong>no ip domain-lookup</strong> in a lab environment.' },
+    ]
+  },
+  DHCP: {
+    name: 'DHCP', fullName: 'Dynamic Host Configuration Protocol', port: '67/68', color: '#00ff88',
+    sections: [
+      { title: 'What is DHCP?', body: `<p><strong>DHCP (Dynamic Host Configuration Protocol)</strong> automatically assigns IP configuration to devices when they join a network. Without DHCP, a network administrator would have to manually configure the IP address, subnet mask, default gateway, and DNS server on every single device — an impractical task in any network of meaningful size.</p><p>Instead, when a device connects, DHCP handles all of this automatically in seconds, making it one of the most essential protocols in any network.</p>` },
+      { title: 'What DHCP Assigns', type: 'table', headers: ['Parameter','Example','Purpose'],
+        rows: [['IP Address','192.168.1.50','Unique identifier for the device on the network'],['Subnet Mask','255.255.255.0 (/24)','Defines the network and host portions of the IP'],['Default Gateway','192.168.1.1','The router the device uses to reach other networks'],['DNS Server','8.8.8.8','Server used to resolve domain names'],['Lease Time','24 hours','How long the device can keep the assigned IP']] },
+      { title: 'The DORA Process', body: `<p>DHCP uses a 4-step process to assign an address, remembered by the acronym <strong>DORA</strong>:</p><p><strong>D — Discover:</strong> First, the client broadcasts a DHCP Discover message to the entire network: "Is there a DHCP server out there?" (Destination: 255.255.255.255)</p><p><strong>O — Offer:</strong> Next, the DHCP server responds with a DHCP Offer, proposing an available IP address and configuration.</p><p><strong>R — Request:</strong> The client then broadcasts a DHCP Request, formally asking for the offered address. (Broadcast so other servers know the offer was accepted.)</p><p><strong>A — Acknowledge:</strong> Finally, the server sends a DHCP Acknowledge (ACK), confirming the assignment. The client now uses the IP address for the duration of the lease.</p>` },
+      { title: 'DHCP Relay Agent', body: `<p>DHCP uses broadcast messages — and routers, by default, do <strong>not forward broadcasts</strong> between networks. This creates a problem: if your DHCP server is on a different subnet than your clients, the Discover broadcast never reaches it.</p><p>The solution is a <strong>DHCP Relay Agent</strong> (also called IP Helper). Configured on the router interface facing the clients, it intercepts DHCP broadcasts and forwards them as unicast packets to the DHCP server's IP address.</p><p>The Cisco command is: <code style="background:rgba(0,0,0,0.2);padding:2px 6px;border-radius:4px;">ip helper-address &lt;DHCP-server-IP&gt;</code></p>` },
+      { title: 'Configuring a DHCP Pool on a Cisco Router', type: 'table', headers: ['Command','Purpose'],
+        rows: [['ip dhcp pool OFFICE','Create a named DHCP pool'],['network 192.168.1.0 255.255.255.0','Define the address range to assign from'],['default-router 192.168.1.1','Set the default gateway given to clients'],['dns-server 8.8.8.8','Set the DNS server given to clients'],['lease 1','Set lease duration (1 day)'],['ip dhcp excluded-address 192.168.1.1 192.168.1.10','Exclude static IPs from the pool']] },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'DHCP uses <strong>UDP ports 67 (server) and 68 (client)</strong>. The DORA process is frequently tested — know the order: <strong>Discover → Offer → Request → Acknowledge</strong>. Also know the <strong>ip helper-address</strong> command for relaying DHCP across subnets. Exam simulations often ask you to configure a DHCP pool or troubleshoot why a client isn\'t getting an IP address.' },
+    ]
+  },
+  SNMP: {
+    name: 'SNMP', fullName: 'Simple Network Management Protocol', port: '161', color: '#0099cc',
+    sections: [
+      { title: 'What is SNMP?', body: `<p><strong>SNMP (Simple Network Management Protocol)</strong> is the standard protocol for <strong>monitoring and managing network devices</strong> remotely. It allows a centralized management system to collect data from routers, switches, servers, and printers — things like CPU usage, interface status, bandwidth utilization, and error counts.</p><p>In essence, SNMP is how your network operations center (NOC) gets a live view of everything happening across the network without logging into each device individually.</p>` },
+      { title: 'SNMP Components', type: 'table', headers: ['Component','Role','Example'],
+        rows: [['SNMP Manager','Centralized system that queries and receives data','SolarWinds, PRTG, Nagios, Cisco Prime'],['SNMP Agent','Software running on managed devices that responds to queries','Running on every Cisco router/switch'],['MIB (Management Information Base)','Database of all monitorable variables on a device','Interface speed, CPU %, packet counts'],['OID (Object Identifier)','Unique numerical ID for each variable in the MIB','1.3.6.1.2.1.2.2.1.10 = interface input bytes']] },
+      { title: 'SNMP Operations', type: 'table', headers: ['Operation','Direction','Purpose'],
+        rows: [['GET','Manager → Agent','Request a specific value (e.g., CPU usage)'],['GET-NEXT','Manager → Agent','Walk through the MIB tree to retrieve multiple values'],['SET','Manager → Agent','Change a value on the device (e.g., shut an interface)'],['Trap','Agent → Manager','Device proactively alerts the manager of an event (e.g., link down)'],['Inform','Agent → Manager','Like a Trap, but requires acknowledgement from the manager']] },
+      { title: 'SNMP Versions', body: `<p>SNMP has evolved through three major versions, each improving on security:</p><p><strong>SNMPv1</strong> — The original version. Uses simple community strings (plaintext passwords like "public" or "private") for authentication. No encryption. Not recommended for production.</p><p><strong>SNMPv2c</strong> — Added bulk data retrieval (GetBulk) for efficiency. However, it still uses plaintext community strings. Still widely deployed despite security weaknesses.</p><p><strong>SNMPv3</strong> — Finally adds proper security: <strong>authentication</strong> (MD5/SHA), <strong>encryption</strong> (AES/DES), and <strong>access control</strong>. This is the version that should be used in any secure environment.</p>` },
+      { title: 'SNMP Community Strings', body: `<p>In SNMPv1 and v2c, access is controlled by <strong>community strings</strong> — essentially plaintext passwords embedded in SNMP packets. Two default strings are notorious for being left unchanged:</p><p><strong>"public"</strong> — Read-only access (GET operations). Lets anyone query device statistics.<br><strong>"private"</strong> — Read-write access (GET and SET). Lets anyone <em>change</em> device configuration.</p><p>Leaving these defaults in place is a significant security risk. Always change community strings and prefer SNMPv3 in production networks.</p>` },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'SNMP uses <strong>UDP port 161</strong> for queries (manager → agent) and <strong>UDP port 162</strong> for Traps (agent → manager). Know the three versions: v1/v2c use community strings (insecure), <strong>SNMPv3 adds auth and encryption</strong>. Also know the difference between a <strong>Trap</strong> (one-way alert, no ACK) and an <strong>Inform</strong> (acknowledged trap).' },
+    ]
+  },
+  Syslog: {
+    name: 'Syslog', fullName: 'System Logging Protocol', port: '514', color: '#ff9900',
+    sections: [
+      { title: 'What is Syslog?', body: `<p><strong>Syslog</strong> is a standard protocol for collecting and forwarding <strong>log messages</strong> from network devices to a central logging server. Every time something significant happens on a router or switch — a link goes down, a login fails, a configuration changes, or an interface resets — the device can generate a syslog message and send it to a server for storage, analysis, and alerting.</p><p>In practice, syslog is the backbone of network monitoring and security auditing. Without it, troubleshooting events that happened in the past would be nearly impossible.</p>` },
+      { title: 'Syslog Severity Levels', body: `<p>Every syslog message is assigned a <strong>severity level</strong> from 0 (most critical) to 7 (least critical). A useful mnemonic is: <strong>"Every Awesome Cisco Engineer Will Need Daily Practice"</strong></p>`, type: 'body_then_table',
+        headers: ['Level','Name','Mnemonic Word','Examples'],
+        rows: [['0','Emergency','Every','System is unusable — complete failure'],['1','Alert','Awesome','Immediate action required — critical hardware failure'],['2','Critical','Cisco','Critical conditions — software failure, high CPU'],['3','Error','Engineer','Error conditions — interface errors, routing failures'],['4','Warning','Will','Warning conditions — unusual but not immediately harmful'],['5','Notice','Need','Normal but significant events — config changes, link up/down'],['6','Informational','Daily','Informational messages — normal operational events'],['7','Debug','Practice','Detailed debug output — only enable when troubleshooting']] },
+      { title: 'Where Syslog Messages Go', type: 'table', headers: ['Destination','Command','Notes'],
+        rows: [['Console','logging console [level]','Shown on physical console port — always on by default'],['VTY (Telnet/SSH)','terminal monitor','Must enable per-session with this command'],['Buffer (RAM)','logging buffered [size] [level]','Stored in device memory — lost on reboot'],['Syslog Server','logging host <ip-address>','Sent to central server — persistent, best practice'],['SNMP Trap','snmp-server enable traps syslog','Forward syslog events as SNMP traps']] },
+      { title: 'Configuring Syslog on a Cisco Device', type: 'table', headers: ['Command','Purpose'],
+        rows: [['logging host 192.168.1.100','Send syslog messages to this server IP'],['logging trap warnings','Only send severity 4 (Warning) and above to the server'],['logging buffered 16384 debugging','Store all messages in a 16KB local buffer'],['logging source-interface Lo0','Use loopback as source IP for syslog messages'],['show logging','View the local syslog buffer and configuration']] },
+      { title: 'Syslog vs SNMP', body: `<p>Both Syslog and SNMP are used for network monitoring, but they serve different purposes. Syslog is <strong>event-driven</strong> — it sends a message when something happens (a link flaps, a user logs in). SNMP, on the other hand, is primarily <strong>poll-based</strong> — the management system periodically asks devices for their statistics.</p><p>As a result, Syslog is better for capturing specific events and building audit trails, while SNMP is better for continuous performance monitoring and trending.</p>` },
+      { title: 'CCNA Exam Tip', type: 'tip', body: 'Syslog uses <strong>UDP port 514</strong>. Memorize the severity levels 0–7 with the mnemonic <strong>"Every Awesome Cisco Engineer Will Need Daily Practice."</strong> For the exam: level 0 = Emergency (worst), level 7 = Debug (most verbose). The command <strong>logging trap [level]</strong> controls what severity gets sent to the syslog server — lower number = more critical, fewer messages.' },
+    ]
+  },
+};
+
+function renderProtocolLesson(protocolKey) {
+  const lesson = PROTOCOL_LESSONS[protocolKey];
+  if (!lesson) return;
+  document.getElementById('protocol-detail-title').textContent = lesson.name;
+  const container = document.getElementById('protocol-detail-content');
+  container.innerHTML = '';
+
+  // Banner
+  const banner = document.createElement('div');
+  banner.style.cssText = `background:${lesson.color}18;border:1px solid ${lesson.color}44;border-left:4px solid ${lesson.color};border-radius:12px;padding:16px 20px;margin-bottom:4px;`;
+  banner.innerHTML = `<div style="font-size:1.1rem;font-weight:700;color:${lesson.color}">${lesson.name} — ${lesson.fullName}</div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-top:4px;">Port ${lesson.port} &nbsp;·&nbsp; OSI Layer 7 — Application</div>`;
+  container.appendChild(banner);
+
+  lesson.sections.forEach(section => {
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+    if (section.type === 'table') {
+      const rows = section.rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <table class="lesson-table"><thead><tr>${section.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+    } else if (section.type === 'tip') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div><div class="lesson-tip">💡 ${section.body}</div>`;
+    } else if (section.type === 'body_then_table') {
+      const rows = section.rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div class="lesson-body">${section.body}</div>
+        <table class="lesson-table" style="margin-top:10px"><thead><tr>${section.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+    } else {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div><div class="lesson-body">${section.body}</div>`;
+    }
+    container.appendChild(card);
+  });
+
+  showScreen('screen-protocol');
+  window.scrollTo(0, 0);
+}
+
+function renderTopics() {
+  const grid = document.getElementById('topic-grid');
+  grid.innerHTML = '';
+  TOPICS.forEach(topic => {
+    const best = state.topicScores[topic.id] || 0;
+    const completed = best >= 80;
+    const card = document.createElement('div');
+    card.className = 'topic-card' + (completed ? ' completed' : '');
+    card.innerHTML = `
+      <div class="badge">${completed ? '✓' : best + '%'}</div>
+      <div class="icon">${topic.icon}</div>
+      <div class="name">${topic.name}</div>
+      <div class="count">${topic.questions.length} questions</div>
+      <div class="card-btns">
+        <button class="btn-learn">📖 Learn</button>
+        <button class="btn-quiz-sm">⚡ Quiz</button>
+      </div>
+    `;
+    card.querySelector('.btn-learn').addEventListener('click', (e) => { e.stopPropagation(); renderLesson(topic); });
+    card.querySelector('.btn-quiz-sm').addEventListener('click', (e) => { e.stopPropagation(); startQuiz(topic); });
+    grid.appendChild(card);
+  });
+}
+
+// ── Lesson ────────────────────────────────────────────────────────────────────
+function renderLesson(topic) {
+  state.currentTopic = topic;
+  document.getElementById('learn-topic-name').textContent = topic.icon + ' ' + topic.name;
+  const container = document.getElementById('lesson-content');
+  container.innerHTML = '';
+
+  for (const section of topic.lesson) {
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+
+    if (section.type === 'diagram') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">Tap any layer to learn more →</div>
+        <div class="lesson-diagram">${section.layers.map(l => `
+          <div class="layer-row" style="background:${l.bg}" data-layer="${l.num}">
+            <div class="layer-num" style="background:${l.fg};color:#000">${l.num}</div>
+            <div class="layer-link" style="color:${l.fg}">${l.name}</div>
+            <div class="layer-detail">${l.pdu} &nbsp;·&nbsp; ${l.example}</div>
+          </div>`).join('')}
+        </div>`;
+      card.querySelectorAll('.layer-row').forEach(row => {
+        row.addEventListener('click', () => renderLayerLesson(parseInt(row.dataset.layer)));
+      });
+    } else if (section.type === 'table') {
+      const rows = section.rows.map(r =>
+        '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>'
+      ).join('');
+      card.innerHTML = `${section.title ? `<div class="lesson-section-title">${section.title}</div>` : ''}
+        <table class="lesson-table">
+          <thead><tr>${section.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    } else if (section.type === 'tip') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div class="lesson-tip">💡 ${section.body}</div>`;
+    } else if (section.type === 'subnet_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div class="lesson-body">${section.body}</div>
+        <div id="subnet-anim-root"></div>`;
+      container.appendChild(card);
+      buildSubnetAnim(document.getElementById('subnet-anim-root'));
+      continue;
+    } else {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div class="lesson-body">${section.body}</div>`;
+    }
+
+    container.appendChild(card);
+  }
+
+  showScreen('screen-learn');
+  window.scrollTo(0, 0);
+}
+
+// ── Quiz ─────────────────────────────────────────────────────────────────────
+function startQuiz(topic) {
+  state.currentTopic = topic;
+  state.currentQuestions = shuffle(topic.questions).slice(0, 10);
+  state.currentIndex = 0;
+  state.currentCorrect = 0;
+  state.missedQuestions = [];
+  state.answered = false;
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = state.currentQuestions[state.currentIndex];
+  const total = state.currentQuestions.length;
+
+  document.getElementById('q-counter').textContent =
+    `Question ${state.currentIndex + 1} / ${total}`;
+  document.getElementById('q-progress').style.width =
+    ((state.currentIndex / total) * 100) + '%';
+  document.getElementById('q-category').textContent =
+    state.currentTopic.name.toUpperCase();
+  document.getElementById('q-text').textContent = q.q;
+
+  const answersEl = document.getElementById('answers');
+  answersEl.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.a.forEach((ans, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = `<span class="letter">${letters[i]}</span>${ans}`;
+    btn.addEventListener('click', () => selectAnswer(i, q));
+    answersEl.appendChild(btn);
+  });
+
+  document.getElementById('explanation').className = 'explanation';
+  document.getElementById('btn-next').className = 'btn-primary';
+  state.answered = false;
+
+  startTimer(q);
+}
+
+function startTimer(q) {
+  clearInterval(state.timer);
+  state.timeLeft = 30;
+  const display = document.getElementById('timer-val');
+  const ring = document.getElementById('timer-display');
+  display.textContent = state.timeLeft;
+  ring.className = 'timer-ring';
+
+  state.timer = setInterval(() => {
+    state.timeLeft--;
+    display.textContent = state.timeLeft;
+    if (state.timeLeft <= 10) ring.className = 'timer-ring urgent';
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timer);
+      if (!state.answered) {
+        selectAnswer(-1, q); // time's up — wrong
+        toast('⏰ Time\'s up!');
+      }
+    }
+  }, 1000);
+}
+
+function selectAnswer(selected, q) {
+  if (state.answered) return;
+  state.answered = true;
+  clearInterval(state.timer);
+
+  const btns = document.querySelectorAll('.answer-btn');
+  btns.forEach(b => b.disabled = true);
+
+  const isCorrect = selected === q.correct;
+
+  if (selected >= 0) {
+    btns[selected].classList.add(isCorrect ? 'correct' : 'wrong');
+  }
+  if (!isCorrect) {
+    btns[q.correct].classList.add('correct');
+  }
+
+  if (isCorrect) {
+    state.currentCorrect++;
+    state.streak++;
+    toast('✅ Correct! +' + (state.streak > 2 ? ' 🔥 Streak x' + state.streak : ''));
+  } else {
+    state.streak = 0;
+    state.missedQuestions.push(q);
+    toast('❌ Wrong — check the explanation');
+  }
+
+  const exp = document.getElementById('explanation');
+  exp.innerHTML = q.explain;
+  exp.className = 'explanation show';
+
+  document.getElementById('btn-next').className = 'btn-primary show';
+  updateHUD();
+  saveState();
+}
+
+function nextQuestion() {
+  state.currentIndex++;
+  if (state.currentIndex >= state.currentQuestions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+// ── Result ───────────────────────────────────────────────────────────────────
+function showResult() {
+  const total = state.currentQuestions.length;
+  const correct = state.currentCorrect;
+  const acc = Math.round((correct / total) * 100);
+
+  const baseXP = correct * 10;
+  const bonusXP = acc === 100 ? 50 : acc >= 80 ? 20 : 0;
+  const earned = baseXP + bonusXP;
+
+  state.xp += earned;
+  state.topicScores[state.currentTopic.id] = Math.max(
+    state.topicScores[state.currentTopic.id] || 0, acc
+  );
+
+  // Level up check
+  let leveledUp = false;
+  while (
+    state.level < state.xpThresholds.length &&
+    state.xp >= (state.xpThresholds[state.level] || Infinity)
+  ) {
+    state.level++;
+    leveledUp = true;
+  }
+
+  saveState();
+  updateHUD();
+
+  document.getElementById('stat-correct').textContent = correct + '/' + total;
+  document.getElementById('stat-acc').textContent = acc + '%';
+  document.getElementById('stat-xp').textContent = '+' + earned;
+
+  let icon, title, sub;
+  if (acc === 100) { icon='🏆'; title='Perfect Score!'; sub='Flawless! You really know this topic.'; }
+  else if (acc >= 80) { icon='🎉'; title='Great Work!'; sub='Solid understanding. Keep it up!'; }
+  else if (acc >= 60) { icon='📚'; title='Keep Studying!'; sub='You\'re getting there — <a class="review-link" id="review-link">review the explanations</a>.'; }
+  else { icon='💪'; title='Keep Practicing!'; sub='Don\'t give up — <a class="review-link" id="review-link">review the explanations</a> for missed answers.'; }
+
+  document.getElementById('result-icon').textContent = leveledUp ? '⬆️' : icon;
+  document.getElementById('result-title').textContent = leveledUp ? 'Level Up! → Level ' + state.level : title;
+  document.getElementById('result-sub').innerHTML = leveledUp ? 'You reached Level ' + state.level + '! ' + sub : sub;
+
+  const reviewPanel = document.getElementById('review-panel');
+  reviewPanel.style.display = 'none';
+  reviewPanel.innerHTML = '';
+
+  const reviewLink = document.getElementById('review-link');
+  if (reviewLink && state.missedQuestions.length > 0) {
+    reviewLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (reviewPanel.style.display === 'flex') {
+        reviewPanel.style.display = 'none';
+        reviewLink.textContent = 'review the explanations';
+      } else {
+        reviewPanel.innerHTML = '<div class="review-header">Missed Questions — ' + state.missedQuestions.length + ' to review</div>';
+        state.missedQuestions.forEach((q, i) => {
+          const div = document.createElement('div');
+          div.className = 'review-item';
+          div.innerHTML = `
+            <div class="ri-q">${i + 1}. ${q.q}</div>
+            <div class="ri-correct">✓ Correct answer: ${q.a[q.correct]}</div>
+            <div class="ri-explain">${q.explain}</div>
+          `;
+          reviewPanel.appendChild(div);
+        });
+        reviewPanel.style.display = 'flex';
+        reviewPanel.style.flexDirection = 'column';
+        reviewPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        reviewLink.textContent = 'hide explanations';
+      }
+    });
+  }
+
+  const banner = document.getElementById('streak-banner');
+  if (state.streak >= 5) {
+    banner.textContent = '🔥 ' + state.streak + '-answer streak! You\'re on fire!';
+    banner.className = 'streak-banner show';
+  } else {
+    banner.className = 'streak-banner';
+  }
+
+  showScreen('screen-result');
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+document.getElementById('btn-next').addEventListener('click', nextQuestion);
+document.getElementById('btn-retry').addEventListener('click', () => startQuiz(state.currentTopic));
+document.getElementById('btn-topics').addEventListener('click', () => {
+  renderTopics();
+  showScreen('screen-topics');
+});
+document.getElementById('btn-learn-back').addEventListener('click', () => {
+  renderTopics();
+  showScreen('screen-topics');
+});
+document.getElementById('btn-start-quiz').addEventListener('click', () => startQuiz(state.currentTopic));
+document.getElementById('btn-layer-back').addEventListener('click', () => {
+  renderLesson(TOPICS.find(t => t.id === 'osi'));
+});
+document.getElementById('btn-layer-quiz').addEventListener('click', () => startQuiz(TOPICS.find(t => t.id === 'osi')));
+document.getElementById('btn-protocol-back').addEventListener('click', () => {
+  renderLayerLesson(7);
+});
+document.getElementById('btn-protocol-quiz').addEventListener('click', () => startQuiz(TOPICS.find(t => t.id === 'osi')));
+document.getElementById('btn-l3protocol-back').addEventListener('click', () => {
+  renderLayerLesson(3);
+});
+document.getElementById('btn-l3protocol-quiz').addEventListener('click', () => startQuiz(TOPICS.find(t => t.id === 'routing')));
+document.getElementById('logo-home').addEventListener('click', () => {
+  renderTopics();
+  showScreen('screen-topics');
+  window.scrollTo(0, 0);
+});
+
+// ── Theme toggle ─────────────────────────────────────────────────────────────
+const themeBtn = document.getElementById('theme-toggle');
+const isLight = localStorage.getItem('nq_theme') === 'light';
+if (isLight) { document.body.classList.add('light'); themeBtn.textContent = '☀️'; }
+
+themeBtn.addEventListener('click', () => {
+  const light = document.body.classList.toggle('light');
+  themeBtn.textContent = light ? '☀️' : '🌙';
+  localStorage.setItem('nq_theme', light ? 'light' : 'dark');
+});
+
+loadState();
+updateHUD();
+renderTopics();
+</script>
+</body>
+</html>
