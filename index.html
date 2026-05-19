@@ -997,6 +997,72 @@
     50% { box-shadow: 0 0 10px 3px currentColor; }
   }
 
+  /* ── Hub vs Switch Animation ── */
+  .hs-wrap { padding:6px 0; }
+  .hs-tabs { display:flex; gap:8px; margin-bottom:10px; }
+  .hs-tab { padding:8px 14px; border-radius:8px; border:1.5px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:#999; font-size:0.78em; font-weight:700; cursor:pointer; transition:all 0.2s; }
+  .hs-desc { font-size:0.79em; color:#ccc; margin-bottom:12px; padding:9px 12px; background:rgba(255,255,255,0.04); border-radius:8px; line-height:1.5; }
+  .hs-topo { display:flex; flex-direction:column; align-items:center; margin-bottom:10px; }
+  .hs-mac-tbl { align-self:stretch; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px 10px; margin-bottom:8px; }
+  .hs-mac-title { font-size:0.65em; font-weight:700; color:#888; letter-spacing:0.05em; margin-bottom:5px; }
+  .hs-mac-row { display:flex; justify-content:space-between; font-size:0.66em; padding:3px 8px; border-radius:4px; border:1px solid transparent; transition:all 0.3s; font-family:monospace; color:#666; }
+  .hs-mac-row.hs-mr-active { border-color:var(--pc); color:var(--pc); background:rgba(255,255,255,0.05); font-weight:700; }
+  .hs-device-wrap { width:100%; display:flex; justify-content:center; margin-bottom:0; }
+  .hs-device { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; width:110px; height:50px; border-radius:10px; border:2px solid; background:rgba(0,0,0,0.3); transition:all 0.3s; }
+  .hs-device.hs-device-active { box-shadow:0 0 18px var(--dc,#fff); border-color:var(--dc,#fff) !important; }
+  .hs-pc-row { display:flex; width:100%; gap:4px; }
+  .hs-pc-col { flex:1; display:flex; flex-direction:column; align-items:center; }
+  .hs-wire { width:2px; height:34px; background:rgba(255,255,255,0.08); border-radius:1px; transition:background 0.25s, box-shadow 0.25s; }
+  .hs-wire.hs-wire-on { background:var(--pc); box-shadow:0 0 8px var(--pc); }
+  .hs-wire.hs-wire-flood { background:var(--pc); box-shadow:0 0 12px var(--pc); animation:hsFlood 0.5s ease-in-out 3; }
+  @keyframes hsFlood { 0%,100%{opacity:0.5} 50%{opacity:1} }
+  .hs-pc { width:100%; display:flex; flex-direction:column; align-items:center; padding:5px 2px; border-radius:8px; border:1.5px solid rgba(255,255,255,0.1); transition:all 0.3s; text-align:center; }
+  .hs-pc.hs-pc-hi { border-color:var(--pc) !important; box-shadow:0 0 12px var(--pc); }
+  .hs-pc.hs-pc-dim { opacity:0.18; }
+  .hs-pc-lbl { font-size:0.6em; font-weight:700; color:var(--pc); margin-top:1px; }
+  .hs-pc-mac { font-size:0.54em; color:#666; font-family:monospace; }
+  .hs-badge { font-size:0.9em; min-height:18px; margin-top:2px; opacity:0; transition:opacity 0.3s; }
+  .hs-badge.hs-badge-on { opacity:1; }
+  .hs-step-box { background:rgba(255,255,255,0.05); border-radius:10px; padding:11px 13px; font-size:0.81em; color:#ccc; line-height:1.55; margin-bottom:10px; min-height:44px; }
+  .hs-controls { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .hs-btn { padding:7px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.07); color:#ccc; font-size:0.77em; cursor:pointer; }
+  .hs-btn:hover { background:rgba(255,255,255,0.13); }
+  .hs-btn-reset { border-color:#ff6680 !important; color:#ff6680 !important; }
+  #hs-ctr { font-size:0.72em; color:#888; }
+
+  /* ── Ethernet Frame Animation ── */
+  .ef-wrap { padding:6px 0; }
+  .ef-diagram { display:flex; gap:2px; margin-bottom:8px; }
+  .ef-field {
+    flex:var(--ef-flex,1); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:9px 3px;
+    background:rgba(0,0,0,0.2); border:1.5px solid var(--fc);
+    border-radius:5px; cursor:pointer; transition:all 0.28s;
+    min-width:26px; text-align:center; position:relative; overflow:hidden;
+  }
+  .ef-field::before { content:''; position:absolute; inset:0; background:var(--fc); opacity:0.1; }
+  .ef-field:hover::before { opacity:0.2; }
+  .ef-field.ef-active::before { opacity:0.22; }
+  .ef-field.ef-active { box-shadow:0 0 16px var(--fc); transform:scaleY(1.07); z-index:1; }
+  .ef-field.ef-dim { opacity:0.18; }
+  .ef-field-name { font-size:0.58em; font-weight:700; color:var(--fc); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; position:relative; }
+  .ef-field-bytes { font-size:0.5em; color:rgba(255,255,255,0.45); white-space:nowrap; position:relative; margin-top:2px; }
+  .ef-hint { font-size:0.72em; color:#777; text-align:center; margin-bottom:8px; }
+  .ef-detail { border:1.5px solid var(--ef-dc,#cc66ff); border-radius:10px; padding:13px 14px; background:rgba(255,255,255,0.04); margin-bottom:10px; }
+  .ef-detail-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1); flex-wrap:wrap; }
+  .ef-detail-icon { font-size:1.25em; }
+  .ef-detail-name { font-size:0.97em; font-weight:700; }
+  .ef-detail-sz { font-size:0.72em; color:#888; margin-left:auto; }
+  .ef-detail-body { font-size:0.81em; color:#ccc; line-height:1.65; margin-bottom:10px; }
+  .ef-detail-body ul { margin:5px 0; padding-left:18px; }
+  .ef-detail-body li { margin-bottom:3px; }
+  .ef-detail-body code { background:rgba(255,255,255,0.1); padding:1px 5px; border-radius:3px; font-family:monospace; font-size:0.92em; }
+  .ef-exam { font-size:0.74em; color:#ddd; background:rgba(255,153,0,0.07); border:1px solid rgba(255,153,0,0.28); border-radius:6px; padding:8px 10px; line-height:1.5; }
+  .ef-controls { display:flex; gap:8px; margin-top:2px; }
+  .ef-btn { padding:7px 13px; border-radius:8px; border:1.5px solid; background:transparent; font-size:0.77em; font-weight:600; cursor:pointer; }
+  .ef-btn-auto  { border-color:#cc66ff; color:#cc66ff; }
+  .ef-btn-reset { border-color:#ff4466; color:#ff4466; }
+
   /* ── Cable Animation ── */
   .cbl-wrap { padding:6px 0; }
   .cbl-tabs { display:flex; gap:7px; margin-bottom:10px; flex-wrap:wrap; }
@@ -2346,23 +2412,17 @@ const LAYER_LESSONS = {
 <p>When a switch receives a frame, it reads the <strong>source MAC</strong> and adds it to its MAC address table, mapping it to the incoming port. Subsequently, when it needs to forward a frame, it looks up the <strong>destination MAC</strong> in that table.</p>`
       },
       {
-        title: 'Ethernet Frame Structure',
-        type: 'table',
-        headers: ['Field', 'Size', 'Purpose'],
-        rows: [
-          ['Preamble', '7 bytes', 'Synchronizes receiver clocking'],
-          ['SFD (Start Frame Delimiter)', '1 byte', 'Marks the start of the frame'],
-          ['Destination MAC', '6 bytes', 'MAC address of the recipient'],
-          ['Source MAC', '6 bytes', 'MAC address of the sender'],
-          ['EtherType / Length', '2 bytes', 'Identifies Layer 3 protocol (e.g., 0x0800 = IPv4)'],
-          ['Data / Payload', '46–1500 bytes', 'The actual data being carried'],
-          ['FCS (Frame Check Sequence)', '4 bytes', 'CRC error detection'],
-        ]
+        type: 'frame_anim',
+        title: 'Ethernet Frame Structure'
       },
       {
         title: 'Switches vs Hubs',
         body: `<p>To understand Layer 2, it helps to contrast switches and hubs. A <strong>hub</strong> (Layer 1 device) simply broadcasts every frame out all ports — it has no intelligence. By contrast, a <strong>switch</strong> (Layer 2 device) learns MAC addresses and forwards frames only to the correct port. As a result, switches dramatically reduce unnecessary traffic and improve network performance.</p>
 <p>Furthermore, switches create separate <strong>collision domains</strong> per port, while a hub creates one shared collision domain for all devices.</p>`
+      },
+      {
+        type: 'hub_switch_anim',
+        title: 'Interactive: Hub vs Switch in Action'
       },
       {
         title: 'CCNA Exam Tip',
@@ -2475,6 +2535,18 @@ function renderLayerLesson(layerNum) {
       card.querySelectorAll('.proto-link').forEach(link => {
         link.addEventListener('click', () => renderProtocolLesson(link.dataset.proto));
       });
+    } else if (section.type === 'hub_switch_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="hs-anim-root"></div>`;
+      container.appendChild(card);
+      buildHubSwitchAnim(document.getElementById('hs-anim-root'));
+      continue;
+    } else if (section.type === 'frame_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="frame-anim-root"></div>`;
+      container.appendChild(card);
+      buildFrameAnim(document.getElementById('frame-anim-root'));
+      continue;
     } else if (section.type === 'cable_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="cable-anim-root"></div>`;
@@ -2515,6 +2587,266 @@ function renderLayerLesson(layerNum) {
 
   showScreen('screen-layer');
   window.scrollTo(0, 0);
+}
+
+// ── Hub vs Switch Animation ───────────────────────────────────────────────────
+function buildHubSwitchAnim(root) {
+  const HUB_C = '#ff9900', SW_C = '#00d4ff';
+  const PCS = [
+    { id:'a', label:'PC-A', mac:'AA:AA', color:'#00d4ff' },
+    { id:'b', label:'PC-B', mac:'BB:BB', color:'#00ff88' },
+    { id:'c', label:'PC-C', mac:'CC:CC', color:'#ff6ec7' },
+    { id:'d', label:'PC-D', mac:'DD:DD', color:'#ffaa44' },
+  ];
+
+  const SCENARIOS = {
+    hub: {
+      deviceLabel:'HUB', deviceIcon:'🔌', deviceColor:HUB_C, showMac:false,
+      desc:`A <strong style="color:${HUB_C}">Hub</strong> is a Layer 1 repeater — it has <strong>no MAC address table</strong> and no intelligence. Every frame is broadcast out every port.`,
+      steps:[
+        { text:`<strong style="color:#00d4ff">PC-A</strong> creates a frame destined for <strong style="color:#00ff88">PC-B</strong> (MAC: BB:BB) and sends it toward the Hub.`,
+          hiPCs:['a'], hiWires:['a'], hiDev:false, badges:{}, hiMac:null },
+        { text:`The <strong style="color:${HUB_C}">Hub</strong> receives the signal on Port 1. It has <strong>no MAC table</strong> — it cannot look up where BB:BB lives.`,
+          hiPCs:[], hiWires:['a'], hiDev:true, badges:{}, hiMac:null },
+        { text:`The Hub <strong>floods the frame out ALL other ports simultaneously</strong> — PC-B, PC-C, and PC-D all receive a copy whether they want it or not.`,
+          hiPCs:['b','c','d'], hiWires:['b','c','d'], hiDev:true, badges:{}, hiMac:null },
+        { text:`<strong style="color:#00ff88">PC-B</strong> ✅ accepts (intended recipient). <strong style="color:#ff6ec7">PC-C</strong> 🚫 and <strong style="color:#ffaa44">PC-D</strong> 🚫 discard it — <em>wasted bandwidth, shared collision domain, zero privacy.</em>`,
+          hiPCs:['b','c','d'], hiWires:[], hiDev:false, badges:{b:'✅',c:'🚫',d:'🚫'}, hiMac:null },
+      ]
+    },
+    switch: {
+      deviceLabel:'SWITCH', deviceIcon:'🔀', deviceColor:SW_C, showMac:true,
+      desc:`A <strong style="color:${SW_C}">Switch</strong> is a Layer 2 device — it builds a <strong>MAC address table</strong> by observing traffic, then forwards frames only to the correct port.`,
+      steps:[
+        { text:`<strong style="color:#00d4ff">PC-A</strong> creates a frame for <strong style="color:#00ff88">PC-B</strong> (MAC: BB:BB). The switch has already learned BB:BB from a prior exchange — it's in the MAC table.`,
+          hiPCs:['a'], hiWires:['a'], hiDev:false, badges:{}, hiMac:null },
+        { text:`PC-A sends the frame up to the <strong style="color:${SW_C}">Switch</strong>. The switch <strong>records AA:AA → Port 1</strong> in its MAC table (MAC learning).`,
+          hiPCs:['a'], hiWires:['a'], hiDev:true, badges:{}, hiMac:'a' },
+        { text:`The Switch looks up <strong>BB:BB</strong> in its MAC table → <strong>Port 2</strong>. Found! No flooding needed. PC-C and PC-D will not be disturbed.`,
+          hiPCs:[], hiWires:[], hiDev:true, badges:{}, hiMac:'b' },
+        { text:`The Switch forwards the frame <strong>only out Port 2 (PC-B)</strong>. PC-C and PC-D each have their own independent collision domain and see nothing.`,
+          hiPCs:['b'], hiWires:['b'], hiDev:true, badges:{}, hiMac:'b' },
+        { text:`<strong style="color:#00ff88">PC-B</strong> ✅ accepts the frame. PC-C and PC-D are completely unaffected — <em>efficient, private, and each port is its own collision domain.</em>`,
+          hiPCs:['b'], hiWires:[], hiDev:false, badges:{b:'✅'}, hiMac:null },
+      ]
+    }
+  };
+
+  root.innerHTML = `<div class="hs-wrap">
+    <div class="hs-tabs">
+      <button class="hs-tab" id="hs-hub-tab">🔌 Hub (Layer 1)</button>
+      <button class="hs-tab" id="hs-sw-tab">🔀 Switch (Layer 2)</button>
+    </div>
+    <div class="hs-desc" id="hs-desc"></div>
+    <div class="hs-topo">
+      <div class="hs-mac-tbl" id="hs-mac-tbl" style="display:none">
+        <div class="hs-mac-title">📋 MAC ADDRESS TABLE</div>
+        ${PCS.map(p=>`<div class="hs-mac-row" id="hs-mr-${p.id}" style="--pc:${p.color}">
+          <span>${p.mac}</span><span style="color:#555">Port ${PCS.indexOf(p)+1}</span>
+        </div>`).join('')}
+      </div>
+      <div class="hs-device-wrap">
+        <div class="hs-device" id="hs-device">
+          <span id="hs-dev-icon" style="font-size:1.4em"></span>
+          <span id="hs-dev-lbl" style="font-size:0.65em;font-weight:800;letter-spacing:0.1em"></span>
+        </div>
+      </div>
+      <div class="hs-pc-row">
+        ${PCS.map(p=>`<div class="hs-pc-col">
+          <div class="hs-wire" id="hs-wire-${p.id}" style="--pc:${p.color}"></div>
+          <div class="hs-pc" id="hs-pc-${p.id}" style="--pc:${p.color}">
+            <div style="font-size:1.1em">💻</div>
+            <div class="hs-pc-lbl">${p.label}</div>
+            <div class="hs-pc-mac">${p.mac}</div>
+            <div class="hs-badge" id="hs-badge-${p.id}"></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="hs-step-box" id="hs-step-box">Select <strong>Hub</strong> or <strong>Switch</strong> above, then press <strong>Next ▶</strong>.</div>
+    <div class="hs-controls">
+      <button class="hs-btn" id="hs-prev">◀ Prev</button>
+      <span id="hs-ctr">—</span>
+      <button class="hs-btn" id="hs-next">Next ▶</button>
+      <button class="hs-btn hs-btn-reset" id="hs-reset">↺ Reset</button>
+    </div>
+  </div>`;
+
+  let mode = 'hub', step = -1;
+  const g = id => root.querySelector('#' + id);
+
+  function applyStep(s) {
+    const sc = SCENARIOS[mode];
+    const st = sc.steps[s];
+    PCS.forEach(p => {
+      g(`hs-pc-${p.id}`).classList.remove('hs-pc-hi','hs-pc-dim');
+      const w = g(`hs-wire-${p.id}`);
+      w.classList.remove('hs-wire-on','hs-wire-flood');
+      g(`hs-badge-${p.id}`).textContent = '';
+      g(`hs-badge-${p.id}`).classList.remove('hs-badge-on');
+    });
+    if (sc.showMac) PCS.forEach(p => g(`hs-mr-${p.id}`)?.classList.remove('hs-mr-active'));
+
+    PCS.forEach(p => {
+      if (st.hiPCs.length && !st.hiPCs.includes(p.id)) g(`hs-pc-${p.id}`).classList.add('hs-pc-dim');
+      if (st.hiPCs.includes(p.id)) g(`hs-pc-${p.id}`).classList.add('hs-pc-hi');
+      if (st.hiWires.includes(p.id)) {
+        const w = g(`hs-wire-${p.id}`);
+        w.classList.add(st.hiWires.length > 1 ? 'hs-wire-flood' : 'hs-wire-on');
+      }
+    });
+    g('hs-device').classList.toggle('hs-device-active', !!st.hiDev);
+    Object.entries(st.badges).forEach(([id, txt]) => {
+      g(`hs-badge-${id}`).textContent = txt;
+      g(`hs-badge-${id}`).classList.add('hs-badge-on');
+    });
+    if (sc.showMac && st.hiMac) g(`hs-mr-${st.hiMac}`)?.classList.add('hs-mr-active');
+    g('hs-step-box').innerHTML = st.text;
+    g('hs-ctr').textContent = `Step ${s+1} / ${sc.steps.length}`;
+  }
+
+  function loadMode(m) {
+    mode = m; step = -1;
+    const sc = SCENARIOS[m];
+    g('hs-hub-tab').style.color = m==='hub' ? HUB_C : '#999';
+    g('hs-hub-tab').style.borderColor = m==='hub' ? HUB_C : 'rgba(255,255,255,0.12)';
+    g('hs-hub-tab').style.background = m==='hub' ? HUB_C+'18' : 'rgba(255,255,255,0.05)';
+    g('hs-sw-tab').style.color = m==='switch' ? SW_C : '#999';
+    g('hs-sw-tab').style.borderColor = m==='switch' ? SW_C : 'rgba(255,255,255,0.12)';
+    g('hs-sw-tab').style.background = m==='switch' ? SW_C+'18' : 'rgba(255,255,255,0.05)';
+    g('hs-dev-icon').textContent = sc.deviceIcon;
+    g('hs-dev-lbl').textContent = sc.deviceLabel;
+    g('hs-dev-lbl').style.color = sc.deviceColor;
+    g('hs-device').style.setProperty('--dc', sc.deviceColor);
+    g('hs-device').style.borderColor = sc.deviceColor+'55';
+    g('hs-mac-tbl').style.display = sc.showMac ? '' : 'none';
+    g('hs-desc').innerHTML = sc.desc;
+    PCS.forEach(p => {
+      g(`hs-pc-${p.id}`).classList.remove('hs-pc-hi','hs-pc-dim');
+      g(`hs-wire-${p.id}`).classList.remove('hs-wire-on','hs-wire-flood');
+      g(`hs-badge-${p.id}`).textContent = '';
+      g(`hs-badge-${p.id}`).classList.remove('hs-badge-on');
+    });
+    g('hs-device').classList.remove('hs-device-active');
+    if (sc.showMac) PCS.forEach(p => g(`hs-mr-${p.id}`)?.classList.remove('hs-mr-active'));
+    g('hs-step-box').innerHTML = `Press <strong>Next ▶</strong> to see how the <strong>${sc.deviceLabel}</strong> handles a frame from PC-A to PC-B.`;
+    g('hs-ctr').textContent = '—';
+  }
+
+  g('hs-hub-tab').addEventListener('click', () => loadMode('hub'));
+  g('hs-sw-tab').addEventListener('click',  () => loadMode('switch'));
+  g('hs-next').addEventListener('click', () => {
+    const max = SCENARIOS[mode].steps.length;
+    if (step < max - 1) { step++; applyStep(step); }
+  });
+  g('hs-prev').addEventListener('click', () => {
+    if (step > 0) { step--; applyStep(step); } else loadMode(mode);
+  });
+  g('hs-reset').addEventListener('click', () => loadMode(mode));
+
+  loadMode('hub');
+}
+
+// ── Ethernet Frame Animation ─────────────────────────────────────────────────
+function buildFrameAnim(root) {
+  const FIELDS = [
+    { id:'preamble',  short:'PRE',      name:'Preamble',               bytes:'7 bytes',      flex:7,  color:'#9966ff', icon:'🔔',
+      detail:`<p>The <strong>Preamble</strong> is 7 bytes of alternating 1s and 0s (<code>10101010…</code>). Its job is to <strong>synchronize the receiver's clock</strong> with the sender's so bits are sampled at exactly the right moment.</p><p>Think of it as the "ready, set…" before "go!" — it prepares the NIC before the actual frame data begins.</p>`,
+      exam:'The Preamble is 7 bytes and is NOT included when calculating Ethernet frame size (minimum 64 bytes excludes Preamble + SFD).' },
+    { id:'sfd',       short:'SFD',      name:'Start Frame Delimiter',  bytes:'1 byte',       flex:2,  color:'#cc66ff', icon:'🚦',
+      detail:`<p>The <strong>SFD (Start Frame Delimiter)</strong> is 1 byte: <code>10101011</code>. The final two 1s break the preamble pattern and signal <strong>"the frame starts with the very next byte."</strong></p><p>After the SFD, the receiver knows the next 6 bytes are the Destination MAC address.</p>`,
+      exam:'SFD = 1 byte, pattern 10101011. The two trailing 1s distinguish it from the preamble pattern.' },
+    { id:'dst',       short:'DST MAC',  name:'Destination MAC',        bytes:'6 bytes',      flex:6,  color:'#ff4466', icon:'🎯',
+      detail:`<p>The <strong>Destination MAC</strong> is the 48-bit hardware address of the intended recipient. Switches read this field to look up which port to forward the frame to.</p><p><strong>Special values:</strong></p><ul><li><code>FF:FF:FF:FF:FF:FF</code> — Broadcast: every device on the segment accepts it</li><li><code>01:xx:xx:xx:xx:xx</code> — Multicast: a group of devices</li></ul>`,
+      exam:'FF:FF:FF:FF:FF:FF = Layer 2 broadcast. Switches flood broadcasts out all ports except the source port.' },
+    { id:'src',       short:'SRC MAC',  name:'Source MAC',             bytes:'6 bytes',      flex:6,  color:'#ff9900', icon:'📤',
+      detail:`<p>The <strong>Source MAC</strong> identifies the NIC that sent the frame. When a switch receives a frame, it maps (Source MAC → incoming port) in its MAC address table — this is called <strong>MAC learning</strong>.</p><p>This is how switches build their forwarding tables dynamically, without any manual configuration.</p>`,
+      exam:'Switches learn MAC addresses from the Source MAC field, not the Destination MAC. Aging timer clears stale entries (default 300s).' },
+    { id:'ethertype', short:'TYPE',     name:'EtherType / Length',     bytes:'2 bytes',      flex:3,  color:'#00d4ff', icon:'🔍',
+      detail:`<p>If the value is <strong>≥ 0x0600 (1536)</strong> it's an <strong>EtherType</strong> identifying the Layer 3 protocol:</p><ul><li><code>0x0800</code> = IPv4</li><li><code>0x0806</code> = ARP</li><li><code>0x86DD</code> = IPv6</li><li><code>0x8100</code> = 802.1Q VLAN tag</li></ul><p>If ≤ 1500, it's the <em>payload length</em> (older IEEE 802.3 format).</p>`,
+      exam:'Know: 0x0800=IPv4, 0x0806=ARP, 0x86DD=IPv6, 0x8100=VLAN (802.1Q). These appear in ACL and protocol identification questions.' },
+    { id:'payload',   short:'DATA',     name:'Data / Payload',         bytes:'46–1500 bytes', flex:20, color:'#00ff88', icon:'📦',
+      detail:`<p>The <strong>payload</strong> carries the upper-layer data — typically an IP packet with its own headers. Size rules:</p><ul><li><strong>Minimum: 46 bytes</strong> — if the actual data is smaller, <strong>padding (zeros)</strong> is added to reach the minimum</li><li><strong>Maximum: 1500 bytes</strong> — this is the standard Ethernet <strong>MTU</strong></li></ul><p>Jumbo frames (up to 9000 bytes) exist on some networks but are non-standard.</p>`,
+      exam:'MTU = 1500 bytes. Total minimum frame = 64 bytes (not counting Preamble/SFD). Know these numbers cold for the CCNA.' },
+    { id:'fcs',       short:'FCS',      name:'FCS',                    bytes:'4 bytes',      flex:4,  color:'#ff6644', icon:'🔒',
+      detail:`<p>The <strong>FCS (Frame Check Sequence)</strong> holds a 32-bit <strong>CRC (Cyclic Redundancy Check)</strong>. The sender calculates this value over the frame; the receiver recalculates and compares.</p><p>If the CRC doesn't match → the frame is <strong>silently dropped</strong>. Ethernet does <em>not</em> request retransmission — that's TCP's job at Layer 4.</p>`,
+      exam:'FCS detects errors but does NOT correct them. Bad frames are discarded. Retransmission is handled by upper layers (TCP).' },
+  ];
+
+  root.innerHTML = `<div class="ef-wrap">
+    <div class="ef-diagram" id="ef-diagram">
+      ${FIELDS.map(f=>`<div class="ef-field" id="ef-f-${f.id}" data-id="${f.id}"
+          style="--fc:${f.color};--ef-flex:${f.flex}">
+        <div class="ef-field-name">${f.short}</div>
+        <div class="ef-field-bytes">${f.bytes}</div>
+      </div>`).join('')}
+    </div>
+    <div class="ef-hint" id="ef-hint">Tap any field to learn more</div>
+    <div class="ef-detail" id="ef-detail" style="display:none">
+      <div class="ef-detail-header">
+        <span class="ef-detail-icon" id="ef-icon"></span>
+        <span class="ef-detail-name" id="ef-name"></span>
+        <span class="ef-detail-sz"   id="ef-sz"></span>
+      </div>
+      <div class="ef-detail-body" id="ef-body"></div>
+      <div class="ef-exam" id="ef-exam"></div>
+    </div>
+    <div class="ef-controls">
+      <button class="ef-btn ef-btn-auto"  id="ef-auto">▶ Auto Tour</button>
+      <button class="ef-btn ef-btn-reset" id="ef-reset" style="display:none">↺ Reset</button>
+    </div>
+  </div>`;
+
+  let autoTimer = null, autoIdx = 0;
+
+  function show(id) {
+    const f = FIELDS.find(x => x.id === id);
+    if (!f) return;
+    root.querySelectorAll('.ef-field').forEach(el => {
+      el.classList.toggle('ef-active', el.dataset.id === id);
+      el.classList.toggle('ef-dim',    el.dataset.id !== id);
+    });
+    const det = root.querySelector('#ef-detail');
+    det.style.display = 'block';
+    det.style.setProperty('--ef-dc', f.color);
+    root.querySelector('#ef-icon').textContent = f.icon;
+    root.querySelector('#ef-icon').style.color  = f.color;
+    root.querySelector('#ef-name').textContent  = f.name;
+    root.querySelector('#ef-name').style.color  = f.color;
+    root.querySelector('#ef-sz').textContent    = f.bytes;
+    root.querySelector('#ef-body').innerHTML    = f.detail;
+    root.querySelector('#ef-exam').innerHTML    = `<strong>📋 CCNA Tip:</strong> ${f.exam}`;
+    root.querySelector('#ef-hint').style.display = 'none';
+    root.querySelector('#ef-reset').style.display = '';
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    root.querySelector('#ef-auto').textContent = '▶ Auto Tour';
+  }
+
+  function resetAll() {
+    stopAuto(); autoIdx = 0;
+    root.querySelectorAll('.ef-field').forEach(el => el.classList.remove('ef-active','ef-dim'));
+    root.querySelector('#ef-detail').style.display = 'none';
+    root.querySelector('#ef-hint').style.display = '';
+    root.querySelector('#ef-reset').style.display = 'none';
+  }
+
+  root.querySelector('#ef-diagram').addEventListener('click', e => {
+    const f = e.target.closest('.ef-field'); if (!f) return;
+    stopAuto(); show(f.dataset.id);
+  });
+  root.querySelector('#ef-auto').addEventListener('click', () => {
+    if (autoTimer) { stopAuto(); return; }
+    root.querySelector('#ef-auto').textContent = '⏸ Pause';
+    show(FIELDS[autoIdx].id);
+    autoTimer = setInterval(() => {
+      autoIdx = (autoIdx + 1) % FIELDS.length;
+      show(FIELDS[autoIdx].id);
+    }, 3000);
+  });
+  root.querySelector('#ef-reset').addEventListener('click', resetAll);
 }
 
 // ── Cable (Straight-Through / Crossover) Animation ───────────────────────────
