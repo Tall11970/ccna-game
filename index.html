@@ -997,6 +997,68 @@
     50% { box-shadow: 0 0 10px 3px currentColor; }
   }
 
+  /* ── Switch Animation ── */
+  .sw-wrap { display:flex; flex-direction:column; gap:10px; font-family:system-ui,sans-serif; }
+  .sw-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+  .sw-tab {
+    background:none; border:1px solid var(--border); color:var(--muted);
+    font-size:0.7rem; border-radius:6px; padding:5px 10px; cursor:pointer;
+    transition:border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .sw-tab:hover { border-color:#cc66ff88; color:#cc99ff; }
+  .sw-tab.sw-tab-active { border-color:#cc66ff; color:#cc99ff; background:rgba(204,102,255,0.1); }
+  .sw-layout { display:flex; gap:8px; align-items:stretch; }
+  .sw-diagram-col { flex:1; display:flex; flex-direction:column; gap:6px; }
+  .sw-row {
+    display:flex; align-items:center; gap:6px;
+    transition:opacity 0.4s;
+  }
+  .sw-pc {
+    width:62px; min-height:54px; border-radius:8px; border:1.5px solid;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:1rem; padding:4px 2px; flex-shrink:0;
+    transition:border-color 0.3s, box-shadow 0.3s, opacity 0.4s;
+    position:relative;
+  }
+  .sw-pc-label { font-size:0.6rem; font-weight:700; line-height:1.2; }
+  .sw-pc-mac { font-size:0.52rem; font-family:'Courier New',monospace; opacity:0.7; }
+  .sw-cable-wrap { flex:1; position:relative; height:32px; display:flex; align-items:center; }
+  .sw-cable-line { position:absolute; left:0; right:0; height:3px; border-radius:2px; }
+  .sw-frame-slot { position:absolute; left:0; right:0; top:0; bottom:0; overflow:hidden; }
+  .sw-frame {
+    position:absolute; top:50%; transform:translateY(-50%);
+    height:18px; border-radius:4px; padding:0 5px;
+    font-size:0.52rem; font-weight:800; white-space:nowrap;
+    display:flex; align-items:center; z-index:5;
+    transition:left 0.55s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:0 0 6px currentColor;
+  }
+  .sw-port {
+    width:44px; text-align:center; font-size:0.58rem; font-weight:700;
+    border:1px solid; border-radius:5px; padding:3px 2px; flex-shrink:0;
+    font-family:'Courier New',monospace;
+    transition:color 0.3s, border-color 0.3s, background 0.3s, box-shadow 0.3s;
+  }
+  .sw-switch-col {
+    display:flex; align-items:center; justify-content:center;
+    width:64px; flex-shrink:0;
+  }
+  .sw-body {
+    width:60px; border-radius:10px; padding:10px 4px;
+    background:rgba(204,102,255,0.08); border:1.5px solid rgba(204,102,255,0.3);
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    transition:border-color 0.3s, box-shadow 0.3s;
+    align-self:stretch; justify-content:center;
+  }
+  .sw-mac-section { background:rgba(255,255,255,0.03); border-radius:10px; padding:10px 12px; border:1px solid var(--border); }
+  .sw-mac-title { font-size:0.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .sw-step-box {
+    background:rgba(204,102,255,0.08); border:1px solid rgba(204,102,255,0.25);
+    border-radius:10px; padding:12px 14px; font-size:0.82rem; line-height:1.5;
+    min-height:52px;
+  }
+  .sw-controls { display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; }
+
   @media (max-width: 420px) {
     .topic-grid { grid-template-columns: 1fr; }
     .result-stats { grid-template-columns: repeat(3,1fr); }
@@ -1454,6 +1516,10 @@ const TOPICS = [
       {
         title: 'How Switches Work',
         body: `<p>A switch operates at <strong>Layer 2</strong> and uses <strong>MAC addresses</strong> to forward frames. When a frame arrives, the switch records the source MAC and port in its <strong>MAC address table</strong>. It looks up the destination MAC and forwards out only the correct port — or floods to all ports if unknown.</p>`
+      },
+      {
+        type: 'switch_anim',
+        title: 'Interactive: See How a Switch Forwards Frames'
       },
       {
         title: 'What are VLANs?',
@@ -2296,6 +2362,299 @@ function renderLayerLesson(layerNum) {
 
   showScreen('screen-layer');
   window.scrollTo(0, 0);
+}
+
+// ── Switch Animation ─────────────────────────────────────────────────────────
+function buildSwitchAnim(root) {
+  const PCS = [
+    { id:'A', label:'PC-A', mac:'AA:AA', port:'Fa0/1', color:'#00d4ff' },
+    { id:'B', label:'PC-B', mac:'BB:BB', port:'Fa0/2', color:'#7b4fff' },
+    { id:'C', label:'PC-C', mac:'CC:CC', port:'Fa0/3', color:'#ff6ec7' },
+    { id:'D', label:'PC-D', mac:'DD:DD', port:'Fa0/4', color:'#ff9900' },
+  ];
+
+  const SCENES = [
+    {
+      title:'📡 Unknown Destination',
+      steps:[
+        { info:'<strong>PC-A wants to send a frame to PC-B.</strong> It prepares a frame with source MAC <strong style="color:#00d4ff">AA:AA</strong> and destination MAC <strong style="color:#7b4fff">BB:BB</strong>. The switch\'s MAC table is empty — it has never seen these devices before.', hi:['A'] },
+        { info:'The frame arrives at <strong>Fa0/1</strong>. The switch reads the <strong>source MAC (AA:AA)</strong> and writes it to the MAC table: <em>"AA:AA is reachable on Fa0/1."</em> This is called <strong>MAC learning</strong>.', hi:['A'], lightPort:'A', frame:{from:'pc',port:'A'}, learn:{mac:'AA:AA',port:'Fa0/1',color:'#00d4ff'} },
+        { info:'Next, the switch looks up the <strong>destination MAC (BB:BB)</strong>. <strong>Not found!</strong> The switch has no idea which port leads to BB:BB. Consequently, it must <strong>flood</strong> — send the frame out every port except the one it arrived on (Fa0/1).', hi:[], lightSwitch:true, lookupMsg:'BB:BB → ❓ Not Found!' },
+        { info:'The switch floods out <strong>Fa0/2, Fa0/3, and Fa0/4</strong> simultaneously. Every device receives the frame, but only <strong>PC-B</strong> will accept it — PC-C and PC-D will discard it because the destination MAC doesn\'t match theirs.', hi:['B','C','D'], lightPort:'BCD', frame:{from:'switch',ports:['B','C','D'],accept:['B'],reject:['C','D']} },
+        { info:'<strong>Result:</strong> PC-B accepted the frame ✅. PC-C and PC-D discarded it ❌. Note: the switch still doesn\'t know where BB:BB is until PC-B sends a reply.', hi:['B'], dim:['C','D'] },
+      ]
+    },
+    {
+      title:'🎯 Known Destination',
+      preload:{ table:{'AA:AA':'Fa0/1','BB:BB':'Fa0/2','CC:CC':'Fa0/3','DD:DD':'Fa0/4'}, colors:{'AA:AA':'#00d4ff','BB:BB':'#7b4fff','CC:CC':'#ff6ec7','DD:DD':'#ff9900'} },
+      steps:[
+        { info:'The MAC table is now <strong>fully populated</strong> — the switch has learned all four devices. Watch what happens this time when PC-A sends another frame to PC-B.', hi:[] },
+        { info:'PC-A\'s frame arrives at <strong>Fa0/1</strong>. The switch checks the source MAC (AA:AA) — already in the table. <strong>No update needed.</strong> It then looks up the destination MAC BB:BB.', hi:['A'], lightPort:'A', frame:{from:'pc',port:'A'} },
+        { info:'<strong>BB:BB found at Fa0/2!</strong> The switch forwards the frame <em>only</em> to Fa0/2. Ports Fa0/3 and Fa0/4 remain completely silent — PC-C and PC-D see nothing.', hi:['B'], lightSwitch:true, lookupMsg:'BB:BB → ✅ Fa0/2', frame:{from:'switch',ports:['B'],accept:['B']} },
+        { info:'<strong>Unicast delivery!</strong> Only PC-B receives the frame ✅. PC-C and PC-D are undisturbed ✨. This efficiency — forwarding only to the correct port — is the key advantage of a switch over a hub.', hi:['B'], dim:['C','D'] },
+      ]
+    },
+    {
+      title:'📢 Broadcast (ARP)',
+      preload:{ table:{'AA:AA':'Fa0/1','BB:BB':'Fa0/2','CC:CC':'Fa0/3','DD:DD':'Fa0/4'}, colors:{'AA:AA':'#00d4ff','BB:BB':'#7b4fff','CC:CC':'#ff6ec7','DD:DD':'#ff9900'} },
+      steps:[
+        { info:'PC-A needs PC-B\'s MAC address to communicate. It sends an <strong>ARP request</strong> — a broadcast asking <em>"Who has IP 10.0.0.2? Tell 10.0.0.1."</em> ARP uses the special destination MAC: <strong>FF:FF:FF:FF:FF:FF</strong>.', hi:['A'] },
+        { info:'The broadcast frame arrives at <strong>Fa0/1</strong>. Even with a full MAC table, the destination <strong>FF:FF:FF:FF:FF:FF</strong> is special — the switch <em>always</em> floods broadcasts, no lookup needed.', hi:['A'], lightPort:'A', frame:{from:'pc',port:'A'} },
+        { info:'The switch floods the broadcast out <strong>all other ports</strong> simultaneously — Fa0/2, Fa0/3, and Fa0/4. Every device on the network must receive and process this frame.', hi:['B','C','D'], lightSwitch:true, lookupMsg:'FF:FF → 📢 Flood All!', frame:{from:'switch',ports:['B','C','D'],accept:['B','C','D']} },
+        { info:'<strong>All devices receive the broadcast</strong> ✅. PC-B responds with a unicast ARP reply containing its MAC. This is why large flat networks are slow — every ARP, DHCP, and STP packet hits every device. <strong>VLANs</strong> solve this by containing broadcasts to a smaller group.', hi:['B','C','D'] },
+      ]
+    },
+  ];
+
+  let scene=0, step=-1, macData={}, macColors={}, timers=[];
+
+  const wrap = document.createElement('div');
+  wrap.className = 'sw-wrap';
+
+  // Scenario tabs
+  const tabs = document.createElement('div');
+  tabs.className = 'sw-tabs';
+  SCENES.forEach((sc,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'sw-tab'+(i===0?' sw-tab-active':'');
+    btn.textContent = sc.title;
+    btn.addEventListener('click', () => loadScene(i));
+    tabs.appendChild(btn);
+  });
+  wrap.appendChild(tabs);
+
+  // Layout: diagram | switch body
+  const layout = document.createElement('div');
+  layout.className = 'sw-layout';
+
+  const diagCol = document.createElement('div');
+  diagCol.className = 'sw-diagram-col';
+  PCS.forEach(pc => {
+    const row = document.createElement('div');
+    row.className = 'sw-row';
+    row.id = 'sw-row-'+pc.id;
+    row.innerHTML = `
+      <div class="sw-pc" id="sw-pc-${pc.id}" style="border-color:${pc.color}55;color:${pc.color}">
+        💻<div class="sw-pc-label">${pc.label}</div>
+        <div class="sw-pc-mac">${pc.mac}</div>
+      </div>
+      <div class="sw-cable-wrap">
+        <div class="sw-cable-line" style="background:${pc.color}44"></div>
+        <div class="sw-frame-slot" id="sw-slot-${pc.id}"></div>
+      </div>
+      <div class="sw-port" id="sw-port-${pc.id}" style="color:${pc.color}66;border-color:${pc.color}44">${pc.port}</div>`;
+    diagCol.appendChild(row);
+  });
+
+  const swCol = document.createElement('div');
+  swCol.className = 'sw-switch-col';
+  swCol.innerHTML = `<div class="sw-body" id="sw-body">
+    <div style="font-size:1.5rem">🔀</div>
+    <div style="font-size:0.58rem;font-weight:800;letter-spacing:1px;margin-top:2px">SWITCH</div>
+    <div id="sw-lookup" style="font-size:0.52rem;color:var(--muted);margin-top:4px;min-height:14px;text-align:center;transition:all 0.3s"></div>
+  </div>`;
+
+  layout.appendChild(diagCol);
+  layout.appendChild(swCol);
+  wrap.appendChild(layout);
+
+  // MAC table
+  const macSection = document.createElement('div');
+  macSection.className = 'sw-mac-section';
+  macSection.innerHTML = `<div class="sw-mac-title">📋 MAC Address Table</div>
+    <table class="lesson-table" style="font-size:0.72rem;margin-bottom:0">
+      <thead><tr><th>MAC</th><th>Port</th><th>Status</th></tr></thead>
+      <tbody id="sw-mac-body"></tbody>
+    </table>
+    <div id="sw-mac-empty" style="font-size:0.7rem;color:var(--muted);padding:6px 0">Empty — switch will flood unknown destinations</div>`;
+  wrap.appendChild(macSection);
+
+  // Step info
+  const stepBox = document.createElement('div');
+  stepBox.className = 'sw-step-box';
+  stepBox.id = 'sw-step-box';
+  stepBox.innerHTML = 'Choose a scenario above, then press <strong>Next ▶</strong> to begin.';
+  wrap.appendChild(stepBox);
+
+  // Controls
+  const ctrls = document.createElement('div');
+  ctrls.className = 'sw-controls';
+  ctrls.innerHTML = `
+    <button class="sa-step-nav" id="sw-prev">◀ Prev</button>
+    <span class="sa-step-counter" id="sw-counter">-</span>
+    <button class="sa-step-nav" id="sw-next">Next ▶</button>
+    <button class="sa-step-nav" id="sw-reset" style="color:#ff6ec7;border-color:#ff6ec755">↺ Reset</button>`;
+  wrap.appendChild(ctrls);
+  root.appendChild(wrap);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function renderMac(highlightMac) {
+    const body = document.getElementById('sw-mac-body');
+    const empty = document.getElementById('sw-mac-empty');
+    if (!body) return;
+    body.innerHTML = '';
+    const keys = Object.keys(macData);
+    if (empty) empty.style.display = keys.length ? 'none' : 'block';
+    keys.forEach(mac => {
+      const isNew = mac === highlightMac;
+      const c = macColors[mac]||'#888';
+      const tr = document.createElement('tr');
+      tr.style.cssText = isNew ? `background:${c}22;transition:background 0.5s` : '';
+      tr.innerHTML = `<td style="font-family:'Courier New',monospace;color:${c};font-weight:700">${mac}</td>
+        <td style="font-weight:700">${macData[mac]}</td>
+        <td><span style="background:${isNew?c+'33':'rgba(255,255,255,0.05)'};color:${isNew?c:'var(--muted)'};border:1px solid ${isNew?c+'55':'transparent'};border-radius:4px;padding:1px 6px;font-size:0.62rem">${isNew?'✨ Just learned':'Active'}</span></td>`;
+      body.appendChild(tr);
+      if (isNew) timers.push(setTimeout(() => { tr.style.background=''; }, 1800));
+    });
+  }
+
+  function flashPort(ids, on) {
+    [...ids].forEach(id => {
+      const el = document.getElementById('sw-port-'+id);
+      const pc = PCS.find(p=>p.id===id);
+      if (!el||!pc) return;
+      if (on) { el.style.color=pc.color; el.style.borderColor=pc.color; el.style.background=pc.color+'22'; el.style.boxShadow='0 0 8px '+pc.color+'88'; }
+      else { el.style.color=pc.color+'66'; el.style.borderColor=pc.color+'44'; el.style.background=''; el.style.boxShadow=''; }
+    });
+  }
+
+  function flashSwitch(on, color) {
+    const el = document.getElementById('sw-body');
+    if (!el) return;
+    el.style.borderColor = on ? color : '';
+    el.style.boxShadow = on ? `0 0 18px ${color}88` : '';
+  }
+
+  function flashPC(id, on, accept) {
+    const el = document.getElementById('sw-pc-'+id);
+    const pc = PCS.find(p=>p.id===id);
+    if (!el||!pc) return;
+    if (on) {
+      el.style.boxShadow = `0 0 12px ${pc.color}99`;
+      el.style.borderColor = pc.color;
+      if (accept !== undefined) {
+        const badge = document.createElement('div');
+        badge.style.cssText = 'position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:1rem;animation:bitPop 0.4s ease';
+        badge.textContent = accept ? '✅' : '❌';
+        el.style.position = 'relative';
+        el.appendChild(badge);
+        timers.push(setTimeout(() => badge.remove(), 1600));
+      }
+    } else {
+      el.style.boxShadow = '';
+      el.style.borderColor = pc.color+'55';
+    }
+  }
+
+  function animFrame(portId, direction, cb) {
+    const slot = document.getElementById('sw-slot-'+portId);
+    const pc = PCS.find(p=>p.id===portId);
+    if (!slot||!pc) { if(cb) cb(); return; }
+    const f = document.createElement('div');
+    f.className = 'sw-frame';
+    f.style.cssText += `background:${pc.color};color:#000;`;
+    f.textContent = direction==='in' ? `${PCS[0].mac}→?` : `→${pc.mac}`;
+    if (direction==='in') {
+      f.style.left='2%';
+      slot.appendChild(f);
+      timers.push(setTimeout(() => { f.style.left='90%'; }, 30));
+      timers.push(setTimeout(() => { f.remove(); if(cb) cb(); }, 620));
+    } else {
+      f.style.left='90%';
+      slot.appendChild(f);
+      timers.push(setTimeout(() => { f.style.left='2%'; }, 30));
+      timers.push(setTimeout(() => { f.remove(); if(cb) cb(); }, 620));
+    }
+  }
+
+  function clearFrames() {
+    PCS.forEach(pc => { const s=document.getElementById('sw-slot-'+pc.id); if(s) s.innerHTML=''; });
+  }
+
+  function resetVisuals() {
+    timers.forEach(clearTimeout); timers=[];
+    clearFrames();
+    PCS.forEach(pc => { flashPC(pc.id, false); flashPort(pc.id, false); });
+    flashSwitch(false, '');
+    const lk = document.getElementById('sw-lookup');
+    if (lk) lk.textContent='';
+  }
+
+  // ── Step execution ─────────────────────────────────────────────────────────
+  function runStep() {
+    resetVisuals();
+    const sc = SCENES[scene];
+    const counter = document.getElementById('sw-counter');
+    const infoEl = document.getElementById('sw-step-box');
+    if (!counter||!infoEl) return;
+
+    if (step<0) {
+      counter.textContent='Ready';
+      infoEl.innerHTML=`<strong>${sc.title}</strong> — press <strong>Next ▶</strong> to begin.`;
+      return;
+    }
+    if (step>=sc.steps.length) {
+      counter.textContent='Done!';
+      infoEl.innerHTML='<strong>Scenario complete!</strong> Try the next tab or press ↺ Reset.';
+      return;
+    }
+
+    const s = sc.steps[step];
+    counter.textContent=`Step ${step+1} / ${sc.steps.length}`;
+    infoEl.innerHTML=s.info;
+
+    // Highlights
+    if (s.hi) s.hi.forEach(id => timers.push(setTimeout(() => flashPC(id, true), 100)));
+    if (s.dim) s.dim.forEach(id => { const el=document.getElementById('sw-pc-'+id); if(el) el.style.opacity='0.3'; timers.push(setTimeout(()=>{ if(el) el.style.opacity=''; },2500)); });
+    if (s.lightPort) timers.push(setTimeout(() => { flashPort(s.lightPort, true); timers.push(setTimeout(() => flashPort(s.lightPort, false), 1800)); }, 300));
+    if (s.lightSwitch) {
+      timers.push(setTimeout(() => { flashSwitch(true,'#cc66ff'); timers.push(setTimeout(()=>flashSwitch(false,''),1800)); },300));
+      if (s.lookupMsg) {
+        const lk=document.getElementById('sw-lookup');
+        timers.push(setTimeout(()=>{ if(lk){lk.style.color='#cc99ff';lk.textContent=s.lookupMsg;} timers.push(setTimeout(()=>{ if(lk) lk.textContent=''; },2000)); },400));
+      }
+    }
+    if (s.learn) timers.push(setTimeout(() => { macData[s.learn.mac]=s.learn.port; macColors[s.learn.mac]=s.learn.color; renderMac(s.learn.mac); }, 500));
+
+    // Frame animation
+    if (s.frame) {
+      if (s.frame.from==='pc') {
+        timers.push(setTimeout(() => animFrame(s.frame.port,'in',null), 200));
+      } else if (s.frame.from==='switch') {
+        s.frame.ports.forEach((pid,i) => {
+          timers.push(setTimeout(() => {
+            const isAccept = s.frame.accept?.includes(pid);
+            const isReject = s.frame.reject?.includes(pid);
+            animFrame(pid,'out', () => {
+              if (isAccept!==undefined || isReject!==undefined) flashPC(pid, true, isAccept);
+            });
+          }, 150+i*80));
+        });
+      }
+    }
+  }
+
+  function loadScene(i) {
+    timers.forEach(clearTimeout); timers=[];
+    scene=i; step=-1;
+    clearFrames();
+    PCS.forEach(pc => { flashPC(pc.id,false); flashPort(pc.id,false); const el=document.getElementById('sw-pc-'+pc.id); if(el) el.style.opacity=''; });
+    flashSwitch(false,'');
+    const lk=document.getElementById('sw-lookup'); if(lk) lk.textContent='';
+    const sc=SCENES[i];
+    if (sc.preload) { macData={...sc.preload.table}; macColors={...sc.preload.colors}; }
+    else { macData={}; macColors={}; }
+    renderMac(null);
+    wrap.querySelectorAll('.sw-tab').forEach((b,idx) => b.classList.toggle('sw-tab-active',idx===i));
+    document.getElementById('sw-counter').textContent='-';
+    document.getElementById('sw-step-box').innerHTML=`<strong>${sc.title}</strong> — press <strong>Next ▶</strong> to begin.`;
+  }
+
+  wrap.querySelector('#sw-next').addEventListener('click', () => { if(step<SCENES[scene].steps.length-1){step++;runStep();} });
+  wrap.querySelector('#sw-prev').addEventListener('click', () => { if(step>0){step--;runStep();}else if(step===0){step=-1;loadScene(scene);} });
+  wrap.querySelector('#sw-reset').addEventListener('click', () => loadScene(scene));
+
+  loadScene(0);
 }
 
 // ── Subnet Animation ─────────────────────────────────────────────────────────
@@ -3254,6 +3613,12 @@ function renderLesson(topic) {
     } else if (section.type === 'tip') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div class="lesson-tip">💡 ${section.body}</div>`;
+    } else if (section.type === 'switch_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="switch-anim-root"></div>`;
+      container.appendChild(card);
+      buildSwitchAnim(document.getElementById('switch-anim-root'));
+      continue;
     } else if (section.type === 'subnet_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div class="lesson-body">${section.body}</div>
