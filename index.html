@@ -997,6 +997,124 @@
     50% { box-shadow: 0 0 10px 3px currentColor; }
   }
 
+  /* ── OSI Animation ── */
+  .osi-wrap { padding:8px 0; }
+  .osi-main { display:flex; gap:6px; align-items:flex-start; }
+  .osi-device { flex:1; min-width:0; }
+  .osi-device-label { text-align:center; font-size:0.68em; font-weight:700; color:#aaa; margin-bottom:6px; letter-spacing:0.04em; }
+  .osi-layer {
+    display:flex; align-items:center; gap:5px;
+    padding:6px 7px; margin-bottom:3px; border-radius:7px;
+    border:1.5px solid rgba(255,255,255,0.07);
+    background:rgba(255,255,255,0.03);
+    transition:all 0.35s;
+  }
+  .osi-layer.osi-active {
+    border-color:var(--lc);
+    background:var(--lc-bg, rgba(0,212,255,0.12));
+    box-shadow:0 0 14px var(--lc);
+    transform:scale(1.04);
+  }
+  .osi-layer.osi-done {
+    border-color:var(--lc);
+    opacity:0.55;
+  }
+  .osi-layer.osi-dim { opacity:0.18; }
+  .osi-l-num { font-size:0.68em; font-weight:800; color:var(--lc); min-width:14px; text-align:center; }
+  .osi-l-name { font-size:0.7em; font-weight:600; color:#ddd; flex:1; }
+  .osi-wire-col { width:52px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; padding-top:30px; }
+  .osi-wire-label { font-size:0.52em; font-weight:800; color:#666; letter-spacing:0.1em; margin-bottom:8px; text-align:center; }
+  .osi-wire { width:36px; height:5px; background:linear-gradient(90deg,#ff4466,#cc66ff,#ff9900,#00ff88,#00d4ff); border-radius:3px; position:relative; margin-bottom:8px; }
+  .osi-travel-pkt { position:absolute; top:-5px; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 0 10px #fff,0 0 20px #adf; transition:left 1.4s ease-in-out; }
+  .osi-dir-label { font-size:0.6em; text-align:center; white-space:nowrap; margin-top:6px; }
+  .osi-pdu-wrap { margin:12px 0 8px; }
+  .osi-pdu-label { font-size:0.72em; color:#888; margin-bottom:5px; }
+  .osi-pdu-label span { font-weight:700; color:#ddd; }
+  .osi-pdu-vis { display:flex; align-items:stretch; gap:2px; height:30px; }
+  .osi-hdr { display:flex; align-items:center; justify-content:center; font-size:0.62em; font-weight:700; padding:0 7px; border-radius:4px; transition:all 0.4s; }
+  .osi-hdr-data { flex:1; min-width:40px; }
+  .osi-pdu-bits { font-size:0.65em; color:#ff4466; font-family:monospace; letter-spacing:0.04em; padding:5px 0; }
+  .osi-step-box { background:rgba(255,255,255,0.05); border-radius:10px; padding:11px 14px; font-size:0.82em; line-height:1.55; color:#ccc; margin-bottom:10px; min-height:46px; }
+  .osi-controls { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .osi-btn { padding:7px 13px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.07); color:#ccc; font-size:0.78em; cursor:pointer; }
+  .osi-btn:hover { background:rgba(255,255,255,0.14); }
+  .osi-btn-reset { border-color:#ff6680 !important; color:#ff6680 !important; }
+  .osi-btn-auto  { border-color:#00d4ff !important; color:#00d4ff !important; }
+  #osi-step-ctr { font-size:0.72em; color:#888; margin:0 2px; }
+
+  /* ── VLAN Animation ── */
+  .vl-wrap { display:flex; flex-direction:column; gap:10px; font-family:system-ui,sans-serif; }
+  .vl-zone-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .vl-zone {
+    flex:1; min-width:120px; border:1.5px solid; border-radius:10px;
+    padding:8px 10px; transition:box-shadow 0.3s, border-color 0.3s;
+  }
+  .vl-zone.vl-active { box-shadow:0 0 14px var(--vl-color,#fff); }
+  .vl-zone-label { font-size:0.62rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .vl-zone-pcs { display:flex; gap:6px; flex-wrap:wrap; }
+  .vl-pc {
+    display:flex; flex-direction:column; align-items:center;
+    border:1.5px solid; border-radius:7px; padding:4px 6px;
+    font-size:0.6rem; font-weight:700; cursor:default;
+    transition:box-shadow 0.3s, border-color 0.3s, opacity 0.4s;
+    min-width:46px;
+  }
+  .vl-pc-ip { font-family:'Courier New',monospace; font-size:0.52rem; opacity:0.7; }
+  .vl-pc.vl-highlight { box-shadow:0 0 12px var(--vl-color,#fff); border-color:var(--vl-color,#fff) !important; }
+  .vl-pc.vl-dim { opacity:0.25; }
+  .vl-switch-row {
+    display:flex; align-items:center; gap:4px;
+    background:rgba(255,255,255,0.03); border:1.5px solid rgba(255,255,255,0.1);
+    border-radius:10px; padding:8px 10px; flex-wrap:wrap;
+  }
+  .vl-port {
+    padding:3px 7px; border-radius:5px; font-size:0.6rem; font-weight:700;
+    border:1px solid; font-family:'Courier New',monospace;
+    transition:background 0.3s, box-shadow 0.3s, border-color 0.3s;
+  }
+  .vl-port.vl-lit { box-shadow:0 0 8px var(--vl-color,#fff); }
+  .vl-sw-body {
+    flex:1; text-align:center; font-size:0.65rem; font-weight:800;
+    letter-spacing:1px; padding:2px 6px; color:var(--muted);
+  }
+  .vl-trunk-row { display:flex; align-items:center; gap:6px; margin:4px 0; }
+  .vl-trunk-line {
+    flex:1; height:6px; border-radius:3px;
+    background:linear-gradient(90deg,#00d4ff,#7b4fff,#00ff88);
+    position:relative; overflow:visible;
+    transition:box-shadow 0.4s;
+  }
+  .vl-trunk-line.vl-lit { box-shadow:0 0 14px #7b4fff99; }
+  .vl-trunk-label { font-size:0.6rem; color:var(--muted); white-space:nowrap; }
+  .vl-tag-badge {
+    position:absolute; top:-12px; left:50%; transform:translateX(-50%);
+    background:#7b4fff; color:#fff; font-size:0.55rem; font-weight:800;
+    border-radius:4px; padding:1px 5px; white-space:nowrap;
+    opacity:0; transition:opacity 0.4s;
+  }
+  .vl-tag-badge.vl-show { opacity:1; }
+  .vl-two-sw { display:flex; gap:8px; align-items:flex-start; }
+  .vl-sw-col { flex:1; }
+  .vl-result-banner {
+    text-align:center; font-size:0.82rem; font-weight:700;
+    padding:8px 12px; border-radius:8px; margin-top:4px;
+    border:1px solid; opacity:0; transition:opacity 0.4s;
+  }
+  .vl-result-banner.vl-show { opacity:1; }
+  .vl-router-box {
+    display:flex; flex-direction:column; align-items:center;
+    border:1.5px solid #ff990066; border-radius:10px;
+    padding:8px; background:rgba(255,153,0,0.06);
+    font-size:0.62rem; gap:4px;
+  }
+  .vl-subif { font-family:'Courier New',monospace; font-size:0.58rem; padding:2px 6px; border-radius:4px; border:1px solid; font-weight:700; }
+  .vl-step-box {
+    background:rgba(123,79,255,0.08); border:1px solid rgba(123,79,255,0.25);
+    border-radius:10px; padding:12px 14px; font-size:0.82rem; line-height:1.5;
+    min-height:52px;
+  }
+  .vl-controls { display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; }
+
   /* ── Switch Animation ── */
   .sw-wrap { display:flex; flex-direction:column; gap:10px; font-family:system-ui,sans-serif; }
   .sw-tabs { display:flex; gap:6px; flex-wrap:wrap; }
@@ -1217,6 +1335,10 @@ const TOPICS = [
           ['Router', 'Layer 3 – Network', 'Routes packets using IP addresses'],
           ['Firewall', 'Layer 3–7', 'Filters traffic at multiple layers'],
         ]
+      },
+      {
+        type: 'osi_anim',
+        title: 'Interactive: Data Flow Through the OSI Stack'
       },
       {
         title: 'Memory Trick',
@@ -1524,6 +1646,10 @@ const TOPICS = [
       {
         title: 'What are VLANs?',
         body: `<p>A <strong>VLAN (Virtual LAN)</strong> logically segments a switch into separate networks. Devices in VLAN 10 cannot talk to VLAN 20 without going through a <strong>router or Layer 3 switch</strong> — even if they're on the same physical switch.</p><p>Benefits: better security, less broadcast traffic, easier management.</p>`
+      },
+      {
+        type: 'vlan_anim',
+        title: 'Interactive: VLANs, Trunks & Inter-VLAN Routing'
       },
       {
         title: 'Access vs Trunk Ports',
@@ -2362,6 +2488,507 @@ function renderLayerLesson(layerNum) {
 
   showScreen('screen-layer');
   window.scrollTo(0, 0);
+}
+
+// ── OSI Stack Animation ──────────────────────────────────────────────────────
+function buildOSIAnim(root) {
+  const LAYERS = [
+    { num:7, name:'Application',  pdu:'Data',    color:'#00d4ff', bg:'rgba(0,212,255,0.13)' },
+    { num:6, name:'Presentation', pdu:'Data',    color:'#00bcd4', bg:'rgba(0,188,212,0.11)' },
+    { num:5, name:'Session',      pdu:'Data',    color:'#0099cc', bg:'rgba(0,153,204,0.11)' },
+    { num:4, name:'Transport',    pdu:'Segment', color:'#00ff88', bg:'rgba(0,255,136,0.11)' },
+    { num:3, name:'Network',      pdu:'Packet',  color:'#ff9900', bg:'rgba(255,153,0,0.11)' },
+    { num:2, name:'Data Link',    pdu:'Frame',   color:'#cc66ff', bg:'rgba(204,102,255,0.11)' },
+    { num:1, name:'Physical',     pdu:'Bits',    color:'#ff4466', bg:'rgba(255,68,102,0.11)' },
+  ];
+  const HDR = { TCP:'#00ff88', IP:'#ff9900', ETH:'#cc66ff', DATA:'#00d4ff' };
+
+  const STEPS = [
+    { side:'a', layer:7,
+      text:'<strong style="color:#00d4ff">Layer 7 – Application (PC-A):</strong> The user opens a browser and makes an HTTP request. This is the raw <strong>Data</strong> — the payload that needs to reach PC-B.',
+      headers:[], pdu:'Data' },
+    { side:'a', layer:6,
+      text:'<strong style="color:#00bcd4">Layer 6 – Presentation (PC-A):</strong> The data is <strong>encrypted</strong> (TLS/SSL) and formatted. Still called <strong>Data</strong> — no header added yet.',
+      headers:[], pdu:'Data' },
+    { side:'a', layer:5,
+      text:'<strong style="color:#0099cc">Layer 5 – Session (PC-A):</strong> A <strong>session</strong> is established and tracked between the two hosts. Manages dialog control.',
+      headers:[], pdu:'Data' },
+    { side:'a', layer:4,
+      text:'<strong style="color:#00ff88">Layer 4 – Transport (PC-A):</strong> TCP wraps the data — adding source port, destination port, and sequence numbers. The unit is now a <strong>Segment</strong>.',
+      headers:['TCP'], pdu:'Segment' },
+    { side:'a', layer:3,
+      text:'<strong style="color:#ff9900">Layer 3 – Network (PC-A):</strong> IP adds source and destination <strong>IP addresses</strong>. The unit is now a <strong>Packet</strong>.',
+      headers:['IP','TCP'], pdu:'Packet' },
+    { side:'a', layer:2,
+      text:'<strong style="color:#cc66ff">Layer 2 – Data Link (PC-A):</strong> Ethernet adds source and destination <strong>MAC addresses</strong> plus an FCS trailer. The unit is now a <strong>Frame</strong>.',
+      headers:['ETH','IP','TCP'], pdu:'Frame' },
+    { side:'a', layer:1,
+      text:'<strong style="color:#ff4466">Layer 1 – Physical (PC-A):</strong> The frame is converted into electrical signals or light pulses — raw <strong>Bits</strong> — and placed on the wire.',
+      headers:['ETH','IP','TCP'], pdu:'Bits' },
+    { side:'wire', layer:null,
+      text:'<strong>📡 In Transit:</strong> Bits travel across the physical medium (copper, fiber, or wireless) toward PC-B. Every header is still intact.',
+      headers:['ETH','IP','TCP'], pdu:'Bits' },
+    { side:'b', layer:1,
+      text:'<strong style="color:#ff4466">Layer 1 – Physical (PC-B):</strong> Electrical signals arrive and are reconstructed into a <strong>Frame</strong> by the NIC.',
+      headers:['ETH','IP','TCP'], pdu:'Frame' },
+    { side:'b', layer:2,
+      text:'<strong style="color:#cc66ff">Layer 2 – Data Link (PC-B):</strong> MAC address is checked — it matches! The <strong>ETH header is stripped</strong>. Unit becomes a <strong>Packet</strong>.',
+      headers:['IP','TCP'], pdu:'Packet' },
+    { side:'b', layer:3,
+      text:'<strong style="color:#ff9900">Layer 3 – Network (PC-B):</strong> Destination IP matches this host. The <strong>IP header is stripped</strong>. Unit becomes a <strong>Segment</strong>.',
+      headers:['TCP'], pdu:'Segment' },
+    { side:'b', layer:4,
+      text:'<strong style="color:#00ff88">Layer 4 – Transport (PC-B):</strong> TCP reassembles the data in order and removes the TCP header. Raw <strong>Data</strong> is recovered.',
+      headers:[], pdu:'Data' },
+    { side:'b', layer:5,
+      text:'<strong style="color:#0099cc">Layer 5 – Session (PC-B):</strong> The session state is updated. Data is handed up to the Presentation layer.',
+      headers:[], pdu:'Data' },
+    { side:'b', layer:6,
+      text:'<strong style="color:#00bcd4">Layer 6 – Presentation (PC-B):</strong> Data is <strong>decrypted</strong> and decoded back to its original readable format.',
+      headers:[], pdu:'Data' },
+    { side:'b', layer:7,
+      text:'<strong style="color:#00d4ff">Layer 7 – Application (PC-B):</strong> The HTTP response is delivered to the browser. <strong>✅ End-to-end communication complete!</strong>',
+      headers:[], pdu:'Data' },
+  ];
+
+  function layerEl(l, side) {
+    return `<div class="osi-layer" id="osi-${side}-${l.num}"
+      style="--lc:${l.color};--lc-bg:${l.bg}">
+      <span class="osi-l-num">${l.num}</span>
+      <span class="osi-l-name">${l.name}</span>
+    </div>`;
+  }
+
+  function pduVis(headers, pdu) {
+    if (pdu === 'Bits') return `<div class="osi-pdu-bits">01001000 01010100 01010100 01010000 …</div>`;
+    const parts = [];
+    if (headers.includes('ETH')) parts.push(`<div class="osi-hdr" style="background:${HDR.ETH}18;border:1px solid ${HDR.ETH};color:${HDR.ETH}">ETH</div>`);
+    if (headers.includes('IP'))  parts.push(`<div class="osi-hdr" style="background:${HDR.IP}18;border:1px solid ${HDR.IP};color:${HDR.IP}">IP</div>`);
+    if (headers.includes('TCP')) parts.push(`<div class="osi-hdr" style="background:${HDR.TCP}18;border:1px solid ${HDR.TCP};color:${HDR.TCP}">TCP</div>`);
+    parts.push(`<div class="osi-hdr osi-hdr-data" style="background:${HDR.DATA}18;border:1px solid ${HDR.DATA};color:${HDR.DATA}">DATA</div>`);
+    if (headers.includes('ETH')) parts.push(`<div class="osi-hdr" style="background:${HDR.ETH}18;border:1px solid ${HDR.ETH};color:${HDR.ETH}">FCS</div>`);
+    return parts.join('');
+  }
+
+  root.innerHTML = `<div class="osi-wrap">
+    <div class="osi-main">
+      <div class="osi-device">
+        <div class="osi-device-label">💻 PC-A &nbsp;(Sender)</div>
+        ${LAYERS.map(l => layerEl(l,'a')).join('')}
+      </div>
+      <div class="osi-wire-col">
+        <div class="osi-wire-label">WIRE</div>
+        <div class="osi-wire">
+          <div class="osi-travel-pkt" id="osi-pkt" style="display:none;left:0%"></div>
+        </div>
+        <div class="osi-dir-label" id="osi-dir"></div>
+      </div>
+      <div class="osi-device">
+        <div class="osi-device-label">🖥️ PC-B &nbsp;(Receiver)</div>
+        ${LAYERS.map(l => layerEl(l,'b')).join('')}
+      </div>
+    </div>
+    <div class="osi-pdu-wrap">
+      <div class="osi-pdu-label">Current PDU: <span id="osi-pdu-name">—</span></div>
+      <div class="osi-pdu-vis" id="osi-pdu-vis"></div>
+    </div>
+    <div class="osi-step-box" id="osi-step-box">Press <strong>Next ▶</strong> to begin the data flow.</div>
+    <div class="osi-controls">
+      <button class="osi-btn" id="osi-prev">◀ Prev</button>
+      <span id="osi-step-ctr">—</span>
+      <button class="osi-btn" id="osi-next">Next ▶</button>
+      <button class="osi-btn osi-btn-reset" id="osi-reset">↺ Reset</button>
+      <button class="osi-btn osi-btn-auto" id="osi-auto">▶ Auto</button>
+    </div>
+  </div>`;
+
+  let cur = -1;
+  let autoTimer = null;
+
+  function resetAll() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    cur = -1;
+    root.querySelectorAll('.osi-layer').forEach(el => el.className = 'osi-layer');
+    const pk = root.querySelector('#osi-pkt');
+    pk.style.display = 'none'; pk.style.left = '0%';
+    root.querySelector('#osi-dir').innerHTML = '';
+    root.querySelector('#osi-pdu-vis').innerHTML = '';
+    root.querySelector('#osi-pdu-name').textContent = '—';
+    root.querySelector('#osi-step-box').innerHTML = 'Press <strong>Next ▶</strong> to begin the data flow.';
+    root.querySelector('#osi-step-ctr').textContent = '—';
+    root.querySelector('#osi-auto').textContent = '▶ Auto';
+  }
+
+  function applyStep(i) {
+    const s = STEPS[i];
+    // Reset all layer classes
+    root.querySelectorAll('.osi-layer').forEach(el => {
+      el.classList.remove('osi-active', 'osi-done', 'osi-dim');
+    });
+    // Mark previously visited layers as done
+    for (let j = 0; j < i; j++) {
+      const ps = STEPS[j];
+      if (ps.side === 'a' || ps.side === 'b') {
+        const el = root.querySelector(`#osi-${ps.side}-${ps.layer}`);
+        if (el) el.classList.add('osi-done');
+      }
+    }
+    // Dim / activate current side
+    if (s.side === 'a' || s.side === 'b') {
+      LAYERS.forEach(l => {
+        const el = root.querySelector(`#osi-${s.side}-${l.num}`);
+        if (!el) return;
+        if (l.num === s.layer) el.classList.add('osi-active');
+        else if (!el.classList.contains('osi-done')) el.classList.add('osi-dim');
+      });
+    }
+    // Wire packet travel
+    const pk = root.querySelector('#osi-pkt');
+    const dir = root.querySelector('#osi-dir');
+    if (s.side === 'wire') {
+      pk.style.display = 'block';
+      pk.style.left = '0%';
+      setTimeout(() => { pk.style.left = 'calc(100% - 14px)'; }, 60);
+      dir.innerHTML = '<span style="color:#aaa;font-size:0.65em">→ → → →</span>';
+    } else {
+      pk.style.display = 'none';
+      if (s.side === 'a') dir.innerHTML = `<span style="color:#00d4ff;font-size:0.65em">↓ encap</span>`;
+      else if (s.side === 'b') dir.innerHTML = `<span style="color:#00ff88;font-size:0.65em">↑ decap</span>`;
+    }
+    // PDU
+    root.querySelector('#osi-pdu-name').textContent = s.pdu;
+    root.querySelector('#osi-pdu-vis').innerHTML = pduVis(s.headers, s.pdu);
+    // Text & counter
+    root.querySelector('#osi-step-box').innerHTML = s.text;
+    root.querySelector('#osi-step-ctr').textContent = `Step ${i+1} / ${STEPS.length}`;
+  }
+
+  root.querySelector('#osi-next').addEventListener('click', () => {
+    if (cur < STEPS.length - 1) { cur++; applyStep(cur); }
+  });
+  root.querySelector('#osi-prev').addEventListener('click', () => {
+    if (cur > 0) { cur--; applyStep(cur); }
+    else resetAll();
+  });
+  root.querySelector('#osi-reset').addEventListener('click', resetAll);
+  root.querySelector('#osi-auto').addEventListener('click', () => {
+    if (autoTimer) {
+      clearInterval(autoTimer); autoTimer = null;
+      root.querySelector('#osi-auto').textContent = '▶ Auto';
+    } else {
+      root.querySelector('#osi-auto').textContent = '⏸ Pause';
+      autoTimer = setInterval(() => {
+        if (cur < STEPS.length - 1) { cur++; applyStep(cur); }
+        else {
+          clearInterval(autoTimer); autoTimer = null;
+          root.querySelector('#osi-auto').textContent = '▶ Auto';
+        }
+      }, 2200);
+    }
+  });
+}
+
+// ── VLAN Animation ───────────────────────────────────────────────────────────
+function buildVlanAnim(root) {
+  const V10 = '#00d4ff', V20 = '#00ff88', V30 = '#ff9900', TR = '#7b4fff';
+
+  // ── scene builders ─────────────────────────────────────────────────────────
+  function buildScene1(container) {
+    container.innerHTML = `
+      <div class="vl-zone-row">
+        <div class="vl-zone" id="vl-z10" style="border-color:${V10}44;--vl-color:${V10}">
+          <div class="vl-zone-label" style="color:${V10}">VLAN 10 · Sales</div>
+          <div class="vl-zone-pcs">
+            <div class="vl-pc" id="vl-pA" style="border-color:${V10}66;color:${V10};--vl-color:${V10}">💻<div>PC-A</div><div class="vl-pc-ip">.10.10</div></div>
+            <div class="vl-pc" id="vl-pB" style="border-color:${V10}66;color:${V10};--vl-color:${V10}">💻<div>PC-B</div><div class="vl-pc-ip">.10.20</div></div>
+          </div>
+        </div>
+        <div class="vl-zone" id="vl-z20" style="border-color:${V20}44;--vl-color:${V20}">
+          <div class="vl-zone-label" style="color:${V20}">VLAN 20 · IT</div>
+          <div class="vl-zone-pcs">
+            <div class="vl-pc" id="vl-pC" style="border-color:${V20}66;color:${V20};--vl-color:${V20}">💻<div>PC-C</div><div class="vl-pc-ip">.20.10</div></div>
+            <div class="vl-pc" id="vl-pD" style="border-color:${V20}66;color:${V20};--vl-color:${V20}">💻<div>PC-D</div><div class="vl-pc-ip">.20.20</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="vl-switch-row">
+        <div class="vl-port" id="vl-spA" style="color:${V10};border-color:${V10}55;background:${V10}11">Fa0/1</div>
+        <div class="vl-port" id="vl-spB" style="color:${V10};border-color:${V10}55;background:${V10}11">Fa0/2</div>
+        <div class="vl-sw-body">🔀 SWITCH</div>
+        <div class="vl-port" id="vl-spC" style="color:${V20};border-color:${V20}55;background:${V20}11">Fa0/3</div>
+        <div class="vl-port" id="vl-spD" style="color:${V20};border-color:${V20}55;background:${V20}11">Fa0/4</div>
+      </div>
+      <div class="vl-result-banner" id="vl-banner1"></div>`;
+  }
+
+  function buildScene2(container) {
+    container.innerHTML = `
+      <div class="vl-two-sw">
+        <div class="vl-sw-col">
+          <div style="font-size:0.62rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-align:center">Switch A</div>
+          <div class="vl-zone-row" style="margin-bottom:6px">
+            <div class="vl-zone" style="border-color:${V10}44">
+              <div class="vl-zone-label" style="color:${V10}">V10</div>
+              <div class="vl-pc" id="vl-pA2" style="border-color:${V10}66;color:${V10};--vl-color:${V10}">💻<div>PC-A</div></div>
+            </div>
+            <div class="vl-zone" style="border-color:${V20}44">
+              <div class="vl-zone-label" style="color:${V20}">V20</div>
+              <div class="vl-pc" id="vl-pB2" style="border-color:${V20}66;color:${V20};--vl-color:${V20}">💻<div>PC-B</div></div>
+            </div>
+          </div>
+          <div class="vl-switch-row" style="justify-content:center">
+            <div class="vl-port" id="vl-spA2" style="color:${V10};border-color:${V10}55;background:${V10}11">Fa0/1</div>
+            <div class="vl-port" id="vl-spB2" style="color:${V20};border-color:${V20}55;background:${V20}11">Fa0/2</div>
+            <div class="vl-port" id="vl-trA" style="color:${TR};border-color:${TR}55;background:${TR}11">Gi0/1</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:12px;gap:4px">
+          <div class="vl-trunk-label" style="text-align:center;font-size:0.58rem">802.1Q<br>Trunk</div>
+          <div class="vl-trunk-row" style="width:60px">
+            <div class="vl-trunk-line" id="vl-trunk2"><div class="vl-tag-badge" id="vl-tag2">VLAN 10</div></div>
+          </div>
+        </div>
+        <div class="vl-sw-col">
+          <div style="font-size:0.62rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-align:center">Switch B</div>
+          <div class="vl-zone-row" style="margin-bottom:6px">
+            <div class="vl-zone" style="border-color:${V10}44">
+              <div class="vl-zone-label" style="color:${V10}">V10</div>
+              <div class="vl-pc" id="vl-pC2" style="border-color:${V10}66;color:${V10};--vl-color:${V10}">💻<div>PC-C</div></div>
+            </div>
+            <div class="vl-zone" style="border-color:${V20}44">
+              <div class="vl-zone-label" style="color:${V20}">V20</div>
+              <div class="vl-pc" id="vl-pD2" style="border-color:${V20}66;color:${V20};--vl-color:${V20}">💻<div>PC-D</div></div>
+            </div>
+          </div>
+          <div class="vl-switch-row" style="justify-content:center">
+            <div class="vl-port" id="vl-trB" style="color:${TR};border-color:${TR}55;background:${TR}11">Gi0/1</div>
+            <div class="vl-port" id="vl-spC2" style="color:${V10};border-color:${V10}55;background:${V10}11">Fa0/1</div>
+            <div class="vl-port" id="vl-spD2" style="color:${V20};border-color:${V20}55;background:${V20}11">Fa0/2</div>
+          </div>
+        </div>
+      </div>
+      <div class="vl-result-banner" id="vl-banner2"></div>`;
+  }
+
+  function buildScene3(container) {
+    container.innerHTML = `
+      <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:2;min-width:140px">
+          <div class="vl-zone-row" style="margin-bottom:6px">
+            <div class="vl-zone" style="border-color:${V10}44">
+              <div class="vl-zone-label" style="color:${V10}">VLAN 10 · Sales</div>
+              <div class="vl-pc" id="vl-pA3" style="border-color:${V10}66;color:${V10};--vl-color:${V10}">💻<div>PC-A</div><div class="vl-pc-ip">192.168.10.10</div></div>
+            </div>
+            <div class="vl-zone" style="border-color:${V20}44">
+              <div class="vl-zone-label" style="color:${V20}">VLAN 20 · IT</div>
+              <div class="vl-pc" id="vl-pB3" style="border-color:${V20}66;color:${V20};--vl-color:${V20}">💻<div>PC-B</div><div class="vl-pc-ip">192.168.20.10</div></div>
+            </div>
+          </div>
+          <div class="vl-switch-row">
+            <div class="vl-port" id="vl-sp3A" style="color:${V10};border-color:${V10}55;background:${V10}11">Fa0/1<br><span style="font-size:0.5rem">V10</span></div>
+            <div class="vl-port" id="vl-sp3B" style="color:${V20};border-color:${V20}55;background:${V20}11">Fa0/2<br><span style="font-size:0.5rem">V20</span></div>
+            <div class="vl-sw-body">🔀 SW</div>
+            <div class="vl-port" id="vl-sp3T" style="color:${TR};border-color:${TR}55;background:${TR}11">Gi0/1<br><span style="font-size:0.5rem">trunk</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:12px;gap:2px">
+          <div class="vl-trunk-row" style="width:40px;flex-direction:column;height:50px;position:relative">
+            <div class="vl-trunk-line" id="vl-trunk3" style="width:6px;height:100%;border-radius:3px;flex:none"><div class="vl-tag-badge" id="vl-tag3" style="top:50%;left:10px">VLAN 10</div></div>
+          </div>
+          <div style="font-size:0.58rem;color:var(--muted);text-align:center">trunk</div>
+        </div>
+        <div style="flex:1;min-width:110px">
+          <div class="vl-router-box" id="vl-router3">
+            <div style="font-size:1.3rem">🔁</div>
+            <div style="font-weight:800;font-size:0.65rem;letter-spacing:1px">ROUTER</div>
+            <div class="vl-subif" id="vl-rif10" style="color:${V10};border-color:${V10}55;background:${V10}11">Gi0/0.10<br>.10.1/24</div>
+            <div class="vl-subif" id="vl-rif20" style="color:${V20};border-color:${V20}55;background:${V20}11">Gi0/0.20<br>.20.1/24</div>
+          </div>
+        </div>
+      </div>
+      <div class="vl-result-banner" id="vl-banner3"></div>`;
+  }
+
+  // ── scene step definitions ─────────────────────────────────────────────────
+  const SCENES = [
+    {
+      title: '🏘️ VLAN Isolation',
+      build: buildScene1,
+      steps: [
+        { info: '<strong>One physical switch, two logical networks.</strong> Ports Fa0/1 &amp; Fa0/2 belong to <strong style="color:'+V10+'">VLAN 10 (Sales)</strong>. Ports Fa0/3 &amp; Fa0/4 belong to <strong style="color:'+V20+'">VLAN 20 (IT)</strong>. Even though they share the same hardware, these are completely separate broadcast domains.' },
+        { info: 'PC-A (<strong style="color:'+V10+'">VLAN 10</strong>) sends a frame to PC-B (<strong style="color:'+V10+'">VLAN 10</strong>). Both are in the same VLAN, so the switch forwards normally. <strong>Success!</strong>',
+          hi10: true, ports: ['spA','spB'], accept: ['pB'] },
+        { info: 'PC-A (<strong style="color:'+V10+'">VLAN 10</strong>) tries to send to PC-C (<strong style="color:'+V20+'">VLAN 20</strong>). The switch sees different VLANs — it <strong>blocks</strong> the frame at the VLAN boundary. This is by design: VLANs isolate traffic for security.',
+          hi10: true, ports: ['spA'], block: 'pC', dim: ['pC','pD'] },
+        { info: 'To communicate <em>between</em> VLANs, traffic must leave the switch and pass through a <strong>router</strong> (or Layer 3 switch). The router routes it from VLAN 10 back into VLAN 20 — this is called <strong>Inter-VLAN routing</strong>.',
+          banner: { id:'vl-banner1', text:'🔑 Key concept: VLANs = separate broadcast domains. A router is required to route between them.', color: TR } },
+      ]
+    },
+    {
+      title: '🔗 Trunk Port',
+      build: buildScene2,
+      steps: [
+        { info: 'Two switches, each with <strong style="color:'+V10+'">VLAN 10</strong> and <strong style="color:'+V20+'">VLAN 20</strong> devices. The switches are connected by a <strong style="color:'+TR+'">trunk port (Gi0/1)</strong> — a special link that carries <em>multiple</em> VLANs tagged with 802.1Q.' },
+        { info: 'PC-A (<strong style="color:'+V10+'">VLAN 10, Switch A</strong>) wants to reach PC-C (<strong style="color:'+V10+'">VLAN 10, Switch B</strong>). The frame travels from PC-A to Switch A\'s Fa0/1, then toward the trunk port Gi0/1.',
+          hiPcs: ['pA2'], hiPorts: ['spA2','trA'] },
+        { info: 'Switch A <strong>tags</strong> the frame with <strong style="color:'+TR+'">802.1Q VLAN 10</strong> and sends it across the trunk link. The tag tells the receiving switch which VLAN the frame belongs to. PC-B (VLAN 20) traffic stays completely separate.',
+          hiPorts: ['trA','trB'], trunk: true, tag: 'VLAN 10' },
+        { info: 'Switch B receives the tagged frame, reads the VLAN 10 tag, <strong>strips it</strong>, and forwards to Fa0/1 (VLAN 10 port) only. <strong>PC-C receives it ✅</strong> — PC-D (VLAN 20) is untouched ✨.',
+          hiPcs: ['pC2'], hiPorts: ['spC2'], dim2: ['pD2'], accept2: ['pC2'],
+          banner: { id:'vl-banner2', text:'🔑 Trunk = one physical link carrying many VLANs, each tagged with an 802.1Q VLAN ID.', color: TR } },
+      ]
+    },
+    {
+      title: '🔄 Inter-VLAN Routing',
+      build: buildScene3,
+      steps: [
+        { info: '<strong>Router-on-a-stick</strong>: one physical router interface with two <em>sub-interfaces</em> — one per VLAN. Sub-interface <strong style="color:'+V10+'">Gi0/0.10</strong> is the default gateway for VLAN 10. <strong style="color:'+V20+'">Gi0/0.20</strong> is the gateway for VLAN 20.' },
+        { info: 'PC-A (<strong style="color:'+V10+'">192.168.10.10</strong>) wants to reach PC-B (<strong style="color:'+V20+'">192.168.20.10</strong>). Different VLANs — so PC-A sends the frame to its default gateway: <strong style="color:'+V10+'">192.168.10.1</strong> (the router\'s VLAN 10 sub-interface).',
+          hi3: ['pA3'], ports3: ['sp3A','sp3T'], trunk3: true, tag3: 'VLAN 10' },
+        { info: 'The router receives the frame on <strong style="color:'+V10+'">Gi0/0.10</strong> (VLAN 10). It sees the destination IP is in the 192.168.20.0/24 network — that\'s VLAN 20. The router <strong>routes the packet</strong> and sends it back out <strong style="color:'+V20+'">Gi0/0.20</strong>.',
+          rif: ['rif10','rif20'] },
+        { info: 'The frame returns to the switch tagged as <strong style="color:'+V20+'">VLAN 20</strong>, then forwarded to Fa0/2 → <strong>PC-B receives it ✅</strong>. This round-trip through the router is inter-VLAN routing — or "routing on a stick" when done with sub-interfaces.',
+          hi3: ['pB3'], ports3: ['sp3T','sp3B'], tag3: 'VLAN 20', accept3: ['pB3'],
+          banner: { id:'vl-banner3', text:'🔑 Inter-VLAN routing: traffic exits the switch on a trunk, router forwards it to the other VLAN, returns tagged.', color: V20 } },
+      ]
+    },
+  ];
+
+  // ── DOM build ──────────────────────────────────────────────────────────────
+  const wrap = document.createElement('div');
+  wrap.className = 'vl-wrap';
+
+  const tabs = document.createElement('div');
+  tabs.className = 'sw-tabs';
+  SCENES.forEach((sc,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'sw-tab'+(i===0?' sw-tab-active':'');
+    btn.textContent = sc.title;
+    btn.addEventListener('click', () => loadScene(i));
+    tabs.appendChild(btn);
+  });
+  wrap.appendChild(tabs);
+
+  const diagWrap = document.createElement('div');
+  wrap.appendChild(diagWrap);
+
+  const stepBox = document.createElement('div');
+  stepBox.className = 'vl-step-box';
+  stepBox.id = 'vl-step-box';
+  wrap.appendChild(stepBox);
+
+  const ctrls = document.createElement('div');
+  ctrls.className = 'vl-controls';
+  ctrls.innerHTML = `
+    <button class="sa-step-nav" id="vl-prev">◀ Prev</button>
+    <span class="sa-step-counter" id="vl-counter">-</span>
+    <button class="sa-step-nav" id="vl-next">Next ▶</button>
+    <button class="sa-step-nav" id="vl-reset" style="color:#ff6ec7;border-color:#ff6ec755">↺ Reset</button>`;
+  wrap.appendChild(ctrls);
+  root.appendChild(wrap);
+
+  // ── helpers ────────────────────────────────────────────────────────────────
+  let scene=0, step=-1, timers=[];
+  const T = (ms,fn) => timers.push(setTimeout(fn,ms));
+
+  function gid(id) { return diagWrap.querySelector('#vl-'+id); }
+
+  function hiEl(id, color, on) {
+    const el = gid(id); if (!el) return;
+    if (on) { el.style.setProperty('--vl-color',color); el.classList.add('vl-highlight'); }
+    else { el.classList.remove('vl-highlight'); }
+  }
+
+  function litPort(id, color, on) {
+    const el = gid(id); if (!el) return;
+    if (on) { el.style.boxShadow=`0 0 10px ${color}`; el.style.borderColor=color; el.style.background=color+'33'; }
+    else { el.style.boxShadow=''; el.style.borderColor=''; el.style.background=''; }
+  }
+
+  function dimEl(id, on) {
+    const el = gid(id); if (!el) return;
+    el.classList.toggle('vl-dim', on);
+  }
+
+  function badge(pcId, accept) {
+    const el = gid(pcId); if (!el) return;
+    el.style.position='relative';
+    const b=document.createElement('div');
+    b.style.cssText='position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:1rem;animation:bitPop 0.4s ease;z-index:10';
+    b.textContent=accept?'✅':'🚫';
+    el.appendChild(b);
+    T(1800,()=>b.remove());
+  }
+
+  function showBanner(id, text, color) {
+    const el = gid ? diagWrap.querySelector('#'+id) : null;
+    if (!el) return;
+    el.textContent=text; el.style.color=color; el.style.borderColor=color+'55'; el.style.background=color+'11';
+    el.classList.add('vl-show');
+  }
+
+  function resetDiag() {
+    timers.forEach(clearTimeout); timers=[];
+    // clear all highlights
+    diagWrap.querySelectorAll('.vl-highlight').forEach(e=>e.classList.remove('vl-highlight'));
+    diagWrap.querySelectorAll('.vl-dim').forEach(e=>e.classList.remove('vl-dim'));
+    diagWrap.querySelectorAll('.vl-result-banner').forEach(e=>e.classList.remove('vl-show'));
+    diagWrap.querySelectorAll('.vl-port').forEach(e=>{e.style.boxShadow='';e.style.borderColor='';e.style.background='';});
+    diagWrap.querySelectorAll('.vl-trunk-line').forEach(e=>e.classList.remove('vl-lit'));
+    diagWrap.querySelectorAll('.vl-tag-badge').forEach(e=>e.classList.remove('vl-show'));
+    diagWrap.querySelectorAll('.vl-router-box .vl-subif').forEach(e=>{e.style.boxShadow='';});
+    diagWrap.querySelectorAll('[style*="position:absolute"]').forEach(e=>e.remove());
+  }
+
+  // ── step runner ────────────────────────────────────────────────────────────
+  function runStep() {
+    resetDiag();
+    const sc=SCENES[scene]; const counter=document.getElementById('vl-counter'); const infoEl=document.getElementById('vl-step-box');
+    if (step<0){counter.textContent='Ready';infoEl.innerHTML=`<strong>${sc.title}</strong> — press <strong>Next ▶</strong> to begin.`;return;}
+    if (step>=sc.steps.length){counter.textContent='Done!';infoEl.innerHTML='✅ Scenario complete! Try the next tab.';return;}
+    const s=sc.steps[step];
+    counter.textContent=`Step ${step+1} / ${sc.steps.length}`;
+    infoEl.innerHTML=s.info;
+
+    // Scene 1 actions
+    if (s.hi10) { T(100,()=>{hiEl('z10',V10,true); T(150,()=>hiEl('pA',V10,true));}); }
+    if (s.ports) s.ports.forEach((p,i)=>T(200+i*100,()=>litPort(p,V10,true)));
+    if (s.accept) s.accept.forEach(p=>T(600,()=>{hiEl(p,V10,true);badge(p,true);}));
+    if (s.block) T(500,()=>badge(s.block,false));
+    if (s.dim) s.dim.forEach(p=>T(200,()=>dimEl(p,true)));
+
+    // Scene 2 actions
+    if (s.hiPcs) s.hiPcs.forEach((p,i)=>T(100+i*100,()=>hiEl(p,V10,true)));
+    if (s.hiPorts) s.hiPorts.forEach((p,i)=>T(200+i*120,()=>litPort(p,V10,true)));
+    if (s.trunk) { T(400,()=>{ const t=gid('trunk2'); if(t)t.classList.add('vl-lit'); }); }
+    if (s.tag) { T(500,()=>{ const tg=gid('tag2'); if(tg){tg.textContent=s.tag;tg.classList.add('vl-show');} }); }
+    if (s.accept2) s.accept2.forEach(p=>T(700,()=>{hiEl(p,V10,true);badge(p,true);}));
+    if (s.dim2) s.dim2.forEach(p=>T(300,()=>dimEl(p,true)));
+
+    // Scene 3 actions
+    if (s.hi3) s.hi3.forEach((p,i)=>T(100+i*100,()=>hiEl(p,s.hi3.includes('pA3')?V10:V20,true)));
+    if (s.ports3) s.ports3.forEach((p,i)=>T(200+i*120,()=>litPort(p,TR,true)));
+    if (s.trunk3) { T(350,()=>{ const t=gid('trunk3'); if(t)t.classList.add('vl-lit'); }); }
+    if (s.tag3) { T(450,()=>{ const tg=gid('tag3'); if(tg){tg.textContent=s.tag3;tg.classList.add('vl-show');} }); }
+    if (s.rif) s.rif.forEach((id,i)=>T(300+i*300,()=>{ const el=gid ? diagWrap.querySelector('#vl-'+id) : null; if(el){el.style.boxShadow=`0 0 10px ${i===0?V10:V20}`;} }));
+    if (s.accept3) s.accept3.forEach(p=>T(700,()=>{hiEl(p,V20,true);badge(p,true);}));
+
+    if (s.banner) T(800,()=>showBanner(s.banner.id,s.banner.text,s.banner.color));
+  }
+
+  function loadScene(i) {
+    timers.forEach(clearTimeout); timers=[];
+    scene=i; step=-1;
+    SCENES[i].build(diagWrap);
+    wrap.querySelectorAll('.sw-tab').forEach((b,idx)=>b.classList.toggle('sw-tab-active',idx===i));
+    document.getElementById('vl-counter').textContent='-';
+    document.getElementById('vl-step-box').innerHTML=`<strong>${SCENES[i].title}</strong> — press <strong>Next ▶</strong> to begin.`;
+  }
+
+  wrap.querySelector('#vl-next').addEventListener('click',()=>{if(step<SCENES[scene].steps.length-1){step++;runStep();}});
+  wrap.querySelector('#vl-prev').addEventListener('click',()=>{if(step>0){step--;runStep();}else if(step===0){step=-1;loadScene(scene);}});
+  wrap.querySelector('#vl-reset').addEventListener('click',()=>loadScene(scene));
+  loadScene(0);
 }
 
 // ── Switch Animation ─────────────────────────────────────────────────────────
@@ -3613,6 +4240,18 @@ function renderLesson(topic) {
     } else if (section.type === 'tip') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div class="lesson-tip">💡 ${section.body}</div>`;
+    } else if (section.type === 'osi_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="osi-anim-root"></div>`;
+      container.appendChild(card);
+      buildOSIAnim(document.getElementById('osi-anim-root'));
+      continue;
+    } else if (section.type === 'vlan_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="vlan-anim-root"></div>`;
+      container.appendChild(card);
+      buildVlanAnim(document.getElementById('vlan-anim-root'));
+      continue;
     } else if (section.type === 'switch_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="switch-anim-root"></div>`;
