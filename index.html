@@ -997,6 +997,44 @@
     50% { box-shadow: 0 0 10px 3px currentColor; }
   }
 
+  /* ── ARP Animation ── */
+  .arp-wrap { padding:6px 0; }
+  .arp-cache { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px 10px; margin-bottom:10px; }
+  .arp-cache-title { font-size:0.65em; font-weight:700; color:#888; letter-spacing:0.05em; margin-bottom:5px; }
+  .arp-cache-empty { font-size:0.68em; color:#555; font-style:italic; padding:3px 0; }
+  .arp-cache-row { display:flex; justify-content:space-between; align-items:center; font-size:0.68em; padding:3px 8px; border-radius:4px; border:1px solid transparent; font-family:monospace; color:#666; transition:all 0.4s; }
+  .arp-cache-row.arp-cache-hi { border-color:#00ff88; color:#00ff88; background:rgba(0,255,136,0.07); font-weight:700; }
+  .arp-cache-row.arp-cache-new { animation:arpCacheIn 0.5s ease-out; }
+  @keyframes arpCacheIn { from{transform:translateX(-8px);opacity:0} to{transform:translateX(0);opacity:1} }
+  .arp-cache-miss { font-size:0.68em; color:#ff6644; font-weight:700; padding:2px 6px; border-radius:4px; background:rgba(255,102,68,0.1); border:1px solid rgba(255,102,68,0.3); display:inline-block; margin-bottom:4px; }
+  .arp-topo { display:flex; flex-direction:column; align-items:center; margin-bottom:10px; }
+  .arp-device { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; width:100px; height:46px; border-radius:10px; border:2px solid #cc66ff55; background:rgba(0,0,0,0.3); transition:all 0.3s; margin-bottom:0; }
+  .arp-device.arp-dev-hi { border-color:#cc66ff; box-shadow:0 0 16px #cc66ff; }
+  .arp-pc-row { display:flex; width:100%; gap:4px; }
+  .arp-pc-col { flex:1; display:flex; flex-direction:column; align-items:center; }
+  .arp-wire { width:2px; height:32px; background:rgba(255,255,255,0.08); border-radius:1px; transition:background 0.25s,box-shadow 0.25s; }
+  .arp-wire.arp-wire-req { background:#ffaa44; box-shadow:0 0 10px #ffaa44; animation:arpPulse 0.5s ease-in-out 3; }
+  .arp-wire.arp-wire-rep { background:#00ff88; box-shadow:0 0 10px #00ff88; animation:arpPulse 0.5s ease-in-out 3; }
+  .arp-wire.arp-wire-data { background:#00d4ff; box-shadow:0 0 10px #00d4ff; animation:arpPulse 0.5s ease-in-out 2; }
+  @keyframes arpPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+  .arp-pc { width:100%; display:flex; flex-direction:column; align-items:center; padding:5px 2px; border-radius:8px; border:1.5px solid rgba(255,255,255,0.1); transition:all 0.3s; text-align:center; }
+  .arp-pc.arp-pc-hi { border-color:var(--pc) !important; box-shadow:0 0 12px var(--pc); }
+  .arp-pc.arp-pc-dim { opacity:0.18; }
+  .arp-pc-lbl { font-size:0.6em; font-weight:700; color:var(--pc); margin-top:1px; }
+  .arp-pc-ip  { font-size:0.52em; color:#888; font-family:monospace; }
+  .arp-pc-mac { font-size:0.5em;  color:#555; font-family:monospace; }
+  .arp-badge { font-size:0.85em; min-height:16px; margin-top:2px; opacity:0; transition:opacity 0.3s; }
+  .arp-badge.arp-badge-on { opacity:1; }
+  .arp-pkt-label { font-size:0.52em; font-weight:700; padding:1px 5px; border-radius:3px; margin-top:2px; opacity:0; transition:opacity 0.3s; }
+  .arp-pkt-label.arp-pkt-on { opacity:1; }
+  .arp-step-box { background:rgba(255,255,255,0.05); border-radius:10px; padding:11px 13px; font-size:0.81em; color:#ccc; line-height:1.55; margin-bottom:10px; min-height:52px; }
+  .arp-step-box code { background:rgba(255,255,255,0.1); padding:1px 5px; border-radius:3px; font-family:monospace; font-size:0.92em; }
+  .arp-controls { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .arp-btn { padding:7px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.07); color:#ccc; font-size:0.77em; cursor:pointer; }
+  .arp-btn:hover { background:rgba(255,255,255,0.13); }
+  .arp-btn-reset { border-color:#ff6680 !important; color:#ff6680 !important; }
+  #arp-ctr { font-size:0.72em; color:#888; }
+
   /* ── Hub vs Switch Animation ── */
   .hs-wrap { padding:6px 0; }
   .hs-tabs { display:flex; gap:8px; margin-bottom:10px; }
@@ -1772,6 +1810,16 @@ const TOPICS = [
         ]
       },
       {
+        title: 'ARP – Address Resolution Protocol',
+        body: `<p>Before a device can send an Ethernet frame it needs both the destination <strong>IP address</strong> (Layer 3) and the destination <strong>MAC address</strong> (Layer 2). <strong>ARP</strong> bridges this gap — it discovers the MAC address for a known IP on the local network.</p>
+<p>Every device keeps an <strong>ARP cache</strong> — a temporary table mapping IP → MAC. When an entry is missing, ARP kicks in automatically. Entries expire after ~4 minutes (240 sec default on Cisco IOS).</p>
+<p>Two message types: <strong>ARP Request</strong> (broadcast — "Who has IP X?") and <strong>ARP Reply</strong> (unicast — "IP X is at MAC Y"). The switch floods requests like any broadcast; the reply travels directly back.</p>`
+      },
+      {
+        type: 'arp_anim',
+        title: 'Interactive: Watch ARP in Action'
+      },
+      {
         title: 'Key Tips',
         type: 'tip',
         body: '<strong>Native VLAN</strong> traffic crosses trunks untagged. Both ends must match or you get VLAN hopping attacks.<br><br><strong>VLAN 1</strong> is the default — never use it for user traffic. Best practice: change the native VLAN to an unused VLAN.<br><br><strong>BPDU Guard</strong> + <strong>PortFast</strong> should be enabled on all access ports to speed up convergence and prevent rogue switches.'
@@ -2535,6 +2583,12 @@ function renderLayerLesson(layerNum) {
       card.querySelectorAll('.proto-link').forEach(link => {
         link.addEventListener('click', () => renderProtocolLesson(link.dataset.proto));
       });
+    } else if (section.type === 'arp_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="arp-anim-root"></div>`;
+      container.appendChild(card);
+      buildARPAnim(document.getElementById('arp-anim-root'));
+      continue;
     } else if (section.type === 'hub_switch_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="hs-anim-root"></div>`;
@@ -2587,6 +2641,147 @@ function renderLayerLesson(layerNum) {
 
   showScreen('screen-layer');
   window.scrollTo(0, 0);
+}
+
+// ── ARP Animation ────────────────────────────────────────────────────────────
+function buildARPAnim(root) {
+  const PCS = [
+    { id:'A', label:'PC-A', ip:'10.0.0.1', mac:'AA:AA', color:'#00d4ff', role:'sender' },
+    { id:'B', label:'PC-B', ip:'10.0.0.2', mac:'BB:BB', color:'#00ff88', role:'target' },
+    { id:'C', label:'PC-C', ip:'10.0.0.3', mac:'CC:CC', color:'#ff6ec7', role:'bystander' },
+  ];
+  const REQ='#ffaa44', REP='#00ff88', DATA='#00d4ff';
+
+  const STEPS = [
+    { text:`<strong style="color:#00d4ff">PC-A</strong> wants to send data to <strong>10.0.0.2</strong>. Before it can build the Ethernet frame it needs PC-B's <strong>MAC address</strong>. First stop: check the <strong>ARP cache</strong>.`,
+      hiPCs:['A'], wires:{}, hiDev:false, cacheMiss:true, cacheHi:null, badges:{}, pkts:{} },
+    { text:`<strong>ARP Cache MISS</strong> — no entry for 10.0.0.2. PC-A builds an <strong>ARP Request</strong>:<br><code>Who has 10.0.0.2? Tell 10.0.0.1</code><br>Destination MAC: <code>FF:FF:FF:FF:FF:FF</code> (broadcast — every device must read this).`,
+      hiPCs:['A'], wires:{A:'req'}, hiDev:false, cacheMiss:true, cacheHi:null, badges:{}, pkts:{A:{label:'ARP REQ',color:REQ}} },
+    { text:`The <strong style="color:#cc66ff">Switch</strong> receives the broadcast on Port 1 and <strong>floods it out all other ports</strong> — PC-B and PC-C both receive a copy.`,
+      hiPCs:['B','C'], wires:{B:'req',C:'req'}, hiDev:true, cacheMiss:true, cacheHi:null, badges:{}, pkts:{B:{label:'ARP REQ',color:REQ},C:{label:'ARP REQ',color:REQ}} },
+    { text:`<strong style="color:#ff6ec7">PC-C</strong> reads the request — <em>"Is 10.0.0.2 my IP?"</em> No. It <strong>silently discards</strong> it.<br><strong style="color:#00ff88">PC-B</strong> reads it — <em>"Is 10.0.0.2 my IP?"</em> Yes! PC-B sends an <strong>ARP Reply</strong> (unicast) back to AA:AA.`,
+      hiPCs:['B'], wires:{B:'rep'}, hiDev:false, cacheMiss:true, cacheHi:null, badges:{C:'🚫',B:'📨'}, pkts:{B:{label:'ARP REP',color:REP}} },
+    { text:`The Switch receives PC-B's reply and forwards it <strong>only to Port 1 (PC-A)</strong> — it learned AA:AA's port when the request was sent. No flooding needed for the unicast reply.`,
+      hiPCs:['A'], wires:{A:'rep'}, hiDev:true, cacheMiss:true, cacheHi:null, badges:{}, pkts:{A:{label:'ARP REP',color:REP}} },
+    { text:`PC-A receives the reply: <em>"10.0.0.2 is at BB:BB."</em> It <strong>adds this to its ARP cache</strong>. The entry stays for ~4 minutes (240 sec on Cisco IOS) before expiring.`,
+      hiPCs:['A'], wires:{}, hiDev:false, cacheMiss:false, cacheHi:'B', badges:{A:'✅'}, pkts:{} },
+    { text:`<strong>ARP complete!</strong> PC-A now builds the Ethernet frame: <strong>DST MAC = BB:BB</strong>, DST IP = 10.0.0.2 and sends data. Future packets to 10.0.0.2 skip ARP entirely — the cache is used directly.`,
+      hiPCs:['A','B'], wires:{A:'data',B:'data'}, hiDev:true, cacheMiss:false, cacheHi:'B', badges:{B:'✅'}, pkts:{A:{label:'DATA',color:DATA},B:{label:'DATA',color:DATA}} },
+  ];
+
+  root.innerHTML = `<div class="arp-wrap">
+    <div class="arp-cache" id="arp-cache">
+      <div class="arp-cache-title">📋 ARP CACHE (PC-A)</div>
+      <div id="arp-miss" class="arp-cache-miss" style="display:none">MISS — 10.0.0.2 not found</div>
+      <div id="arp-empty" class="arp-cache-empty">Empty</div>
+      <div class="arp-cache-row" id="arp-cr-B" style="display:none">
+        <span>10.0.0.2</span><span>BB:BB</span><span style="color:#888">Port 2</span>
+      </div>
+    </div>
+    <div class="arp-topo">
+      <div class="arp-device" id="arp-dev">
+        <span style="font-size:1.3em">🔀</span>
+        <span style="font-size:0.65em;font-weight:800;color:#cc66ff;letter-spacing:0.08em">SWITCH</span>
+      </div>
+      <div class="arp-pc-row">
+        ${PCS.map(p=>`<div class="arp-pc-col">
+          <div class="arp-wire" id="arp-wire-${p.id}" style="--pc:${p.color}"></div>
+          <div class="arp-pc" id="arp-pc-${p.id}" style="--pc:${p.color}">
+            <div style="font-size:1.05em">💻</div>
+            <div class="arp-pc-lbl">${p.label}</div>
+            <div class="arp-pc-ip">${p.ip}</div>
+            <div class="arp-pc-mac">${p.mac}</div>
+            <div class="arp-pkt-label" id="arp-pkt-${p.id}"></div>
+            <div class="arp-badge" id="arp-badge-${p.id}"></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="arp-step-box" id="arp-step-box">Press <strong>Next ▶</strong> to watch ARP discover a MAC address.</div>
+    <div class="arp-controls">
+      <button class="arp-btn" id="arp-prev">◀ Prev</button>
+      <span id="arp-ctr">—</span>
+      <button class="arp-btn" id="arp-next">Next ▶</button>
+      <button class="arp-btn arp-btn-reset" id="arp-reset">↺ Reset</button>
+    </div>
+  </div>`;
+
+  let step = -1;
+  const g = id => root.querySelector('#' + id);
+
+  function applyStep(s) {
+    const st = STEPS[s];
+    // Reset PCs, wires, badges, pkts
+    PCS.forEach(p => {
+      g(`arp-pc-${p.id}`).classList.remove('arp-pc-hi','arp-pc-dim');
+      const w = g(`arp-wire-${p.id}`);
+      w.className = 'arp-wire';
+      g(`arp-badge-${p.id}`).textContent = '';
+      g(`arp-badge-${p.id}`).classList.remove('arp-badge-on');
+      g(`arp-pkt-${p.id}`).textContent = '';
+      g(`arp-pkt-${p.id}`).classList.remove('arp-pkt-on');
+    });
+    // Highlight PCs
+    PCS.forEach(p => {
+      if (st.hiPCs.length && !st.hiPCs.includes(p.id)) g(`arp-pc-${p.id}`).classList.add('arp-pc-dim');
+      if (st.hiPCs.includes(p.id)) g(`arp-pc-${p.id}`).classList.add('arp-pc-hi');
+    });
+    // Wires
+    Object.entries(st.wires).forEach(([id, type]) => {
+      g(`arp-wire-${id}`).classList.add(`arp-wire-${type}`);
+    });
+    // Device
+    g('arp-dev').classList.toggle('arp-dev-hi', !!st.hiDev);
+    // Badges
+    Object.entries(st.badges).forEach(([id, txt]) => {
+      g(`arp-badge-${id}`).textContent = txt;
+      g(`arp-badge-${id}`).classList.add('arp-badge-on');
+    });
+    // Packet labels
+    Object.entries(st.pkts).forEach(([id, pkt]) => {
+      const el = g(`arp-pkt-${id}`);
+      el.textContent = pkt.label;
+      el.style.background = pkt.color + '22';
+      el.style.border = `1px solid ${pkt.color}`;
+      el.style.color = pkt.color;
+      el.classList.add('arp-pkt-on');
+    });
+    // ARP cache
+    g('arp-miss').style.display = st.cacheMiss ? '' : 'none';
+    g('arp-empty').style.display = (st.cacheMiss && !st.cacheHi) ? '' : 'none';
+    const cacheRow = g('arp-cr-B');
+    if (!st.cacheMiss) {
+      cacheRow.style.display = '';
+      cacheRow.classList.toggle('arp-cache-hi', st.cacheHi === 'B');
+      if (s === 5) cacheRow.classList.add('arp-cache-new');
+    } else {
+      cacheRow.style.display = 'none';
+    }
+    g('arp-step-box').innerHTML = st.text;
+    g('arp-ctr').textContent = `Step ${s+1} / ${STEPS.length}`;
+  }
+
+  function reset() {
+    step = -1;
+    PCS.forEach(p => {
+      g(`arp-pc-${p.id}`).classList.remove('arp-pc-hi','arp-pc-dim');
+      g(`arp-wire-${p.id}`).className = 'arp-wire';
+      g(`arp-badge-${p.id}`).textContent = '';
+      g(`arp-badge-${p.id}`).classList.remove('arp-badge-on');
+      g(`arp-pkt-${p.id}`).textContent = '';
+      g(`arp-pkt-${p.id}`).classList.remove('arp-pkt-on');
+    });
+    g('arp-dev').classList.remove('arp-dev-hi');
+    g('arp-miss').style.display = 'none';
+    g('arp-empty').style.display = '';
+    g('arp-cr-B').style.display = 'none';
+    g('arp-step-box').innerHTML = 'Press <strong>Next ▶</strong> to watch ARP discover a MAC address.';
+    g('arp-ctr').textContent = '—';
+  }
+
+  g('arp-next').addEventListener('click', () => { if (step < STEPS.length-1) { step++; applyStep(step); } });
+  g('arp-prev').addEventListener('click', () => { if (step > 0) { step--; applyStep(step); } else reset(); });
+  g('arp-reset').addEventListener('click', reset);
 }
 
 // ── Hub vs Switch Animation ───────────────────────────────────────────────────
@@ -4779,6 +4974,12 @@ function renderLesson(topic) {
         <div id="osi-anim-root"></div>`;
       container.appendChild(card);
       buildOSIAnim(document.getElementById('osi-anim-root'));
+      continue;
+    } else if (section.type === 'arp_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="arp-anim-root"></div>`;
+      container.appendChild(card);
+      buildARPAnim(document.getElementById('arp-anim-root'));
       continue;
     } else if (section.type === 'vlan_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
