@@ -906,6 +906,97 @@
     100% { transform: scale(1); }
   }
 
+  /* ── AD Chart ── */
+  .ad-chart-wrap { margin: 10px 0 4px; }
+  .ad-chart-title { font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; text-align:center; margin-bottom:10px; }
+  .ad-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    border-radius: 7px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .ad-bar-row:hover { background: rgba(255,255,255,0.04); }
+  .ad-bar-row.ad-bar-active { background: rgba(255,255,255,0.06); }
+  .ad-bar-label { font-size:0.7rem; min-width:120px; font-weight:600; }
+  .ad-bar-track {
+    flex: 1;
+    height: 14px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+  .ad-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.9s cubic-bezier(0.4,0,0.2,1);
+  }
+  .ad-bar-val { font-size:0.7rem; font-weight:800; min-width:26px; text-align:right; font-family:'Courier New',monospace; }
+  .ad-trust-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size:0.6rem;
+    color:var(--muted);
+    padding: 2px 6px 8px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: 4px;
+  }
+  /* per-lesson visuals */
+  .ad-visual { margin: 10px 0; }
+  .ad-router-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .ad-router-icon {
+    width: 56px; height: 56px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem;
+  }
+  .ad-iface-row { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .ad-iface {
+    padding: 6px 10px; border-radius: 8px;
+    font-size: 0.7rem; font-weight: 700;
+    border: 1px solid;
+    font-family: 'Courier New', monospace;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+  .ad-iface:hover { transform: translateY(-2px); }
+  .ad-hop-track { display:flex; align-items:center; gap:0; margin: 8px 0; overflow-x:auto; }
+  .ad-hop-node {
+    width: 38px; height: 38px; border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 0.65rem; font-weight:800; flex-shrink:0;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+  }
+  .ad-hop-node:hover { transform: scale(1.15); }
+  .ad-hop-arrow { font-size:0.8rem; color:var(--muted); flex-shrink:0; padding:0 1px; }
+  .ad-hop-dead { opacity:0.3; text-decoration:line-through; }
+  .ad-redist-box {
+    display:flex; flex-direction:column; gap:8px; align-items:center;
+  }
+  .ad-redist-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .ad-proto-pill {
+    padding:5px 12px; border-radius:99px; font-size:0.72rem; font-weight:700;
+    border:1px solid; cursor:default;
+  }
+  .ad-arrow-label { font-size:0.65rem; color:var(--muted); text-align:center; }
+  @keyframes adBarIn {
+    from { width: 0 !important; }
+  }
+  @keyframes adPulse {
+    0%,100% { box-shadow: 0 0 0 0 currentColor; }
+    50% { box-shadow: 0 0 10px 3px currentColor; }
+  }
+
   @media (max-width: 420px) {
     .topic-grid { grid-template-columns: 1fr; }
     .result-stats { grid-template-columns: repeat(3,1fr); }
@@ -969,6 +1060,15 @@
   </div>
   <div id="l3protocol-detail-content"></div>
   <button class="btn-start-quiz" id="btn-l3protocol-quiz">Take the Quiz →</button>
+</div>
+
+<!-- AD Source Detail -->
+<div class="screen" id="screen-ad">
+  <div class="learn-nav">
+    <button class="learn-back" id="btn-ad-back">← Routing Protocols</button>
+    <span id="ad-detail-title"></span>
+  </div>
+  <div id="ad-detail-content"></div>
 </div>
 
 <!-- Protocol Detail -->
@@ -1250,16 +1350,16 @@ const TOPICS = [
         type: 'table_after',
       },
       {
-        type: 'table',
+        type: 'ad_table',
         headers: ['Source', 'AD', 'Notes'],
         rows: [
-          ['Connected interface', '0', 'Always preferred — directly attached'],
-          ['Static route', '1', 'Manually configured by admin'],
-          ['EIGRP (internal)', '90', 'Cisco proprietary, fast convergence'],
-          ['OSPF', '110', 'Open standard, link-state'],
-          ['RIP', '120', 'Oldest, limited to 15 hops'],
-          ['EIGRP (external)', '170', 'Routes redistributed into EIGRP'],
-          ['Unknown / unreachable', '255', 'Never used'],
+          { key:'Connected',      label:'Connected interface',    ad:'0',   note:'Always preferred — directly attached', color:'#00ff88' },
+          { key:'Static',         label:'Static route',           ad:'1',   note:'Manually configured by admin',         color:'#00d4ff' },
+          { key:'EIGRP_int',      label:'EIGRP (internal)',        ad:'90',  note:'Cisco proprietary, fast convergence',  color:'#7b4fff' },
+          { key:'OSPF',           label:'OSPF',                   ad:'110', note:'Open standard, link-state',            color:'#ff9900' },
+          { key:'RIP',            label:'RIP',                    ad:'120', note:'Oldest, limited to 15 hops',           color:'#ff6ec7' },
+          { key:'EIGRP_ext',      label:'EIGRP (external)',        ad:'170', note:'Routes redistributed into EIGRP',      color:'#ff4444' },
+          { key:'Unknown',        label:'Unknown / unreachable',  ad:'255', note:'Never used to forward traffic',         color:'#666688' },
         ]
       },
       {
@@ -3134,6 +3234,23 @@ function renderLesson(topic) {
           <thead><tr>${section.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
           <tbody>${rows}</tbody>
         </table>`;
+    } else if (section.type === 'ad_table') {
+      const rowsHtml = section.rows.map(r =>
+        `<tr>
+          <td><a class="proto-link review-link ad-source-link" data-adkey="${r.key}" style="cursor:pointer;color:${r.color}">${r.label}</a></td>
+          <td style="color:${r.color};font-weight:800;font-family:'Courier New',monospace">${r.ad}</td>
+          <td>${r.note}</td>
+        </tr>`
+      ).join('');
+      card.innerHTML = `<div class="lesson-section-title">${section.title||'Administrative Distance (AD)'}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">Tap a source to learn more →</div>
+        <table class="lesson-table">
+          <thead><tr>${section.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>`;
+      card.querySelectorAll('.ad-source-link').forEach(link => {
+        link.addEventListener('click', () => renderADLesson(link.dataset.adkey));
+      });
     } else if (section.type === 'tip') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div class="lesson-tip">💡 ${section.body}</div>`;
@@ -3154,6 +3271,403 @@ function renderLesson(topic) {
 
   showScreen('screen-learn');
   window.scrollTo(0, 0);
+}
+
+// ── Administrative Distance Deep-Dive Lessons ────────────────────────────────
+const AD_SOURCES = [
+  { key:'Connected', label:'Connected',       ad:0,   color:'#00ff88' },
+  { key:'Static',    label:'Static Route',    ad:1,   color:'#00d4ff' },
+  { key:'EIGRP_int', label:'EIGRP (internal)',ad:90,  color:'#7b4fff' },
+  { key:'OSPF',      label:'OSPF',            ad:110, color:'#ff9900' },
+  { key:'RIP',       label:'RIP',             ad:120, color:'#ff6ec7' },
+  { key:'EIGRP_ext', label:'EIGRP (external)',ad:170, color:'#ff4444' },
+  { key:'Unknown',   label:'Unknown',         ad:255, color:'#666688' },
+];
+
+const AD_LESSONS = {
+  Connected: {
+    title: 'Connected Interface (AD 0)',
+    color: '#00ff88',
+    icon: '🔗',
+    intro: `<p>A <strong>Connected route</strong> has an Administrative Distance of <strong>0</strong> — the most trusted route possible. First and foremost, this makes perfect sense: if a router's own interface is directly attached to a network, there's no need to learn that route from anywhere else. The router already <em>is</em> on that network.</p>
+<p>Whenever you assign an IP address to a router interface and bring it up, IOS automatically adds a connected route ("C") to the routing table. As a result, no configuration is needed — it's completely automatic.</p>`,
+    visual: 'connected',
+    sections: [
+      { title: 'How It Works', body: `<p>Think of it this way: if you live at 123 Main Street, you don't need a map to tell you how to get to your own front door. Similarly, a router doesn't need a routing protocol to reach its directly connected networks.</p>
+<p>When an interface like <code>GigabitEthernet0/0</code> is configured with IP address <strong>192.168.1.1/24</strong>, the router automatically knows the <strong>192.168.1.0/24</strong> network is reachable out that interface with AD=0.</p>
+<p>Furthermore, connected routes act as the <em>foundation</em> for all other routes. Routing protocols discover remote networks and then install routes with higher ADs — but the connected routes are always the most trusted anchor points in the table.</p>` },
+      { title: 'Routing Table Entry', body: `<p>Run <strong>show ip route</strong> and look for the letter <strong>C</strong>:</p>
+<code style="display:block;background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:8px;font-size:0.78rem;margin:8px 0;color:#00ff88">C &nbsp; 192.168.1.0/24 is directly connected, GigabitEthernet0/0<br>L &nbsp; 192.168.1.1/32 is directly connected, GigabitEthernet0/0</code>
+<p>Notice the companion <strong>L</strong> (local) route — that's the router's own IP address at /32. This was added in IOS 15 to prevent the router from routing packets destined for itself out an interface.</p>` },
+      { title: 'CCNA Tip', type:'tip', body: 'Connected routes (AD=0) are <strong>always</strong> preferred over any learned route for the same network. If an interface goes down, the connected route is immediately removed from the table — which is how routing protocols detect topology changes.' },
+    ]
+  },
+  Static: {
+    title: 'Static Route (AD 1)',
+    color: '#00d4ff',
+    icon: '📌',
+    intro: `<p>A <strong>Static route</strong> has an Administrative Distance of <strong>1</strong> — the second most trusted route after a directly connected interface. The reasoning is straightforward: a human network administrator manually entered this route, so the router treats it as highly reliable.</p>
+<p>In contrast to dynamic routing protocols that discover paths automatically, static routes are configured with the <code>ip route</code> command and never change unless an admin changes them. This predictability is both their greatest strength and their key limitation.</p>`,
+    visual: 'static',
+    sections: [
+      { title: 'Configuring a Static Route', body: `<p>The syntax is simple and follows a consistent pattern:</p>
+<code style="display:block;background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:8px;font-size:0.78rem;margin:8px 0;color:#00d4ff">ip route [destination network] [subnet mask] [next-hop IP or exit interface]</code>
+<p>For example, to reach the 10.0.0.0/8 network via next-hop 192.168.1.254:</p>
+<code style="display:block;background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:8px;font-size:0.78rem;margin:8px 0;color:#00d4ff">ip route 10.0.0.0 255.0.0.0 192.168.1.254</code>
+<p>Furthermore, the most important static route to know is the <strong>default route</strong> (gateway of last resort), which matches any destination when no specific route exists.</p>` },
+      { title: 'The Default Route', body: `<p>The default route uses a special "quad-zero" notation:</p>
+<code style="display:block;background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:8px;font-size:0.78rem;margin:8px 0;color:#00d4ff">ip route 0.0.0.0 0.0.0.0 [ISP gateway IP]</code>
+<p>This route matches <em>every</em> destination — it's the router's last resort when no more specific route exists. Consequently, it's always configured on edge routers pointing toward the internet.</p>
+<p>In the routing table, you'll see it marked as <strong>S*</strong> — the asterisk (*) indicates it's the gateway of last resort.</p>` },
+      { title: 'When to Use Static Routes', body: `<p>Static routes are ideal in three scenarios. <strong>First</strong>, on stub networks — networks with only one path in or out, where dynamic protocols would be overkill. <strong>Second</strong>, for the default route pointing to an ISP. <strong>Third</strong>, when you need absolute control over how traffic flows, such as for security or compliance reasons.</p>
+<p>However, static routes don't adapt to topology changes. If the next-hop router fails, the static route remains in the table pointing to a dead end. For this reason, large networks use dynamic protocols instead.</p>` },
+      { title: 'CCNA Tip', type:'tip', body: 'A <strong>floating static route</strong> has a manually raised AD (e.g., "ip route 0.0.0.0 0.0.0.0 &lt;backup-ISP&gt; <strong>5</strong>") so it only activates if the primary route disappears. It "floats" below the primary route in preference.' },
+    ]
+  },
+  EIGRP_int: {
+    title: 'EIGRP Internal (AD 90)',
+    color: '#7b4fff',
+    icon: '⚡',
+    intro: `<p><strong>EIGRP internal routes</strong> have an Administrative Distance of <strong>90</strong> — the lowest AD among all dynamic routing protocols. Cisco designed EIGRP to be highly trusted, and this low AD reflects that confidence.</p>
+<p>An "internal" EIGRP route is one that <em>originated within</em> the same EIGRP autonomous system — meaning it was advertised by a router running EIGRP natively, not imported from another protocol. As a result, EIGRP internal routes will always be preferred over OSPF (110) or RIP (120) routes to the same destination.</p>`,
+    visual: 'eigrp_int',
+    sections: [
+      { title: 'Why AD 90?', body: `<p>Cisco assigned AD 90 to EIGRP internal routes because EIGRP uses a sophisticated <strong>composite metric</strong> (bandwidth + delay by default) and the <strong>DUAL algorithm</strong>, which mathematically guarantees loop-free paths. This reliability earns it more trust than OSPF or RIP.</p>
+<p>Furthermore, EIGRP converges almost instantly when a link fails — the DUAL algorithm pre-computes backup paths called <strong>Feasible Successors</strong>, so failover happens in milliseconds without recalculation.</p>` },
+      { title: 'Internal vs External — AD Comparison', body: `<p>EIGRP distinguishes between two types of routes:</p>
+<p><strong>Internal (AD 90):</strong> Routes that originated natively within the EIGRP domain. These are trusted.</p>
+<p><strong>External (AD 170):</strong> Routes imported (redistributed) from another protocol, like OSPF or a static route. Because their origin is less certain, EIGRP marks them with a higher AD.</p>
+<p>This split design allows EIGRP to signal to the router: "trust our own routes, but be more cautious about routes we imported from elsewhere."</p>` },
+      { title: 'CCNA Tip', type:'tip', body: 'EIGRP internal = AD <strong>90</strong>. EIGRP external = AD <strong>170</strong>. In the routing table, EIGRP routes appear as <strong>D</strong> (for DUAL/Diffusing). External EIGRP routes appear as <strong>D EX</strong>.' },
+    ]
+  },
+  OSPF: {
+    title: 'OSPF (AD 110)',
+    color: '#ff9900',
+    icon: '🗺️',
+    intro: `<p><strong>OSPF (Open Shortest Path First)</strong> has an Administrative Distance of <strong>110</strong>. It sits just above EIGRP (90) in trust level, reflecting that it's a highly reliable open standard — but not quite as Cisco-optimized as EIGRP.</p>
+<p>OSPF is a <strong>link-state protocol</strong>, meaning every router builds a complete map of the network (called the Link State Database, or LSDB) and independently runs <strong>Dijkstra's Shortest Path First (SPF) algorithm</strong> to find the best path to every destination. Because every router has the full picture, OSPF is extremely accurate and scales well across large networks.</p>`,
+    visual: 'ospf',
+    sections: [
+      { title: 'Why AD 110?', body: `<p>OSPF's AD of 110 places it between EIGRP (90) and RIP (120). This reflects its strengths and limitations:</p>
+<p><strong>More trusted than RIP</strong> because OSPF uses actual link bandwidth (cost) as its metric, not just hop count. It scales to large networks and converges in seconds rather than minutes.</p>
+<p><strong>Less trusted than EIGRP</strong> (on Cisco equipment) because EIGRP converges faster and uses a more precise composite metric. However, in non-Cisco environments, OSPF is universally preferred.</p>
+<p>Additionally, OSPF's AD of 110 means that in a network running both OSPF and EIGRP, EIGRP routes will always win for the same destination — a critical detail for redistribution scenarios.</p>` },
+      { title: 'OSPF Cost Metric', body: `<p>OSPF doesn't use hop count. Instead, it uses <strong>cost</strong>, calculated as:</p>
+<code style="display:block;background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:8px;font-size:0.78rem;margin:8px 0;color:#ff9900">Cost = Reference Bandwidth ÷ Interface Bandwidth<br>Default Reference BW = 100 Mbps</code>
+<p>As a result, a 100 Mbps FastEthernet link has cost=1, and so does a 1 Gbps GigabitEthernet link (100÷1000 rounds to 1). This is a well-known OSPF limitation — you must increase the reference bandwidth with <code>auto-cost reference-bandwidth 1000</code> on all OSPF routers to differentiate GigE from FastEthernet.</p>` },
+      { title: 'CCNA Tip', type:'tip', body: 'OSPF AD = <strong>110</strong>. Routes appear as <strong>O</strong> in the routing table. Inter-area routes appear as <strong>O IA</strong>. Cost = reference BW ÷ interface BW — always change the reference BW on GigE networks!' },
+    ]
+  },
+  RIP: {
+    title: 'RIP (AD 120)',
+    color: '#ff6ec7',
+    icon: '🐢',
+    intro: `<p><strong>RIP (Routing Information Protocol)</strong> has an Administrative Distance of <strong>120</strong> — the highest AD among commonly used dynamic routing protocols (excluding EIGRP external and BGP). This relatively high value reflects RIP's age and simplicity.</p>
+<p>RIP is a classic <strong>distance-vector protocol</strong>. Rather than building a complete network map like OSPF, RIP routers only know what their neighbors tell them — the classic "routing by rumor" analogy. Each router advertises its routing table to neighbors every <strong>30 seconds</strong>, regardless of whether anything changed. Consequently, RIP is bandwidth-inefficient and slow to converge.</p>`,
+    visual: 'rip',
+    sections: [
+      { title: 'The 15-Hop Limit', body: `<p>RIP's most famous limitation is its <strong>maximum hop count of 15</strong>. Any destination requiring 16 or more hops is considered <em>unreachable</em> (infinity = 16). This was a reasonable constraint in the 1980s when networks were small, but it makes RIP completely unsuitable for large modern networks.</p>
+<p>Furthermore, because RIP only counts hops — not bandwidth — it might route traffic over a slow 56K link just because it has fewer hops than a fast gigabit path. This blind spot can cause serious performance problems.</p>` },
+      { title: 'Why Still Important for CCNA?', body: `<p>Despite its limitations, RIP remains a CCNA exam topic for good reasons. <strong>First</strong>, it clearly illustrates fundamental routing concepts like distance-vector operation, split horizon, and routing loops. <strong>Second</strong>, RIPv2 added classless routing (subnet mask support) and multicast updates — making it more practical. <strong>Third</strong>, RIP is still found in legacy networks and lab environments.</p>
+<p>RIPv2 updates use multicast address <strong>224.0.0.9</strong>, whereas RIPv1 used broadcasts. Additionally, RIPv2 supports authentication, which RIPv1 lacks entirely.</p>` },
+      { title: 'RIP Timers', body: `<p>RIP uses four timers that are critical for understanding its behavior:</p>
+<p><strong>Update (30s):</strong> How often RIP sends its full routing table to neighbors.</p>
+<p><strong>Invalid (180s):</strong> After 180s with no update for a route, it's marked unreachable (metric=16).</p>
+<p><strong>Hold-down (180s):</strong> Prevents accepting worse routes immediately after a route goes bad.</p>
+<p><strong>Flush (240s):</strong> After 240s, the route is completely removed from the table.</p>` },
+      { title: 'CCNA Tip', type:'tip', body: 'RIP AD = <strong>120</strong>. Routes appear as <strong>R</strong> in the routing table. Max hop count = <strong>15</strong> (16 = unreachable). RIPv2 multicast = <strong>224.0.0.9</strong>. Update timer = <strong>30 seconds</strong>.' },
+    ]
+  },
+  EIGRP_ext: {
+    title: 'EIGRP External (AD 170)',
+    color: '#ff4444',
+    icon: '↔️',
+    intro: `<p><strong>EIGRP external routes</strong> have an Administrative Distance of <strong>170</strong> — significantly higher than EIGRP internal routes (90). This gap is intentional and important to understand.</p>
+<p>An external EIGRP route is one that was <em>redistributed</em> into EIGRP from another source — such as OSPF, RIP, a static route, or a connected network on a different router. In other words, these routes didn't originate natively in EIGRP; they were imported. As a result, EIGRP trusts them less and marks them with the higher AD of 170.</p>`,
+    visual: 'eigrp_ext',
+    sections: [
+      { title: 'What is Redistribution?', body: `<p><strong>Redistribution</strong> is the process of taking routes learned by one routing protocol and injecting them into another. For example, imagine a network where the left half runs OSPF and the right half runs EIGRP. To allow traffic to flow between both halves, a border router redistributes OSPF routes into EIGRP (and vice versa).</p>
+<p>Furthermore, static routes and connected networks can also be redistributed. For instance, a default route (0.0.0.0/0) learned from an ISP might be redistributed into EIGRP so that all routers in the domain know where to send internet-bound traffic.</p>` },
+      { title: 'Why AD 170 Instead of 90?', body: `<p>The higher AD of 170 acts as a safeguard. Consider this scenario: Router A learns the 10.0.0.0/8 network natively via EIGRP (AD 90) and also via redistribution from OSPF (AD 170 as EIGRP external). Without the AD difference, a routing loop or suboptimal path could be installed.</p>
+<p>By assigning AD 170 to external routes, EIGRP ensures that <em>natively learned</em> EIGRP routes always win over redistributed ones for the same destination. This prevents routing loops during redistribution and makes the network more predictable.</p>` },
+      { title: 'Identifying External Routes', body: `<p>In the routing table, EIGRP external routes are marked as <strong>D EX</strong>:</p>
+<code style="display:block;background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:8px;font-size:0.78rem;margin:8px 0;color:#ff4444">D EX &nbsp;172.16.0.0/16 [170/2816] via 10.0.0.1, GigabitEthernet0/0</code>
+<p>The <strong>D</strong> = EIGRP (DUAL), and <strong>EX</strong> = external. Notice the AD of 170 shown in brackets, compared to internal routes that show [90/...].</p>` },
+      { title: 'CCNA Tip', type:'tip', body: 'EIGRP external = AD <strong>170</strong>. Appears as <strong>D EX</strong> in routing table. The most common way external routes appear is via redistribution — when a network runs multiple routing protocols and routes need to cross between them.' },
+    ]
+  },
+  Unknown: {
+    title: 'Unknown / Unreachable (AD 255)',
+    color: '#666688',
+    icon: '🚫',
+    intro: `<p>An Administrative Distance of <strong>255</strong> means the route source is <em>completely untrusted</em> — so untrusted, in fact, that Cisco IOS will <strong>never install it in the routing table</strong>. AD 255 is essentially a signal that says: "this route should not be used to forward any traffic."</p>
+<p>In practice, you'll rarely see AD 255 in normal operation. Instead, it appears in specific scenarios: when a route is manually configured with AD 255 as an administrative tool, or when IOS itself marks a route as inaccessible due to a failure or misconfiguration.</p>`,
+    visual: 'unknown',
+    sections: [
+      { title: 'How AD 255 is Used Intentionally', body: `<p>Network administrators sometimes deliberately set a route to AD 255 to effectively "disable" it without deleting the configuration. For example:</p>
+<code style="display:block;background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:8px;font-size:0.78rem;margin:8px 0;color:#666688">ip route 10.0.0.0 255.0.0.0 192.168.1.1 255</code>
+<p>This route exists in the configuration but will never be used. The router ignores it completely when making forwarding decisions. Consequently, it's a useful troubleshooting technique — you can "park" a route without deleting it.</p>` },
+      { title: 'The Full AD Scale in Context', body: `<p>Understanding AD 255 helps put the entire AD scale in perspective. Think of it as a <strong>trust spectrum</strong>:</p>
+<p>At one end, <strong>AD 0</strong> (Connected) = "I know this for certain — my own interface is there." Moving across the spectrum, each higher AD reflects decreasing certainty. <strong>AD 1</strong> (Static) = "A human told me this." <strong>AD 90–120</strong> (dynamic protocols) = "An algorithm calculated this." Finally, <strong>AD 255</strong> = "I refuse to believe this." </p>
+<p>This spectrum is what makes AD such an elegant solution to the problem of route trustworthiness.</p>` },
+      { title: 'CCNA Tip', type:'tip', body: 'AD 255 = route is <strong>never installed</strong> in the routing table. If you ever see it in a show command, the router is telling you this route exists but is not active. BGP external routes (eBGP) have AD=20, iBGP=200 — both higher than most IGPs but lower than 255.' },
+    ]
+  },
+};
+
+function buildADChart(container, highlightKey) {
+  const wrap = document.createElement('div');
+  wrap.className = 'ad-chart-wrap lesson-card';
+  wrap.innerHTML = `<div class="ad-chart-title">Administrative Distance — All Sources (lower = more trusted, click to explore)</div>`;
+
+  AD_SOURCES.forEach((s, idx) => {
+    const isActive = s.key === highlightKey;
+    const pct = s.ad === 0 ? 0.4 : (s.ad / 255) * 100;
+    const row = document.createElement('div');
+    row.className = 'ad-bar-row' + (isActive ? ' ad-bar-active' : '');
+    row.innerHTML = `
+      <div class="ad-bar-label" style="color:${isActive ? s.color : 'var(--muted)'}">${s.label}</div>
+      <div class="ad-bar-track">
+        <div class="ad-bar-fill" id="adfill-${s.key}" style="background:${s.color};opacity:${isActive?'1':'0.35'}${isActive?';box-shadow:0 0 8px '+s.color+'77':''}"></div>
+      </div>
+      <div class="ad-bar-val" style="color:${s.color}">${s.ad}</div>`;
+    row.addEventListener('click', () => renderADLesson(s.key));
+    wrap.appendChild(row);
+    setTimeout(() => {
+      const fill = document.getElementById('adfill-'+s.key);
+      if (fill) { fill.style.width = pct + '%'; }
+    }, 80 + idx * 110);
+  });
+
+  const scale = document.createElement('div');
+  scale.className = 'ad-trust-scale';
+  scale.innerHTML = `<span style="color:#00ff88">◀ Most Trusted (0)</span><span>Least Trusted (255) ▶</span>`;
+  wrap.appendChild(scale);
+  container.appendChild(wrap);
+}
+
+function buildADVisual(container, key) {
+  const card = document.createElement('div');
+  card.className = 'lesson-card ad-visual';
+
+  if (key === 'Connected') {
+    const color = '#00ff88';
+    card.innerHTML = `<div class="lesson-section-title">How a Connected Route Works</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;">Tap an interface to see its connected route</div>
+      <div class="ad-router-box">
+        <div class="ad-router-icon" style="background:${color}22;border:2px solid ${color}55">🔀</div>
+        <div style="font-size:0.72rem;font-weight:700;color:${color}">Router</div>
+        <div class="ad-iface-row" id="ad-iface-row"></div>
+        <div id="ad-iface-info" style="font-size:0.75rem;color:var(--muted);text-align:center;min-height:36px;margin-top:4px;transition:all 0.3s"></div>
+      </div>`;
+    container.appendChild(card);
+    const ifaces = [
+      { name:'Gi0/0', ip:'192.168.1.1/24', net:'192.168.1.0/24', color:'#00d4ff' },
+      { name:'Gi0/1', ip:'10.0.0.1/8',     net:'10.0.0.0/8',     color:'#7b4fff' },
+      { name:'Gi0/2', ip:'172.16.0.1/16',  net:'172.16.0.0/16',  color:'#ff9900' },
+    ];
+    const row = document.getElementById('ad-iface-row');
+    const info = document.getElementById('ad-iface-info');
+    ifaces.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'ad-iface';
+      el.textContent = f.name;
+      el.style.cssText = `color:${f.color};border-color:${f.color}66;background:${f.color}11`;
+      el.addEventListener('click', () => {
+        info.innerHTML = `<span style="color:${f.color}">C ${f.net}</span> is directly connected, <strong>${f.name}</strong><br><span style="color:var(--muted);font-size:0.68rem">IP: ${f.ip} · AD: 0</span>`;
+      });
+      row.appendChild(el);
+    });
+
+  } else if (key === 'Static') {
+    const color = '#00d4ff';
+    card.innerHTML = `<div class="lesson-section-title">Static Route — Packet Path</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">Press Play to send a packet along the manually configured path</div>
+      <div id="ad-static-path" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;min-height:60px"></div>
+      <div style="text-align:center;margin-top:10px">
+        <button class="sa-replay" id="ad-static-play">▶ Play</button>
+      </div>`;
+    container.appendChild(card);
+    const nodes = ['Your PC','Router A','Router B','Router C','Destination'];
+    const pathEl = document.getElementById('ad-static-path');
+    nodes.forEach((n, i) => {
+      if (i > 0) { const a=document.createElement('div'); a.className='ad-hop-arrow'; a.textContent='→'; a.id='ad-sarrow-'+i; a.style.opacity='0.2'; pathEl.appendChild(a); }
+      const nd = document.createElement('div');
+      nd.className = 'ad-hop-node';
+      nd.id = 'ad-snode-'+i;
+      nd.style.cssText = `background:${color}22;border:2px solid ${color}44;color:${color};font-size:0.55rem;text-align:center;padding:2px;width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center`;
+      nd.textContent = n;
+      pathEl.appendChild(nd);
+    });
+    document.getElementById('ad-static-play').addEventListener('click', () => {
+      nodes.forEach((_, i) => {
+        const nd = document.getElementById('ad-snode-'+i);
+        nd.style.background = color+'22'; nd.style.borderColor = color+'44'; nd.style.boxShadow='';
+        if (i>0) { const a=document.getElementById('ad-sarrow-'+i); if(a) a.style.opacity='0.2'; }
+      });
+      nodes.forEach((_, i) => {
+        setTimeout(() => {
+          const nd = document.getElementById('ad-snode-'+i);
+          nd.style.background = color+'cc'; nd.style.borderColor = color; nd.style.boxShadow='0 0 12px '+color;
+          nd.style.color = '#000';
+          if (i>0) { const a=document.getElementById('ad-sarrow-'+i); if(a) a.style.opacity='1'; }
+          if (i===nodes.length-1) { setTimeout(()=>{ nd.textContent='✅ Done!'; },300); }
+        }, i * 500);
+      });
+    });
+
+  } else if (key === 'RIP') {
+    const color = '#ff6ec7';
+    card.innerHTML = `<div class="lesson-section-title">RIP Hop Count Meter — Tap Any Router</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">RIP counts hops. Hop 16 = unreachable.</div>
+      <div id="ad-rip-track" class="ad-hop-track" style="justify-content:center"></div>
+      <div id="ad-rip-info" style="text-align:center;margin-top:10px;font-size:0.78rem;min-height:24px"></div>`;
+    container.appendChild(card);
+    const track = document.getElementById('ad-rip-track');
+    const info = document.getElementById('ad-rip-info');
+    for (let i=0; i<=16; i++) {
+      if (i>0) { const a=document.createElement('span'); a.className='ad-hop-arrow'; a.textContent='—'; track.appendChild(a); }
+      const n = document.createElement('div');
+      n.className = 'ad-hop-node' + (i===16?' ad-hop-dead':'');
+      const ratio = i/16;
+      const r = Math.round(102 + 153*ratio), g = Math.round(110 - 110*ratio), b = Math.round(199 - 130*ratio);
+      const c = i===16 ? '#444' : `rgb(${r},${g},${b})`;
+      n.style.cssText = `background:${c}33;border:2px solid ${c}88;color:${c};font-size:0.6rem;font-weight:800;width:28px;height:28px`;
+      n.textContent = i===16 ? '∞' : i;
+      n.title = i===16 ? 'Unreachable (metric=16)' : `Hop ${i}`;
+      n.addEventListener('click', () => {
+        info.style.color = c;
+        info.textContent = i===0 ? 'Hop 0 = source router' : i===16 ? '🚫 Hop 16 = UNREACHABLE — route is discarded!' : `Hop ${i}: ${16-i} hops remaining before unreachable`;
+      });
+      track.appendChild(n);
+    }
+
+  } else if (key === 'OSPF') {
+    const color = '#ff9900';
+    card.innerHTML = `<div class="lesson-section-title">OSPF Cost Calculator — Tap a Link Type</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Cost = 100 Mbps ÷ Interface Speed. Lower cost = preferred path.</div>
+      <div class="ad-iface-row" id="ad-ospf-links" style="justify-content:center;flex-wrap:wrap;gap:8px"></div>
+      <div id="ad-ospf-result" style="text-align:center;margin-top:12px;font-size:0.78rem;min-height:40px"></div>`;
+    container.appendChild(card);
+    const links = [
+      { name:'Serial (64K)',    bw:0.064, cost:1562 },
+      { name:'T1 (1.5M)',       bw:1.544, cost:64   },
+      { name:'FastEth (100M)',  bw:100,   cost:1    },
+      { name:'GigEth (1G)',     bw:1000,  cost:1    },
+      { name:'10GigEth (10G)', bw:10000, cost:1    },
+    ];
+    const row = document.getElementById('ad-ospf-links');
+    const res = document.getElementById('ad-ospf-result');
+    links.forEach(l => {
+      const el = document.createElement('div');
+      el.className = 'ad-iface';
+      el.textContent = l.name;
+      el.style.cssText = `color:${color};border-color:${color}66;background:${color}11;font-size:0.68rem`;
+      el.addEventListener('click', () => {
+        res.innerHTML = `<span style="color:${color}">Cost = 100 ÷ ${l.bw} = <strong style="font-size:1rem">${l.cost}</strong></span><br>
+          <span style="color:var(--muted);font-size:0.68rem">${l.cost===1?'⚠️ Same cost as FastEthernet — increase reference BW!':'Lower cost = preferred by OSPF'}</span>`;
+      });
+      row.appendChild(el);
+    });
+
+  } else if (key === 'EIGRP_int' || key === 'EIGRP_ext') {
+    const color = key==='EIGRP_int' ? '#7b4fff' : '#ff4444';
+    const isExt = key==='EIGRP_ext';
+    card.innerHTML = `<div class="lesson-section-title">${isExt ? 'Redistribution — How External Routes Enter EIGRP' : 'EIGRP Successor vs Feasible Successor'}</div>`;
+    if (isExt) {
+      card.innerHTML += `<div class="ad-redist-box">
+        <div class="ad-redist-row">
+          <div class="ad-proto-pill" style="color:#ff9900;border-color:#ff990066;background:#ff990011">OSPF Domain</div>
+          <div style="font-size:1.2rem">⟶</div>
+          <div class="ad-proto-pill" style="color:#ffcc00;border-color:#ffcc0066;background:#ffcc0011">Border Router<br><span style="font-size:0.6rem">redistribute ospf into eigrp</span></div>
+          <div style="font-size:1.2rem">⟶</div>
+          <div class="ad-proto-pill" style="color:${color};border-color:${color}66;background:${color}11">EIGRP Domain<br><span style="font-size:0.6rem">D EX — AD 170</span></div>
+        </div>
+        <div class="ad-arrow-label" style="margin-top:6px">OSPF routes cross the border as EIGRP <strong>external</strong> routes (AD 170 — less trusted than internal AD 90)</div>
+      </div>`;
+    } else {
+      card.innerHTML += `<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Click a path to see if it qualifies as a Feasible Successor</div>
+        <div class="ad-redist-box">
+          <div class="ad-redist-row">
+            <div class="ad-proto-pill" style="color:${color};border-color:${color}66;background:${color}11">Source</div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
+              <div id="eigrp-path-a" class="ad-proto-pill" style="color:#00ff88;border-color:#00ff8866;background:#00ff8811;cursor:pointer">Path A: FD=50 (Successor)</div>
+              <div id="eigrp-path-b" class="ad-proto-pill" style="color:#00d4ff;border-color:#00d4ff66;background:#00d4ff11;cursor:pointer">Path B: RD=30, FD=70</div>
+              <div id="eigrp-path-c" class="ad-proto-pill" style="color:#ff4444;border-color:#ff444466;background:#ff444411;cursor:pointer">Path C: RD=60, FD=80</div>
+            </div>
+            <div class="ad-proto-pill" style="color:${color};border-color:${color}66;background:${color}11">Dest</div>
+          </div>
+          <div id="eigrp-path-info" style="font-size:0.75rem;text-align:center;min-height:32px;margin-top:4px;color:var(--muted)">Tap a path to check Feasibility Condition (RD &lt; Successor FD)</div>
+        </div>`;
+      setTimeout(()=>{
+        const info = document.getElementById('eigrp-path-info');
+        document.getElementById('eigrp-path-a')?.addEventListener('click',()=>{ info.style.color='#00ff88'; info.textContent='✅ Path A: Successor — best path (FD=50), installed in routing table.'; });
+        document.getElementById('eigrp-path-b')?.addEventListener('click',()=>{ info.style.color='#00d4ff'; info.textContent='✅ Path B: Feasible Successor — RD(30) < Successor FD(50). Pre-computed backup ready for instant failover.'; });
+        document.getElementById('eigrp-path-c')?.addEventListener('click',()=>{ info.style.color='#ff4444'; info.textContent='❌ Path C: NOT a FS — RD(60) ≥ Successor FD(50). Could cause loop. DUAL rejects it.'; });
+      },100);
+    }
+    container.appendChild(card);
+    return;
+
+  } else if (key === 'Unknown') {
+    const color = '#666688';
+    card.innerHTML = `<div class="lesson-section-title">The AD Trust Spectrum</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">Each source sits on a spectrum of trustworthiness — tap any dot to learn more</div>
+      <div id="ad-spectrum-track" style="position:relative;height:60px;margin:10px 0;background:linear-gradient(90deg,#00ff8833,#00d4ff22,#7b4fff22,#ff990022,#ff6ec722,#ff444422,#33333322);border-radius:10px;border:1px solid rgba(255,255,255,0.1)"></div>
+      <div id="ad-spectrum-info" style="text-align:center;font-size:0.78rem;min-height:28px;color:var(--muted)">Tap a dot above</div>`;
+    container.appendChild(card);
+    setTimeout(()=>{
+      const track = document.getElementById('ad-spectrum-track');
+      const info = document.getElementById('ad-spectrum-info');
+      AD_SOURCES.forEach(s => {
+        const dot = document.createElement('div');
+        const pct = (s.ad/255)*88+4;
+        dot.style.cssText = `position:absolute;left:${pct}%;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:${s.color};border:2px solid #fff3;cursor:pointer;transition:transform 0.2s;box-shadow:0 0 6px ${s.color}88`;
+        dot.addEventListener('mouseenter',()=>dot.style.transform='translate(-50%,-50%) scale(1.4)');
+        dot.addEventListener('mouseleave',()=>dot.style.transform='translate(-50%,-50%) scale(1)');
+        dot.addEventListener('click',()=>{ info.style.color=s.color; info.textContent=`${s.label}: AD ${s.ad} — ${s.ad===255?'never installed in routing table':s.ad===0?'always preferred — directly connected':s.ad===1?'manually configured, highly trusted':'dynamic protocol route'}`; });
+        track.appendChild(dot);
+      });
+    },100);
+  }
+
+  if (!card.parentNode) container.appendChild(card);
+}
+
+function renderADLesson(key) {
+  const lesson = AD_LESSONS[key];
+  if (!lesson) return;
+  document.getElementById('ad-detail-title').textContent = lesson.icon + ' ' + lesson.title;
+  const container = document.getElementById('ad-detail-content');
+  container.innerHTML = '';
+
+  // Intro card
+  const intro = document.createElement('div');
+  intro.className = 'lesson-card';
+  intro.innerHTML = `<div class="lesson-section-title">${lesson.title}</div><div class="lesson-body">${lesson.intro}</div>`;
+  container.appendChild(intro);
+
+  // Interactive AD chart
+  buildADChart(container, key);
+
+  // Per-source visual
+  buildADVisual(container, key);
+
+  // Additional sections
+  for (const sec of lesson.sections) {
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+    if (sec.type === 'tip') {
+      card.innerHTML = `<div class="lesson-section-title">${sec.title}</div><div class="lesson-tip">💡 ${sec.body}</div>`;
+    } else {
+      card.innerHTML = `<div class="lesson-section-title">${sec.title}</div><div class="lesson-body">${sec.body}</div>`;
+    }
+    container.appendChild(card);
+  }
+
+  showScreen('screen-ad');
+  window.scrollTo(0,0);
 }
 
 // ── Quiz ─────────────────────────────────────────────────────────────────────
@@ -3371,6 +3885,9 @@ document.getElementById('btn-protocol-back').addEventListener('click', () => {
 document.getElementById('btn-protocol-quiz').addEventListener('click', () => startQuiz(TOPICS.find(t => t.id === 'osi')));
 document.getElementById('btn-l3protocol-back').addEventListener('click', () => {
   renderLayerLesson(3);
+});
+document.getElementById('btn-ad-back').addEventListener('click', () => {
+  renderLesson(TOPICS.find(t => t.id === 'routing'));
 });
 document.getElementById('btn-l3protocol-quiz').addEventListener('click', () => startQuiz(TOPICS.find(t => t.id === 'routing')));
 document.getElementById('logo-home').addEventListener('click', () => {
