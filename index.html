@@ -1016,7 +1016,7 @@
   .wir-net-right { right:21%; transform:translateX(50%); }
   .wir-badge { font-size:0.59rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:2px 6px; color:#fff; transition:opacity 0.3s; white-space:nowrap; text-align:center; margin-top:2px; min-height:16px; }
   .wir-pkt { position:absolute; width:18px; height:18px; border-radius:50%; background:#ff9900; box-shadow:0 0 14px #ff9900, 0 0 4px #fff; border:2px solid #fff; z-index:10; transition:left 0.6s cubic-bezier(.4,0,.2,1), top 0.6s cubic-bezier(.4,0,.2,1); pointer-events:none; }
-  .wir-rtable { position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); background:#080c18; border:1px solid rgba(255,153,0,0.4); border-radius:8px; padding:6px 8px; min-width:190px; z-index:20; font-size:0.6rem; font-family:'Courier New',monospace; box-shadow:0 4px 20px rgba(0,0,0,0.5); }
+  .wir-rtable { background:#080c18; border:1px solid rgba(255,153,0,0.4); border-radius:8px; padding:8px 12px; font-size:0.65rem; font-family:'Courier New',monospace; margin-bottom:10px; }
   .wir-rtable-title { font-size:0.58rem; color:rgba(255,153,0,0.7); margin-bottom:4px; letter-spacing:.05em; }
   .wir-rt-row { display:grid; grid-template-columns:14px 1fr 1fr; gap:4px; padding:3px 4px; border-radius:4px; transition:background 0.2s; align-items:center; }
   .wir-rt-row-hi { background:rgba(255,255,0,0.12); outline:1px solid rgba(255,255,0,0.35); }
@@ -2771,15 +2771,11 @@ function buildWhatIsRoutingAnim(root) {
         <div class="wir-badge" id="wir-badge-A"></div>
       </div>
       <div class="wir-wire" id="wir-wL"><div class="wir-wire-line"></div></div>
-      <div class="wir-node" id="wir-R" style="position:relative">
+      <div class="wir-node" id="wir-R">
         <div class="wir-node-icon" style="--nc:#ff9900">🔀</div>
         <div class="wir-node-name" style="color:#ff9900">Router</div>
         <div class="wir-node-ip">Gi0/0: .1.1<br>Gi0/1: 10.0.0.1</div>
         <div class="wir-badge" id="wir-badge-R"></div>
-        <div class="wir-rtable" id="wir-rtable" style="display:none">
-          <div class="wir-rtable-title">ROUTING TABLE</div>
-          <div id="wir-rt-rows"></div>
-        </div>
       </div>
       <div class="wir-wire" id="wir-wR"><div class="wir-wire-line"></div></div>
       <div class="wir-node" id="wir-B">
@@ -2789,6 +2785,10 @@ function buildWhatIsRoutingAnim(root) {
         <div class="wir-badge" id="wir-badge-B"></div>
       </div>
       <div class="wir-pkt" id="wir-pkt"></div>
+    </div>
+    <div class="wir-rtable" id="wir-rtable" style="display:none">
+      <div class="wir-rtable-title">ROUTING TABLE</div>
+      <div id="wir-rt-rows"></div>
     </div>
     <div class="wir-step-box" id="wir-step-box"></div>
     <div class="wir-controls">
