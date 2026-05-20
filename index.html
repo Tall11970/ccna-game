@@ -997,6 +997,36 @@
     50% { box-shadow: 0 0 10px 3px currentColor; }
   }
 
+  /* ── What Is Routing Animation ── */
+  .wir-wrap { padding:6px 0; }
+  .wir-topo { position:relative; display:flex; align-items:center; justify-content:space-between; padding:44px 10px 24px; margin-bottom:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:12px; overflow:visible; }
+  .wir-node { display:flex; flex-direction:column; align-items:center; gap:4px; z-index:2; position:relative; transition:opacity 0.3s; }
+  .wir-node-icon { width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.35rem; border:2px solid var(--nc,#fff); background:rgba(255,255,255,0.05); transition:all 0.3s; }
+  .wir-node-name { font-size:0.78rem; font-weight:600; }
+  .wir-node-ip { font-size:0.6rem; color:rgba(255,255,255,0.4); text-align:center; line-height:1.4; }
+  .wir-node-hi .wir-node-icon { box-shadow:0 0 18px var(--nc,#fff); background:rgba(255,255,255,0.1); transform:scale(1.1); }
+  .wir-node-dim { opacity:0.3; }
+  .wir-wire { flex:1; position:relative; display:flex; align-items:center; height:50px; }
+  .wir-wire-line { width:100%; height:2px; background:rgba(255,255,255,0.15); border-radius:2px; transition:background 0.3s, box-shadow 0.3s; }
+  .wir-wire-active .wir-wire-line { background:#fff; box-shadow:0 0 10px rgba(255,255,255,0.5); animation:wirePulse 0.5s ease infinite alternate; }
+  @keyframes wirePulse { from{opacity:0.6} to{opacity:1} }
+  .wir-net-label { position:absolute; top:7px; font-size:0.63rem; font-weight:700; text-align:center; letter-spacing:.03em; pointer-events:none; }
+  .wir-net-label span { display:block; font-size:0.58rem; opacity:0.6; font-weight:400; }
+  .wir-net-left { left:21%; transform:translateX(-50%); }
+  .wir-net-right { right:21%; transform:translateX(50%); }
+  .wir-badge { font-size:0.59rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:2px 6px; color:#fff; transition:opacity 0.3s; white-space:nowrap; text-align:center; margin-top:2px; min-height:16px; }
+  .wir-pkt { position:absolute; width:18px; height:18px; border-radius:50%; background:#ff9900; box-shadow:0 0 14px #ff9900, 0 0 4px #fff; border:2px solid #fff; z-index:10; transition:left 0.6s cubic-bezier(.4,0,.2,1), top 0.6s cubic-bezier(.4,0,.2,1); pointer-events:none; }
+  .wir-rtable { position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); background:#080c18; border:1px solid rgba(255,153,0,0.4); border-radius:8px; padding:6px 8px; min-width:190px; z-index:20; font-size:0.6rem; font-family:'Courier New',monospace; box-shadow:0 4px 20px rgba(0,0,0,0.5); }
+  .wir-rtable-title { font-size:0.58rem; color:rgba(255,153,0,0.7); margin-bottom:4px; letter-spacing:.05em; }
+  .wir-rt-row { display:grid; grid-template-columns:14px 1fr 1fr; gap:4px; padding:3px 4px; border-radius:4px; transition:background 0.2s; align-items:center; }
+  .wir-rt-row-hi { background:rgba(255,255,0,0.12); outline:1px solid rgba(255,255,0,0.35); }
+  .wir-step-box { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px 14px; font-size:0.83rem; line-height:1.6; margin-bottom:10px; min-height:52px; }
+  .wir-controls { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .wir-btn { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.78rem; transition:background 0.2s; }
+  .wir-btn:hover:not(:disabled) { background:rgba(255,255,255,0.15); }
+  .wir-btn:disabled { opacity:0.3; cursor:default; }
+  .wir-btn-auto { background:rgba(255,153,0,0.15); border-color:rgba(255,153,0,0.4); color:#ff9900; }
+
   /* ── Route Table Animation ── */
   .rt-wrap { padding:6px 0; }
   .rt-term { background:#0a0e1a; border:1px solid rgba(255,255,255,0.15); border-radius:10px; overflow:hidden; margin-bottom:12px; font-family:'Courier New',monospace; font-size:0.78rem; }
@@ -1686,6 +1716,10 @@ const TOPICS = [
       {
         title: 'What is Routing?',
         body: `<p>A <strong>router</strong> connects different networks and decides the best path for packets to travel. It looks up the destination IP in its <strong>routing table</strong> and forwards the packet out the right interface.</p><p>Routes come from three sources: <strong>connected</strong> networks (automatic), <strong>static</strong> routes (manually configured), and <strong>dynamic</strong> routing protocols (learned automatically from other routers).</p>`
+      },
+      {
+        type: 'what_is_routing_anim',
+        title: 'Interactive: How a Router Forwards a Packet'
       },
       {
         title: 'Administrative Distance (AD)',
@@ -2677,6 +2711,181 @@ function renderLayerLesson(layerNum) {
 
   showScreen('screen-layer');
   window.scrollTo(0, 0);
+}
+
+// ── What Is Routing Animation ────────────────────────────────────────────────
+function buildWhatIsRoutingAnim(root) {
+  const RT_ROWS = [
+    { code: 'C', net: '192.168.1.0/24', via: 'connected  Gi0/0', color: '#00ff88' },
+    { code: 'S', net: '10.0.0.0/8',     via: 'via 10.0.0.1  Gi0/1', color: '#00d4ff' },
+    { code: 'S', net: '0.0.0.0/0',      via: 'via 203.0.113.1', color: '#ff9900' },
+  ];
+
+  const STEPS = [
+    {
+      text: 'PC-A <strong style="color:#00d4ff">(192.168.1.10)</strong> wants to reach PC-B <strong style="color:#00ff88">(10.1.1.20)</strong> — but they are on <strong>different networks</strong>. A router is needed to connect them.',
+      hiNode: 'A', pktPos: 'A', showTable: false, hiRoute: -1,
+      badge: { A: 'wants to send →' }
+    },
+    {
+      text: 'PC-A checks: is <strong>10.1.1.20</strong> on my network <strong>192.168.1.0/24</strong>? <strong style="color:#ff4466">No</strong> — different subnet. PC-A must send the packet to its <strong>default gateway</strong> (the Router).',
+      hiNode: 'A', pktPos: 'A', showTable: false, hiRoute: -1,
+      badge: { A: '≠ subnet → use gateway' }
+    },
+    {
+      text: 'Packet travels across <strong style="color:#00d4ff">Network A (192.168.1.0/24)</strong> toward the Router\'s <strong>Gi0/0</strong> interface at 192.168.1.1.',
+      hiNode: 'wL', pktPos: 'wL', showTable: false, hiRoute: -1
+    },
+    {
+      text: 'Router receives the packet on <strong>Gi0/0</strong>. It reads the destination IP: <strong style="color:#00ff88">10.1.1.20</strong>. Now it consults its <strong>routing table</strong>...',
+      hiNode: 'R', pktPos: 'R', showTable: true, hiRoute: -1,
+      badge: { R: '🔍 looking up 10.1.1.20' }
+    },
+    {
+      text: '<strong style="color:#00ff88">Match found!</strong> Route <strong>10.0.0.0/8</strong> — longest prefix match for 10.1.1.20. Router will forward the packet out <strong>Gi0/1</strong>.',
+      hiNode: 'R', pktPos: 'R', showTable: true, hiRoute: 1,
+      badge: { R: '✓ 10.0.0.0/8 → Gi0/1' }
+    },
+    {
+      text: 'Router re-encapsulates the packet with a new Layer 2 header and sends it out <strong>Gi0/1</strong> across <strong style="color:#00ff88">Network B (10.0.0.0/8)</strong>.',
+      hiNode: 'wR', pktPos: 'wR', showTable: false, hiRoute: -1
+    },
+    {
+      text: 'PC-B <strong style="color:#00ff88">(10.1.1.20)</strong> receives the packet! <strong style="color:#00ff88">✅ Routing complete!</strong><br>Path: PC-A → Network A → Router → Network B → PC-B.',
+      hiNode: 'B', pktPos: 'B', showTable: false, hiRoute: -1,
+      badge: { B: '✅ Received!' }
+    },
+  ];
+
+  let step = 0;
+  let autoTimer = null;
+
+  root.innerHTML = `<div class="wir-wrap">
+    <div class="wir-topo" id="wir-topo">
+      <div class="wir-net-label wir-net-left" style="color:#00d4ff">Network A<span>192.168.1.0/24</span></div>
+      <div class="wir-net-label wir-net-right" style="color:#00ff88">Network B<span>10.0.0.0/8</span></div>
+      <div class="wir-node" id="wir-A">
+        <div class="wir-node-icon" style="--nc:#00d4ff">💻</div>
+        <div class="wir-node-name" style="color:#00d4ff">PC-A</div>
+        <div class="wir-node-ip">192.168.1.10</div>
+        <div class="wir-badge" id="wir-badge-A"></div>
+      </div>
+      <div class="wir-wire" id="wir-wL"><div class="wir-wire-line"></div></div>
+      <div class="wir-node" id="wir-R" style="position:relative">
+        <div class="wir-node-icon" style="--nc:#ff9900">🔀</div>
+        <div class="wir-node-name" style="color:#ff9900">Router</div>
+        <div class="wir-node-ip">Gi0/0: .1.1<br>Gi0/1: 10.0.0.1</div>
+        <div class="wir-badge" id="wir-badge-R"></div>
+        <div class="wir-rtable" id="wir-rtable" style="display:none">
+          <div class="wir-rtable-title">ROUTING TABLE</div>
+          <div id="wir-rt-rows"></div>
+        </div>
+      </div>
+      <div class="wir-wire" id="wir-wR"><div class="wir-wire-line"></div></div>
+      <div class="wir-node" id="wir-B">
+        <div class="wir-node-icon" style="--nc:#00ff88">💻</div>
+        <div class="wir-node-name" style="color:#00ff88">PC-B</div>
+        <div class="wir-node-ip">10.1.1.20</div>
+        <div class="wir-badge" id="wir-badge-B"></div>
+      </div>
+      <div class="wir-pkt" id="wir-pkt"></div>
+    </div>
+    <div class="wir-step-box" id="wir-step-box"></div>
+    <div class="wir-controls">
+      <button class="wir-btn" id="wir-prev">◀ Prev</button>
+      <span id="wir-step-num" style="color:rgba(255,255,255,0.4);font-size:0.8rem"></span>
+      <button class="wir-btn" id="wir-next">Next ▶</button>
+      <button class="wir-btn wir-btn-auto" id="wir-auto">▶ Auto Play</button>
+      <button class="wir-btn" id="wir-reset">↺ Reset</button>
+    </div>
+  </div>`;
+
+  // Build routing table rows
+  const rtRowsEl = root.querySelector('#wir-rt-rows');
+  RT_ROWS.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'wir-rt-row';
+    row.id = 'wir-rt-row-' + i;
+    row.innerHTML = `<span style="color:${r.color};font-weight:700">${r.code}</span><span>${r.net}</span><span style="color:rgba(255,255,255,0.5)">${r.via}</span>`;
+    rtRowsEl.appendChild(row);
+  });
+
+  function getPktPos(nodeId) {
+    const topo = root.querySelector('#wir-topo');
+    const topoR = topo.getBoundingClientRect();
+    let el;
+    if (nodeId === 'A')  el = root.querySelector('#wir-A .wir-node-icon');
+    else if (nodeId === 'R')  el = root.querySelector('#wir-R .wir-node-icon');
+    else if (nodeId === 'B')  el = root.querySelector('#wir-B .wir-node-icon');
+    else if (nodeId === 'wL') el = root.querySelector('#wir-wL');
+    else if (nodeId === 'wR') el = root.querySelector('#wir-wR');
+    if (!el) return { x: 0, y: 20 };
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - topoR.left - 9, y: r.top + r.height / 2 - topoR.top - 9 };
+  }
+
+  function render() {
+    const s = STEPS[step];
+
+    // Node highlights
+    ['A', 'R', 'B'].forEach(n => {
+      const el = root.querySelector('#wir-' + n);
+      el.classList.remove('wir-node-hi', 'wir-node-dim');
+      if (s.hiNode === n) el.classList.add('wir-node-hi');
+      else if (s.hiNode !== 'wL' && s.hiNode !== 'wR') el.classList.add('wir-node-dim');
+    });
+
+    // Wire highlights
+    ['wL', 'wR'].forEach(w => {
+      const el = root.querySelector('#wir-' + w);
+      el.classList.toggle('wir-wire-active', s.hiNode === w);
+    });
+
+    // Badges
+    ['A', 'R', 'B'].forEach(n => {
+      const b = root.querySelector('#wir-badge-' + n);
+      const txt = s.badge && s.badge[n] ? s.badge[n] : '';
+      b.textContent = txt;
+      b.style.opacity = txt ? '1' : '0';
+    });
+
+    // Routing table visibility + highlight
+    root.querySelector('#wir-rtable').style.display = s.showTable ? 'block' : 'none';
+    RT_ROWS.forEach((_, i) => {
+      root.querySelector('#wir-rt-row-' + i).classList.toggle('wir-rt-row-hi', i === s.hiRoute);
+    });
+
+    // Move packet
+    const pos = getPktPos(s.pktPos);
+    const pkt = root.querySelector('#wir-pkt');
+    pkt.style.left = pos.x + 'px';
+    pkt.style.top  = pos.y + 'px';
+
+    root.querySelector('#wir-step-box').innerHTML = s.text;
+    root.querySelector('#wir-step-num').textContent = `Step ${step + 1} / ${STEPS.length}`;
+    root.querySelector('#wir-prev').disabled = step === 0;
+    root.querySelector('#wir-next').disabled = step === STEPS.length - 1;
+  }
+
+  root.querySelector('#wir-prev').addEventListener('click', () => { step = Math.max(0, step - 1); render(); });
+  root.querySelector('#wir-next').addEventListener('click', () => { step = Math.min(STEPS.length - 1, step + 1); render(); });
+  root.querySelector('#wir-reset').addEventListener('click', () => { step = 0; stopAuto(); render(); });
+  root.querySelector('#wir-auto').addEventListener('click', () => {
+    if (autoTimer) { stopAuto(); return; }
+    root.querySelector('#wir-auto').textContent = '⏸ Pause';
+    autoTimer = setInterval(() => {
+      if (step < STEPS.length - 1) { step++; render(); } else stopAuto();
+    }, 2500);
+  });
+
+  function stopAuto() {
+    clearInterval(autoTimer); autoTimer = null;
+    const btn = root.querySelector('#wir-auto');
+    if (btn) btn.textContent = '▶ Auto Play';
+  }
+
+  // Initial render after DOM is painted so getBoundingClientRect works
+  requestAnimationFrame(() => render());
 }
 
 // ── Route Table Animation ─────────────────────────────────────────────────────
@@ -5172,6 +5381,12 @@ function renderLesson(topic) {
         <div id="osi-anim-root"></div>`;
       container.appendChild(card);
       buildOSIAnim(document.getElementById('osi-anim-root'));
+      continue;
+    } else if (section.type === 'what_is_routing_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="wir-anim-root"></div>`;
+      container.appendChild(card);
+      buildWhatIsRoutingAnim(document.getElementById('wir-anim-root'));
       continue;
     } else if (section.type === 'route_table_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
