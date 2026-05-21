@@ -7066,6 +7066,11 @@ async function authHandleSignOut() {
   saveState(); updateHUD();
   document.getElementById('hud-user-area').style.display = 'none';
   document.getElementById('logout-btn').style.display = 'none';
+  // Restore clean login state
+  document.getElementById('auth-tabs').style.display = '';
+  document.getElementById('form-reset').classList.add('hidden');
+  document.getElementById('forgot-section').classList.remove('show');
+  document.getElementById('auth-tagline').textContent = 'Master the CCNA. Sign in to save your progress across devices.';
   document.getElementById('auth-overlay').classList.remove('hidden');
   authSwitchTab('signin');
 }
