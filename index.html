@@ -1468,6 +1468,12 @@
   .auth-msg.show { display:block; }
   .auth-msg.error { color:#ff4466; background:rgba(255,68,102,0.1); border:1px solid rgba(255,68,102,0.25); }
   .auth-msg.success { color:#00ff88; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.25); }
+  .auth-forgot-link { font-size:0.72rem; color:rgba(0,212,255,0.65); cursor:pointer; text-align:right; display:block; margin-top:-2px; }
+  .auth-forgot-link:hover { color:#00d4ff; text-decoration:underline; }
+  .auth-forgot-section { border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:4px; display:none; flex-direction:column; gap:8px; }
+  .auth-forgot-section.show { display:flex; }
+  .auth-reset-title { font-size:0.8rem; font-weight:700; color:#fff; margin-bottom:2px; }
+  .auth-reset-sub { font-size:0.72rem; color:rgba(255,255,255,0.45); margin-bottom:4px; }
   #hud-user-area { display:none; align-items:center; gap:6px; cursor:pointer; padding:4px 8px; border-radius:8px; transition:background 0.2s; }
   #hud-user-area:hover { background:rgba(255,255,255,0.08); }
   #hud-avatar { font-size:1.2rem; line-height:1; }
@@ -1545,7 +1551,7 @@
   <div class="auth-card">
     <div class="auth-logo">Net<span>Quest</span></div>
     <div class="auth-tagline">Master the CCNA. Sign in to save your progress across devices.</div>
-    <div class="auth-tabs">
+    <div class="auth-tabs" id="auth-tabs">
       <button class="auth-tab active" id="tab-signin" onclick="authSwitchTab('signin')">Sign In</button>
       <button class="auth-tab" id="tab-signup" onclick="authSwitchTab('signup')">Create Account</button>
     </div>
@@ -1558,8 +1564,33 @@
         <label class="auth-label">Password</label>
         <input class="auth-input" id="si-pass" type="password" placeholder="••••••••" required autocomplete="current-password">
       </div>
+      <span class="auth-forgot-link" onclick="authToggleForgot()">Forgot password?</span>
+      <div class="auth-forgot-section" id="forgot-section">
+        <div>
+          <div class="auth-reset-title">Reset your password</div>
+          <div class="auth-reset-sub">Enter your email and we'll send you a reset link.</div>
+        </div>
+        <input class="auth-input" id="forgot-email" type="email" placeholder="you@example.com" autocomplete="email">
+        <div class="auth-msg" id="forgot-msg"></div>
+        <button class="auth-submit" type="button" id="forgot-btn" onclick="authSendReset()">Send Reset Link →</button>
+      </div>
       <div class="auth-msg error" id="si-err"></div>
       <button class="auth-submit" id="si-btn" type="submit">Sign In →</button>
+    </form>
+    <!-- Shown after clicking reset link in email -->
+    <form class="auth-form hidden" id="form-reset" onsubmit="authSetNewPassword(event)">
+      <div class="auth-reset-title" style="font-size:0.95rem;margin-bottom:4px">🔐 Set New Password</div>
+      <div class="auth-reset-sub">Choose a new password for your account.</div>
+      <div class="auth-field">
+        <label class="auth-label">New Password</label>
+        <input class="auth-input" id="rp-pass" type="password" placeholder="Minimum 6 characters" minlength="6" required autocomplete="new-password">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Confirm Password</label>
+        <input class="auth-input" id="rp-conf" type="password" placeholder="Confirm new password" required autocomplete="new-password">
+      </div>
+      <div class="auth-msg" id="rp-msg"></div>
+      <button class="auth-submit" type="submit">Update Password →</button>
     </form>
     <form class="auth-form hidden" id="form-signup" onsubmit="authHandleSignUp(event)">
       <div class="auth-field">
@@ -6914,6 +6945,48 @@ function authHideMsg(id) {
   document.getElementById(id).className = 'auth-msg';
 }
 
+function authToggleForgot() {
+  const sec = document.getElementById('forgot-section');
+  sec.classList.toggle('show');
+  if (sec.classList.contains('show')) {
+    document.getElementById('forgot-email').focus();
+  }
+}
+
+async function authSendReset() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const msg = document.getElementById('forgot-msg');
+  const btn = document.getElementById('forgot-btn');
+  msg.className = 'auth-msg';
+  if (!email) { msg.textContent = 'Please enter your email address.'; msg.className = 'auth-msg error show'; return; }
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href.split('#')[0]
+  });
+  btn.disabled = false; btn.textContent = 'Send Reset Link →';
+  if (error) { msg.textContent = error.message; msg.className = 'auth-msg error show'; return; }
+  msg.textContent = '✅ Reset link sent! Check your email inbox.';
+  msg.className = 'auth-msg success show';
+  document.getElementById('forgot-email').value = '';
+}
+
+async function authSetNewPassword(e) {
+  e.preventDefault();
+  const np = document.getElementById('rp-pass').value;
+  const cp = document.getElementById('rp-conf').value;
+  const msg = document.getElementById('rp-msg');
+  msg.className = 'auth-msg';
+  if (np.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; msg.className = 'auth-msg error show'; return; }
+  if (np !== cp) { msg.textContent = 'Passwords do not match.'; msg.className = 'auth-msg error show'; return; }
+  const { data, error } = await sb.auth.updateUser({ password: np });
+  if (error) { msg.textContent = error.message; msg.className = 'auth-msg error show'; return; }
+  msg.textContent = '✅ Password updated! Signing you in…'; msg.className = 'auth-msg success show';
+  setTimeout(async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) await authOnLogin(session.user);
+  }, 1200);
+}
+
 async function authHandleSignIn(e) {
   e.preventDefault();
   authHideMsg('si-err');
@@ -7070,13 +7143,32 @@ window.saveState = function() {
   sbSaveProfile();
 };
 
+// ── Auth state change (handles password recovery redirect) ───────────────────
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    // User arrived via reset email link — show the set-new-password form
+    document.getElementById('auth-overlay').classList.remove('hidden');
+    document.getElementById('auth-tabs').style.display = 'none';
+    document.getElementById('form-signin').classList.add('hidden');
+    document.getElementById('form-signup').classList.add('hidden');
+    document.getElementById('form-reset').classList.remove('hidden');
+    document.getElementById('auth-tagline').textContent = 'Enter a new password for your account.';
+    // Clean the token out of the URL so a refresh doesn't retrigger this
+    history.replaceState(null, '', window.location.pathname);
+  }
+});
+
 // ── Session restore on page load ─────────────────────────────────────────────
 (async () => {
+  // If the URL hash contains type=recovery (user clicked a reset link),
+  // skip auto-login and let onAuthStateChange handle it with PASSWORD_RECOVERY
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  if (hashParams.get('type') === 'recovery') return;
+
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     await authOnLogin(session.user);
   }
-  // If config hasn't been filled in yet, just hide the overlay so the game still works
   if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
     document.getElementById('auth-overlay').classList.add('hidden');
   }
