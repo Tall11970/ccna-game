@@ -1468,12 +1468,77 @@
   .auth-msg.show { display:block; }
   .auth-msg.error { color:#ff4466; background:rgba(255,68,102,0.1); border:1px solid rgba(255,68,102,0.25); }
   .auth-msg.success { color:#00ff88; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.25); }
-  #hud-username { font-size:0.7rem; color:rgba(255,255,255,0.5); max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #hud-user-area { display:none; align-items:center; gap:6px; cursor:pointer; padding:4px 8px; border-radius:8px; transition:background 0.2s; }
+  #hud-user-area:hover { background:rgba(255,255,255,0.08); }
+  #hud-avatar { font-size:1.2rem; line-height:1; }
+  #hud-username { font-size:0.7rem; color:rgba(255,255,255,0.75); max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
   #logout-btn { background:rgba(255,68,102,0.12); border:1px solid rgba(255,68,102,0.3); color:#ff4466; border-radius:6px; padding:4px 10px; font-size:0.7rem; cursor:pointer; transition:background 0.2s; white-space:nowrap; }
   #logout-btn:hover { background:rgba(255,68,102,0.22); }
+  /* ── Profile Modal ── */
+  #profile-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9998; display:flex; align-items:center; justify-content:center; padding:20px; }
+  #profile-overlay.hidden { display:none; }
+  .profile-card { background:#0d1122; border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:26px; width:100%; max-width:400px; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
+  .profile-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .profile-title { font-size:1rem; font-weight:700; }
+  .profile-close { background:none; border:none; color:rgba(255,255,255,0.4); font-size:1.3rem; cursor:pointer; line-height:1; padding:2px 6px; border-radius:4px; }
+  .profile-close:hover { color:#fff; background:rgba(255,255,255,0.1); }
+  .profile-user { display:flex; align-items:center; gap:14px; margin-bottom:22px; padding:14px; background:rgba(255,255,255,0.04); border-radius:10px; border:1px solid rgba(255,255,255,0.07); }
+  .profile-avatar-big { font-size:2.4rem; line-height:1; }
+  .profile-uname { font-size:1rem; font-weight:700; }
+  .profile-uemail { font-size:0.65rem; color:rgba(255,255,255,0.35); margin-top:2px; }
+  .profile-section { margin-bottom:22px; }
+  .profile-section-title { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:#00d4ff; margin-bottom:10px; }
+  .avatar-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:5px; }
+  .avatar-opt { font-size:1.35rem; padding:5px 2px; border-radius:8px; cursor:pointer; text-align:center; border:2px solid transparent; background:rgba(255,255,255,0.04); transition:all 0.15s; }
+  .avatar-opt:hover { background:rgba(255,255,255,0.1); transform:scale(1.12); }
+  .avatar-opt.av-sel { border-color:#00d4ff; background:rgba(0,212,255,0.14); }
+  .profile-input { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 12px; color:#fff; font-size:0.88rem; outline:none; width:100%; box-sizing:border-box; transition:border-color 0.2s; margin-bottom:8px; }
+  .profile-input:focus { border-color:#00d4ff; box-shadow:0 0 0 3px rgba(0,212,255,0.1); }
+  .profile-save { background:rgba(0,212,255,0.14); border:1px solid rgba(0,212,255,0.4); color:#00d4ff; border-radius:8px; padding:9px 18px; font-size:0.82rem; font-weight:700; cursor:pointer; transition:background 0.2s; }
+  .profile-save:hover:not(:disabled) { background:rgba(0,212,255,0.25); }
+  .profile-save:disabled { opacity:0.4; cursor:default; }
+  .profile-msg { font-size:0.73rem; border-radius:6px; padding:7px 10px; margin-top:7px; display:none; }
+  .profile-msg.show { display:block; }
+  .profile-msg.ok  { color:#00ff88; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.22); }
+  .profile-msg.err { color:#ff4466; background:rgba(255,68,102,0.1); border:1px solid rgba(255,68,102,0.22); }
 </style>
 </head>
 <body>
+
+<!-- ── Profile Modal ── -->
+<div id="profile-overlay" class="hidden">
+  <div class="profile-card">
+    <div class="profile-header">
+      <span class="profile-title">⚙️ Profile Settings</span>
+      <button class="profile-close" onclick="closeProfileModal()">✕</button>
+    </div>
+    <div class="profile-user">
+      <span class="profile-avatar-big" id="prof-avatar-big">👤</span>
+      <div>
+        <div class="profile-uname" id="prof-uname"></div>
+        <div class="profile-uemail" id="prof-uemail"></div>
+      </div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">Choose Avatar</div>
+      <div class="avatar-grid" id="avatar-grid"></div>
+      <div class="profile-msg" id="avatar-msg"></div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">Update Email</div>
+      <input class="profile-input" id="prof-new-email" type="email" placeholder="New email address" autocomplete="email">
+      <button class="profile-save" onclick="profileUpdateEmail()">Save Email</button>
+      <div class="profile-msg" id="email-msg"></div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">Update Password</div>
+      <input class="profile-input" id="prof-new-pass" type="password" placeholder="New password (min 6 chars)" autocomplete="new-password">
+      <input class="profile-input" id="prof-conf-pass" type="password" placeholder="Confirm new password" autocomplete="new-password">
+      <button class="profile-save" onclick="profileUpdatePassword()">Save Password</button>
+      <div class="profile-msg" id="pass-msg"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Auth Overlay ── -->
 <div id="auth-overlay">
@@ -1520,7 +1585,10 @@
   <div class="logo" id="logo-home" style="cursor:pointer;text-decoration:none;">Net<span>Quest</span></div>
   <div style="display:flex;align-items:center;gap:10px;">
     <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">🌙</button>
-    <span id="hud-username" style="display:none"></span>
+    <div id="hud-user-area" onclick="openProfileModal()" title="Profile settings">
+      <span id="hud-avatar">👤</span>
+      <span id="hud-username"></span>
+    </div>
     <div class="hud">
       <div class="hud-item"><strong id="hud-level">1</strong>Level</div>
       <div class="hud-item"><strong id="hud-xp">0</strong>XP</div>
@@ -6889,47 +6957,109 @@ async function authCreateProfile(user, username) {
   });
 }
 
+let profileUserId = null;
+let profileUsername = '';
+let profileCurrentAvatar = '👤';
+
 async function authOnLogin(user) {
-  // Load profile from Supabase
+  profileUserId = user.id;
   const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
   if (profile) {
     state.xp = profile.xp || 0;
     state.level = profile.level || 1;
     state.streak = profile.streak || 0;
     state.topicScores = profile.topic_scores || {};
-    saveState(); // cache locally
+    profileUsername = profile.username || '';
+    profileCurrentAvatar = profile.avatar || '👤';
+    saveState();
     updateHUD();
-    // Show username in header
-    const unEl = document.getElementById('hud-username');
-    unEl.textContent = '👤 ' + profile.username;
-    unEl.style.display = 'inline';
+    // Update header user area
+    document.getElementById('hud-avatar').textContent = profileCurrentAvatar;
+    document.getElementById('hud-username').textContent = profileUsername;
+    document.getElementById('hud-user-area').style.display = 'flex';
+    // Pre-fill profile modal
+    document.getElementById('prof-uname').textContent = profileUsername;
+    document.getElementById('prof-uemail').textContent = user.email || '';
+    document.getElementById('prof-avatar-big').textContent = profileCurrentAvatar;
   }
   document.getElementById('logout-btn').style.display = 'inline';
-  // Hide the auth overlay
   document.getElementById('auth-overlay').classList.add('hidden');
 }
 
 async function authHandleSignOut() {
   await sb.auth.signOut();
-  // Reset state & UI
   state.xp = 0; state.level = 1; state.streak = 0; state.topicScores = {};
+  profileUserId = null; profileUsername = ''; profileCurrentAvatar = '👤';
   saveState(); updateHUD();
-  document.getElementById('hud-username').style.display = 'none';
+  document.getElementById('hud-user-area').style.display = 'none';
   document.getElementById('logout-btn').style.display = 'none';
   document.getElementById('auth-overlay').classList.remove('hidden');
   authSwitchTab('signin');
+}
+
+// ── Profile Modal ─────────────────────────────────────────────────────────────
+const AVATARS = ['🖥️','💻','🔀','📡','🌐','🔧','🛡️','🚀','🎯','⚡','🔥','💡','🤖','👾','🦅','🐉','🎓','🏆','⭐','💎','🦊','🐺','🦁','🐯'];
+
+function openProfileModal() {
+  buildAvatarGrid(profileCurrentAvatar);
+  document.getElementById('profile-overlay').classList.remove('hidden');
+}
+function closeProfileModal() {
+  document.getElementById('profile-overlay').classList.add('hidden');
+}
+
+function buildAvatarGrid(selected) {
+  document.getElementById('avatar-grid').innerHTML = AVATARS.map(a =>
+    `<div class="avatar-opt${a===selected?' av-sel':''}" onclick="profileSelectAvatar('${a}')">${a}</div>`
+  ).join('');
+}
+
+async function profileSelectAvatar(avatar) {
+  profileCurrentAvatar = avatar;
+  buildAvatarGrid(avatar);
+  document.getElementById('prof-avatar-big').textContent = avatar;
+  document.getElementById('hud-avatar').textContent = avatar;
+  if (!profileUserId) return;
+  await sb.from('profiles').update({ avatar }).eq('id', profileUserId);
+  const msg = document.getElementById('avatar-msg');
+  msg.textContent = '✅ Avatar saved!'; msg.className = 'profile-msg ok show';
+  setTimeout(() => { msg.className = 'profile-msg'; }, 2000);
+}
+
+async function profileUpdateEmail() {
+  const newEmail = document.getElementById('prof-new-email').value.trim();
+  const msg = document.getElementById('email-msg');
+  if (!newEmail) { msg.textContent = 'Enter a new email address.'; msg.className = 'profile-msg err show'; return; }
+  const { error } = await sb.auth.updateUser({ email: newEmail });
+  if (error) { msg.textContent = error.message; msg.className = 'profile-msg err show'; return; }
+  msg.textContent = '✅ Confirmation sent to your new email. Click the link to confirm.';
+  msg.className = 'profile-msg ok show';
+  document.getElementById('prof-new-email').value = '';
+}
+
+async function profileUpdatePassword() {
+  const np = document.getElementById('prof-new-pass').value;
+  const cp = document.getElementById('prof-conf-pass').value;
+  const msg = document.getElementById('pass-msg');
+  if (np.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; msg.className = 'profile-msg err show'; return; }
+  if (np !== cp) { msg.textContent = 'Passwords do not match.'; msg.className = 'profile-msg err show'; return; }
+  const { error } = await sb.auth.updateUser({ password: np });
+  if (error) { msg.textContent = error.message; msg.className = 'profile-msg err show'; return; }
+  msg.textContent = '✅ Password updated successfully!'; msg.className = 'profile-msg ok show';
+  document.getElementById('prof-new-pass').value = '';
+  document.getElementById('prof-conf-pass').value = '';
 }
 
 // ── Supabase save (debounced 4 seconds) ──────────────────────────────────────
 function sbSaveProfile() {
   clearTimeout(sbSaveTimer);
   sbSaveTimer = setTimeout(async () => {
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return;
+    if (!profileUserId) return;
     await sb.from('profiles').update({
       xp: state.xp, level: state.level, streak: state.streak,
-      topic_scores: state.topicScores, updated_at: new Date().toISOString()
-    }).eq('id', user.id);
+      topic_scores: state.topicScores, avatar: profileCurrentAvatar,
+      updated_at: new Date().toISOString()
+    }).eq('id', profileUserId);
   }, 4000);
 }
 
