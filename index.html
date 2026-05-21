@@ -1444,19 +1444,89 @@
     .topic-grid { grid-template-columns: 1fr; }
     .result-stats { grid-template-columns: repeat(3,1fr); }
   }
+  /* ── Auth Modal ── */
+  #auth-overlay { position:fixed; inset:0; background:#080c18; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; transition:opacity 0.3s; }
+  #auth-overlay.hidden { display:none; }
+  .auth-card { background:#0d1122; border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:32px 28px; width:100%; max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
+  .auth-logo { font-size:1.6rem; font-weight:800; color:#fff; margin-bottom:4px; }
+  .auth-logo span { color:#00d4ff; }
+  .auth-tagline { font-size:0.78rem; color:rgba(255,255,255,0.4); margin-bottom:24px; }
+  .auth-tabs { display:flex; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.1); }
+  .auth-tab { flex:1; background:none; border:none; color:rgba(255,255,255,0.4); font-size:0.85rem; font-weight:600; padding:10px; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; margin-bottom:-1px; }
+  .auth-tab.active { color:#00d4ff; border-bottom-color:#00d4ff; }
+  .auth-form { display:flex; flex-direction:column; gap:12px; }
+  .auth-form.hidden { display:none; }
+  .auth-field { display:flex; flex-direction:column; gap:5px; }
+  .auth-label { font-size:0.68rem; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:.07em; }
+  .auth-input { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:11px 13px; color:#fff; font-size:0.9rem; outline:none; transition:border-color 0.2s; width:100%; box-sizing:border-box; }
+  .auth-input:focus { border-color:#00d4ff; box-shadow:0 0 0 3px rgba(0,212,255,0.1); }
+  .auth-submit { background:#00d4ff; color:#080c18; border:none; border-radius:8px; padding:12px; font-size:0.92rem; font-weight:700; cursor:pointer; margin-top:4px; transition:opacity 0.2s, transform 0.1s; }
+  .auth-submit:hover:not(:disabled) { opacity:0.9; }
+  .auth-submit:active { transform:scale(0.98); }
+  .auth-submit:disabled { opacity:0.45; cursor:default; }
+  .auth-msg { font-size:0.75rem; border-radius:6px; padding:8px 11px; display:none; }
+  .auth-msg.show { display:block; }
+  .auth-msg.error { color:#ff4466; background:rgba(255,68,102,0.1); border:1px solid rgba(255,68,102,0.25); }
+  .auth-msg.success { color:#00ff88; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.25); }
+  #hud-username { font-size:0.7rem; color:rgba(255,255,255,0.5); max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #logout-btn { background:rgba(255,68,102,0.12); border:1px solid rgba(255,68,102,0.3); color:#ff4466; border-radius:6px; padding:4px 10px; font-size:0.7rem; cursor:pointer; transition:background 0.2s; white-space:nowrap; }
+  #logout-btn:hover { background:rgba(255,68,102,0.22); }
 </style>
 </head>
 <body>
 
+<!-- ── Auth Overlay ── -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">Net<span>Quest</span></div>
+    <div class="auth-tagline">Master the CCNA. Sign in to save your progress across devices.</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-signin" onclick="authSwitchTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="authSwitchTab('signup')">Create Account</button>
+    </div>
+    <form class="auth-form" id="form-signin" onsubmit="authHandleSignIn(event)">
+      <div class="auth-field">
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="si-email" type="email" placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="si-pass" type="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <div class="auth-msg error" id="si-err"></div>
+      <button class="auth-submit" id="si-btn" type="submit">Sign In →</button>
+    </form>
+    <form class="auth-form hidden" id="form-signup" onsubmit="authHandleSignUp(event)">
+      <div class="auth-field">
+        <label class="auth-label">Username</label>
+        <input class="auth-input" id="su-name" type="text" placeholder="CiscoNinja42" required minlength="3" maxlength="20" autocomplete="username">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="su-email" type="email" placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="su-pass" type="password" placeholder="Minimum 6 characters" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="auth-msg error" id="su-err"></div>
+      <div class="auth-msg success" id="su-ok"></div>
+      <button class="auth-submit" id="su-btn" type="submit">Create Account →</button>
+    </form>
+  </div>
+</div>
+
 <header>
   <div class="logo" id="logo-home" style="cursor:pointer;text-decoration:none;">Net<span>Quest</span></div>
-  <div style="display:flex;align-items:center;gap:12px;">
+  <div style="display:flex;align-items:center;gap:10px;">
     <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+    <span id="hud-username" style="display:none"></span>
     <div class="hud">
       <div class="hud-item"><strong id="hud-level">1</strong>Level</div>
       <div class="hud-item"><strong id="hud-xp">0</strong>XP</div>
       <div class="hud-item"><strong id="hud-streak">0🔥</strong>Streak</div>
     </div>
+    <button id="logout-btn" onclick="authHandleSignOut()" style="display:none">Sign Out</button>
   </div>
 </header>
 
@@ -6743,6 +6813,144 @@ themeBtn.addEventListener('click', () => {
 loadState();
 updateHUD();
 renderTopics();
+</script>
+
+<!-- ── Supabase SDK ── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ── Supabase Config ───────────────────────────────────────────────────────────
+// Replace these two values with your own from https://supabase.com → Project Settings → API
+const SUPABASE_URL      = 'https://dzixonewtiuepcgknlgp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_tbuL2d2tDtrW3bGXa7RPtg_QPN639-V';
+// ─────────────────────────────────────────────────────────────────────────────
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let sbSaveTimer = null;
+
+// ── Auth UI ──────────────────────────────────────────────────────────────────
+function authSwitchTab(tab) {
+  const isSignin = tab === 'signin';
+  document.getElementById('tab-signin').classList.toggle('active', isSignin);
+  document.getElementById('tab-signup').classList.toggle('active', !isSignin);
+  document.getElementById('form-signin').classList.toggle('hidden', !isSignin);
+  document.getElementById('form-signup').classList.toggle('hidden', isSignin);
+}
+
+function authShowMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'auth-msg ' + type + ' show';
+}
+
+function authHideMsg(id) {
+  document.getElementById(id).className = 'auth-msg';
+}
+
+async function authHandleSignIn(e) {
+  e.preventDefault();
+  authHideMsg('si-err');
+  const btn = document.getElementById('si-btn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const email = document.getElementById('si-email').value.trim();
+  const pass  = document.getElementById('si-pass').value;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.disabled = false; btn.textContent = 'Sign In →';
+  if (error) { authShowMsg('si-err', error.message, 'error'); return; }
+  await authOnLogin(data.user);
+}
+
+async function authHandleSignUp(e) {
+  e.preventDefault();
+  authHideMsg('su-err'); authHideMsg('su-ok');
+  const username = document.getElementById('su-name').value.trim();
+  const email    = document.getElementById('su-email').value.trim();
+  const pass     = document.getElementById('su-pass').value;
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+    authShowMsg('su-err', 'Username must be 3–20 characters, letters/numbers/underscores only.', 'error'); return;
+  }
+  const btn = document.getElementById('su-btn');
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  const { data, error } = await sb.auth.signUp({ email, password: pass, options: { data: { username } } });
+  btn.disabled = false; btn.textContent = 'Create Account →';
+  if (error) { authShowMsg('su-err', error.message, 'error'); return; }
+  if (data.user && !data.session) {
+    authShowMsg('su-ok', '✅ Check your email to confirm your account, then sign in.', 'success'); return;
+  }
+  // Auto-confirmed (e.g. email confirmation disabled in Supabase)
+  await authCreateProfile(data.user, username);
+  await authOnLogin(data.user);
+}
+
+async function authCreateProfile(user, username) {
+  await sb.from('profiles').upsert({
+    id: user.id, username,
+    xp: state.xp, level: state.level, streak: state.streak,
+    topic_scores: state.topicScores
+  });
+}
+
+async function authOnLogin(user) {
+  // Load profile from Supabase
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if (profile) {
+    state.xp = profile.xp || 0;
+    state.level = profile.level || 1;
+    state.streak = profile.streak || 0;
+    state.topicScores = profile.topic_scores || {};
+    saveState(); // cache locally
+    updateHUD();
+    // Show username in header
+    const unEl = document.getElementById('hud-username');
+    unEl.textContent = '👤 ' + profile.username;
+    unEl.style.display = 'inline';
+  }
+  document.getElementById('logout-btn').style.display = 'inline';
+  // Hide the auth overlay
+  document.getElementById('auth-overlay').classList.add('hidden');
+}
+
+async function authHandleSignOut() {
+  await sb.auth.signOut();
+  // Reset state & UI
+  state.xp = 0; state.level = 1; state.streak = 0; state.topicScores = {};
+  saveState(); updateHUD();
+  document.getElementById('hud-username').style.display = 'none';
+  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('auth-overlay').classList.remove('hidden');
+  authSwitchTab('signin');
+}
+
+// ── Supabase save (debounced 4 seconds) ──────────────────────────────────────
+function sbSaveProfile() {
+  clearTimeout(sbSaveTimer);
+  sbSaveTimer = setTimeout(async () => {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    await sb.from('profiles').update({
+      xp: state.xp, level: state.level, streak: state.streak,
+      topic_scores: state.topicScores, updated_at: new Date().toISOString()
+    }).eq('id', user.id);
+  }, 4000);
+}
+
+// Patch saveState to also sync to Supabase
+const _origSaveState = saveState;
+window.saveState = function() {
+  _origSaveState();
+  sbSaveProfile();
+};
+
+// ── Session restore on page load ─────────────────────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await authOnLogin(session.user);
+  }
+  // If config hasn't been filled in yet, just hide the overlay so the game still works
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    document.getElementById('auth-overlay').classList.add('hidden');
+  }
+})();
 </script>
 </body>
 </html>
