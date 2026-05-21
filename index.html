@@ -997,6 +997,80 @@
     50% { box-shadow: 0 0 10px 3px currentColor; }
   }
 
+  /* ── DORA Animation ── */
+  .dora-wrap { padding:6px 0; }
+  .dora-letters { display:flex; gap:6px; margin-bottom:12px; }
+  .dora-letter { flex:1; padding:10px 4px; border-radius:10px; text-align:center; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); transition:all 0.35s; }
+  .dora-letter-key { font-size:1.7rem; font-weight:800; line-height:1; transition:color 0.3s; }
+  .dora-letter-name { font-size:0.58rem; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:.06em; margin-top:4px; }
+  .dora-letter.dora-active { background:color-mix(in srgb, var(--dc) 15%, transparent); border-color:var(--dc); box-shadow:0 0 14px color-mix(in srgb, var(--dc) 40%, transparent); }
+  .dora-letter.dora-active .dora-letter-name { color:rgba(255,255,255,0.75); }
+  .dora-letter.dora-done { opacity:0.4; }
+  .dora-topo { position:relative; display:flex; align-items:center; justify-content:space-between; padding:32px 16px 18px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:12px; margin-bottom:8px; min-height:110px; }
+  .dora-node { display:flex; flex-direction:column; align-items:center; gap:4px; z-index:2; flex-shrink:0; }
+  .dora-node-box { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.35rem; border:2px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); transition:all 0.3s; }
+  .dora-node-name { font-size:0.7rem; font-weight:600; }
+  .dora-node-ip { font-size:0.59rem; font-family:'Courier New',monospace; color:rgba(255,255,255,0.4); text-align:center; margin-top:1px; transition:color 0.4s; min-height:14px; }
+  .dora-wire-track { flex:1; height:2px; background:rgba(255,255,255,0.12); margin:0 10px; border-radius:2px; }
+  .dora-pkt { position:absolute; height:22px; padding:0 8px; border-radius:12px; font-size:0.62rem; font-weight:700; display:flex; align-items:center; white-space:nowrap; border:1px solid; transform:translateY(-50%); z-index:10; pointer-events:none; top:50%; }
+  .dora-bcast-badge { position:absolute; top:7px; left:50%; transform:translateX(-50%); font-size:0.59rem; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; }
+  .dora-detail { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px 14px; margin-bottom:8px; }
+  .dora-msg-row { display:flex; gap:8px; align-items:baseline; margin-bottom:3px; flex-wrap:wrap; }
+  .dora-msg-label { font-size:0.6rem; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:.06em; width:40px; flex-shrink:0; }
+  .dora-step-box { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px 14px; font-size:0.83rem; line-height:1.6; margin-bottom:10px; min-height:52px; }
+  .dora-controls { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .dora-btn { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.78rem; transition:background 0.2s; }
+  .dora-btn:hover:not(:disabled) { background:rgba(255,255,255,0.15); }
+  .dora-btn:disabled { opacity:0.3; cursor:default; }
+  .dora-btn-auto { background:rgba(255,153,0,0.15); border-color:rgba(255,153,0,0.4); color:#ff9900; }
+
+  /* ── TCP vs UDP Animation ── */
+  .tcpu-wrap { padding:6px 0; }
+  .tcpu-tabs { display:flex; gap:8px; margin-bottom:10px; }
+  .tcpu-tab { flex:1; padding:8px 6px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.45); cursor:pointer; font-size:0.8rem; font-weight:600; transition:all 0.2s; }
+  .tcpu-topo { position:relative; display:flex; align-items:center; justify-content:space-between; padding:32px 18px 20px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:12px; margin-bottom:10px; min-height:110px; }
+  .tcpu-node { display:flex; flex-direction:column; align-items:center; gap:4px; z-index:2; flex-shrink:0; }
+  .tcpu-node-box { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; border:2px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); transition:border-color 0.3s, box-shadow 0.3s; }
+  .tcpu-node-name { font-size:0.7rem; font-weight:600; color:rgba(255,255,255,0.6); }
+  .tcpu-wire-track { flex:1; height:2px; background:rgba(255,255,255,0.12); margin:0 10px; border-radius:2px; }
+  .tcpu-pkt { position:absolute; height:22px; padding:0 8px; border-radius:12px; font-size:0.62rem; font-weight:700; display:flex; align-items:center; white-space:nowrap; border:1px solid; transform:translateY(-50%); z-index:10; pointer-events:none; }
+  .tcpu-conn-badge { position:absolute; top:7px; left:50%; transform:translateX(-50%); font-size:0.63rem; font-weight:700; padding:3px 10px; border-radius:12px; white-space:nowrap; }
+  .tcpu-desc { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px 14px; font-size:0.83rem; line-height:1.6; margin-bottom:10px; min-height:62px; }
+  .tcpu-mode-lbl { font-size:0.63rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; margin-bottom:5px; }
+  .tcpu-controls { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .tcpu-btn { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.78rem; transition:background 0.2s; }
+  .tcpu-btn:hover:not(:disabled) { background:rgba(255,255,255,0.15); }
+  .tcpu-btn:disabled { opacity:0.3; cursor:default; }
+  .tcpu-btn-auto { background:rgba(255,153,0,0.15); border-color:rgba(255,153,0,0.4); color:#ff9900; }
+
+  /* ── STP Animation ── */
+  .stp-wrap { padding:6px 0; }
+  .stp-topo { position:relative; height:230px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .stp-svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+  .stp-sw { position:absolute; display:flex; flex-direction:column; align-items:center; gap:3px; transform:translate(-50%,-50%); z-index:2; }
+  .stp-sw-box { width:50px; height:50px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:2px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); transition:all 0.4s; }
+  .stp-sw-name { font-size:0.7rem; font-weight:700; }
+  .stp-sw-sub { font-size:0.57rem; color:rgba(255,255,255,0.4); }
+  .stp-sw-root .stp-sw-box { border-color:#ff9900; box-shadow:0 0 18px rgba(255,153,0,0.55); background:rgba(255,153,0,0.12); }
+  .stp-sw-hi .stp-sw-box { border-color:#00d4ff; box-shadow:0 0 14px rgba(0,212,255,0.4); background:rgba(0,212,255,0.07); }
+  .stp-sw-dim { opacity:0.3; }
+  .stp-crown { font-size:0.9rem; position:absolute; top:-18px; left:50%; transform:translateX(-50%); }
+  .stp-port-badge { font-size:0.56rem; padding:1px 6px; border-radius:10px; font-weight:700; margin-top:2px; }
+  .stp-port-root { background:rgba(0,212,255,0.2); color:#00d4ff; border:1px solid rgba(0,212,255,0.4); }
+  .stp-port-blk { background:rgba(255,68,102,0.2); color:#ff4466; border:1px solid rgba(255,68,102,0.4); }
+  .stp-pkt { position:absolute; width:14px; height:14px; border-radius:50%; z-index:10; pointer-events:none; transition:left 0.5s ease, top 0.5s ease; transform:translate(-50%,-50%); border:2px solid #fff; }
+  .stp-step-box { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px 14px; font-size:0.83rem; line-height:1.6; margin-bottom:10px; min-height:60px; }
+  .stp-phase { display:inline-block; font-size:0.63rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:2px 8px; border-radius:10px; margin-bottom:6px; }
+  .stp-phase-problem { background:rgba(255,68,102,0.2); color:#ff4466; border:1px solid rgba(255,68,102,0.35); }
+  .stp-phase-stp { background:rgba(0,255,136,0.15); color:#00ff88; border:1px solid rgba(0,255,136,0.3); }
+  .stp-controls { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .stp-btn { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.78rem; transition:background 0.2s; }
+  .stp-btn:hover:not(:disabled) { background:rgba(255,255,255,0.15); }
+  .stp-btn:disabled { opacity:0.3; cursor:default; }
+  .stp-btn-auto { background:rgba(255,153,0,0.15); border-color:rgba(255,153,0,0.4); color:#ff9900; }
+  @keyframes stpPulse { 0%{opacity:1} 50%{opacity:0.25} 100%{opacity:1} }
+  .stp-looping { animation:stpPulse 0.65s ease infinite; }
+
   /* ── What Is Routing Animation ── */
   .wir-wrap { padding:6px 0; }
   .wir-topo { position:relative; display:flex; align-items:center; justify-content:space-between; padding:44px 10px 24px; margin-bottom:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:12px; overflow:visible; }
@@ -1868,6 +1942,10 @@ const TOPICS = [
         body: `<p>STP prevents <strong>Layer 2 loops</strong> by blocking redundant paths. It elects a <strong>Root Bridge</strong> (lowest Bridge ID wins), then blocks ports that would create loops.</p>`,
       },
       {
+        type: 'stp_anim',
+        title: 'Interactive: STP Loop Prevention'
+      },
+      {
         title: 'STP Port States',
         type: 'table',
         headers: ['State', 'Forwards?', 'Learns MACs?', 'Duration'],
@@ -2091,6 +2169,10 @@ const TOPICS = [
         ]
       },
       {
+        type: 'tcp_udp_anim',
+        title: 'Interactive: TCP vs UDP in Action'
+      },
+      {
         title: 'TCP 3-Way Handshake',
         body: `<p>Before TCP sends data, it establishes a connection:</p>
 <p><strong>1. SYN</strong> — Client says "I want to connect"<br>
@@ -2124,6 +2206,10 @@ const TOPICS = [
 <strong>O</strong>ffer — Server replies with an available IP address<br>
 <strong>R</strong>equest — Client formally requests that IP<br>
 <strong>A</strong>ck — Server confirms the lease</p>`
+      },
+      {
+        type: 'dora_anim',
+        title: 'Interactive: Watch DORA in Action'
       },
       {
         title: 'DNS & NAT',
@@ -2711,6 +2797,577 @@ function renderLayerLesson(layerNum) {
 
   showScreen('screen-layer');
   window.scrollTo(0, 0);
+}
+
+// ── DORA Animation ───────────────────────────────────────────────────────────
+function buildDORAnim(root) {
+  const LETTERS = [
+    { key:'D', name:'Discover', color:'#ff9900' },
+    { key:'O', name:'Offer',    color:'#7b4fff' },
+    { key:'R', name:'Request',  color:'#00d4ff' },
+    { key:'A', name:'Ack',      color:'#00ff88' },
+  ];
+
+  const STEPS = [
+    {
+      letter:-1,
+      text:'A new device connects to the network with <strong>no IP address</strong>. It needs one automatically — but it doesn\'t even know the DHCP server\'s address yet. Enter DORA.',
+      pkt:null, clientIp:'No IP', serverNote:'Pool: .50–.100', bcast:null, detail:null
+    },
+    {
+      letter:0,
+      text:'<strong style="color:#ff9900">D — DISCOVER</strong> · Client broadcasts to the entire network: <em>"Is there a DHCP server? I need an IP!"</em> Source is <code>0.0.0.0</code> (no IP yet), destination is <code>255.255.255.255</code> (all devices).',
+      pkt:{dir:'right',label:'DISCOVER',color:'#ff9900'},
+      clientIp:'0.0.0.0', serverNote:'Pool: .50–.100',
+      bcast:{text:'255.255.255.255 — Broadcast',color:'#ff9900'},
+      detail:{from:'0.0.0.0',to:'255.255.255.255',proto:'UDP 68 → 67',msg:'Who is the DHCP server?'}
+    },
+    {
+      letter:1,
+      text:'<strong style="color:#7b4fff">O — OFFER</strong> · DHCP server picks an available IP from its pool and responds: <em>"You can have 192.168.1.50 — along with your gateway and DNS!"</em>',
+      pkt:{dir:'left',label:'OFFER',color:'#7b4fff'},
+      clientIp:'← offer: 192.168.1.50', serverNote:'Reserved: .50',
+      bcast:null,
+      detail:{from:'192.168.1.1',to:'255.255.255.255',proto:'UDP 67 → 68',msg:'Offering 192.168.1.50 | GW: .1 | DNS: 8.8.8.8 | Lease: 24h'}
+    },
+    {
+      letter:2,
+      text:'<strong style="color:#00d4ff">R — REQUEST</strong> · Client broadcasts acceptance: <em>"I\'ll take 192.168.1.50!"</em> Still broadcast so <strong>all DHCP servers</strong> see which offer was accepted — others withdraw theirs.',
+      pkt:{dir:'right',label:'REQUEST',color:'#00d4ff'},
+      clientIp:'requesting: .50', serverNote:'Waiting...',
+      bcast:{text:'255.255.255.255 — Broadcast',color:'#00d4ff'},
+      detail:{from:'0.0.0.0',to:'255.255.255.255',proto:'UDP 68 → 67',msg:'Requesting 192.168.1.50 from server 192.168.1.1'}
+    },
+    {
+      letter:3,
+      text:'<strong style="color:#00ff88">A — ACKNOWLEDGE</strong> · Server confirms the lease: <em>"192.168.1.50 is yours for 24 hours!"</em> Client now officially has a fully configured IP.',
+      pkt:{dir:'left',label:'ACK ✓',color:'#00ff88'},
+      clientIp:'192.168.1.50 ✓', serverNote:'Leased: .50',
+      bcast:null,
+      detail:{from:'192.168.1.1',to:'192.168.1.50',proto:'UDP 67 → 68',msg:'Confirmed! IP: .50 | Mask: /24 | GW: .1 | DNS: 8.8.8.8 | Lease: 24h'}
+    },
+    {
+      letter:4,
+      text:'<strong style="color:#00ff88">✅ DORA complete!</strong> The client has a full IP config in under a second — all automatic. When the lease expires, DORA runs again (usually just R→A to renew).',
+      pkt:null, clientIp:'192.168.1.50', serverNote:'Leased: .50',
+      bcast:null, detail:null, summary:true
+    },
+  ];
+
+  let step=0, autoTimer=null;
+
+  root.innerHTML = `<div class="dora-wrap">
+    <div class="dora-letters">
+      ${LETTERS.map((l,i)=>`<div class="dora-letter" id="dora-L${i}" style="--dc:${l.color}">
+        <div class="dora-letter-key" style="color:${l.color}">${l.key}</div>
+        <div class="dora-letter-name">${l.name}</div>
+      </div>`).join('')}
+    </div>
+    <div class="dora-topo" id="dora-topo">
+      <div class="dora-node" id="dora-client">
+        <div class="dora-node-box" id="dora-cbox">💻</div>
+        <div class="dora-node-name">Client</div>
+        <div class="dora-node-ip" id="dora-cip">No IP</div>
+      </div>
+      <div class="dora-wire-track"></div>
+      <div class="dora-node" id="dora-server">
+        <div class="dora-node-box" id="dora-sbox">🖧</div>
+        <div class="dora-node-name">DHCP Server</div>
+        <div class="dora-node-ip" id="dora-snote">192.168.1.1</div>
+      </div>
+      <div class="dora-pkt" id="dora-pkt" style="display:none;transition:left 0.55s ease,opacity 0.3s ease;"></div>
+      <div class="dora-bcast-badge" id="dora-bcast" style="display:none"></div>
+    </div>
+    <div id="dora-detail-wrap"></div>
+    <div class="dora-step-box" id="dora-step-box"></div>
+    <div class="dora-controls">
+      <button class="dora-btn" id="dora-prev">◀ Prev</button>
+      <span id="dora-step-num" style="color:rgba(255,255,255,0.4);font-size:0.8rem"></span>
+      <button class="dora-btn" id="dora-next">Next ▶</button>
+      <button class="dora-btn dora-btn-auto" id="dora-auto">▶ Auto Play</button>
+      <button class="dora-btn" id="dora-reset">↺ Reset</button>
+    </div>
+  </div>`;
+
+  function nodeCenter(id) {
+    const topoR = root.querySelector('#dora-topo').getBoundingClientRect();
+    const box = root.querySelector('#'+id+' .dora-node-box').getBoundingClientRect();
+    return { x: box.left+box.width/2-topoR.left, y: box.top+box.height/2-topoR.top };
+  }
+
+  function animPkt(fx, tx, y, label, color) {
+    const el = root.querySelector('#dora-pkt');
+    el.style.transition='none'; el.style.display='flex'; el.style.opacity='1';
+    el.style.left=(fx-22)+'px'; el.style.top=y+'px';
+    el.style.background=color+'28'; el.style.borderColor=color; el.style.color=color;
+    el.textContent=label;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      el.style.transition='left 0.55s ease, opacity 0.3s ease';
+      el.style.left=(tx-22)+'px';
+    }));
+  }
+
+  function render() {
+    const s = STEPS[step];
+
+    // Letter highlights
+    LETTERS.forEach((_,i)=>{
+      const el=root.querySelector('#dora-L'+i);
+      el.classList.remove('dora-active','dora-done');
+      if(s.summary) { el.classList.add('dora-active'); }
+      else if(s.letter===i) { el.classList.add('dora-active'); }
+      else if(i<s.letter) { el.classList.add('dora-done'); }
+    });
+
+    // IP labels
+    const cipEl=root.querySelector('#dora-cip');
+    cipEl.textContent=s.clientIp;
+    cipEl.style.color=s.clientIp.includes('✓')?'#00ff88':s.clientIp.includes('←')||s.clientIp.includes('requesting')?'#ff9900':'rgba(255,255,255,0.4)';
+    root.querySelector('#dora-snote').textContent=s.serverNote;
+
+    // Broadcast badge
+    const bEl=root.querySelector('#dora-bcast');
+    if(s.bcast){
+      bEl.textContent='📡 '+s.bcast.text;
+      bEl.style.cssText=`display:block;position:absolute;top:7px;left:50%;transform:translateX(-50%);font-size:0.59rem;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;background:${s.bcast.color}18;border:1px solid ${s.bcast.color}44;color:${s.bcast.color};`;
+    } else { bEl.style.display='none'; }
+
+    // Detail panel
+    const dw=root.querySelector('#dora-detail-wrap');
+    if(s.detail){
+      const c=LETTERS[s.letter]?.color||'#fff';
+      dw.innerHTML=`<div class="dora-detail">
+        <div class="dora-msg-row"><span class="dora-msg-label">From</span><span style="font-family:'Courier New',monospace;font-size:0.74rem;color:#e0e0e0">${s.detail.from}</span></div>
+        <div class="dora-msg-row"><span class="dora-msg-label">To</span><span style="font-family:'Courier New',monospace;font-size:0.74rem;color:#e0e0e0">${s.detail.to}</span></div>
+        <div class="dora-msg-row"><span class="dora-msg-label">Port</span><span style="font-size:0.74rem;color:rgba(255,255,255,0.6)">${s.detail.proto}</span></div>
+        <div class="dora-msg-row"><span class="dora-msg-label">Data</span><span style="font-size:0.74rem;color:${c}">${s.detail.msg}</span></div>
+      </div>`;
+    } else if(s.summary){
+      dw.innerHTML=`<div class="dora-detail">${LETTERS.map((l,i)=>`<div class="dora-msg-row">
+        <span style="color:${l.color};font-weight:800;width:18px;flex-shrink:0">${l.key}</span>
+        <span style="color:${l.color};font-weight:600;width:68px;flex-shrink:0;font-size:0.74rem">${l.name}</span>
+        <span style="font-size:0.74rem;color:rgba(255,255,255,0.65)">${['Client→ALL: "Need an IP!"  (src 0.0.0.0, dst 255.255.255.255)','Server→Client: "Take 192.168.1.50" (unicast)','Client→ALL: "I request .50" (broadcast)','Server→Client: "Confirmed! 24h lease" (unicast)'][i]}</span>
+      </div>`).join('')}</div>`;
+    } else { dw.innerHTML=''; }
+
+    // Step text + counter
+    root.querySelector('#dora-step-box').innerHTML=s.text;
+    root.querySelector('#dora-step-num').textContent=`Step ${step+1} / ${STEPS.length}`;
+
+    // Animate packet
+    root.querySelector('#dora-pkt').style.display='none';
+    if(s.pkt){
+      const cl=nodeCenter('dora-client'), sv=nodeCenter('dora-server');
+      const fx=s.pkt.dir==='right'?cl.x:sv.x, tx=s.pkt.dir==='right'?sv.x:cl.x;
+      animPkt(fx,tx,cl.y-11,s.pkt.label,s.pkt.color);
+    }
+
+    // Node box colors
+    const ac=s.letter>=0&&s.letter<4?LETTERS[s.letter].color:(s.summary?'#00ff88':'rgba(255,255,255,0.2)');
+    root.querySelector('#dora-cbox').style.borderColor=ac;
+    root.querySelector('#dora-cbox').style.boxShadow=s.letter>=0||s.summary?`0 0 12px ${ac}55`:'none';
+    root.querySelector('#dora-sbox').style.borderColor=ac;
+    root.querySelector('#dora-sbox').style.boxShadow=s.letter>=0||s.summary?`0 0 12px ${ac}55`:'none';
+
+    root.querySelector('#dora-prev').disabled=step===0;
+    root.querySelector('#dora-next').disabled=step===STEPS.length-1;
+  }
+
+  root.querySelector('#dora-prev').addEventListener('click',()=>{step=Math.max(0,step-1);render();});
+  root.querySelector('#dora-next').addEventListener('click',()=>{step=Math.min(STEPS.length-1,step+1);render();});
+  root.querySelector('#dora-reset').addEventListener('click',()=>{step=0;stopAuto();render();});
+  root.querySelector('#dora-auto').addEventListener('click',()=>{
+    if(autoTimer){stopAuto();return;}
+    root.querySelector('#dora-auto').textContent='⏸ Pause';
+    autoTimer=setInterval(()=>{if(step<STEPS.length-1){step++;render();}else stopAuto();},2500);
+  });
+
+  function stopAuto(){
+    clearInterval(autoTimer);autoTimer=null;
+    const btn=root.querySelector('#dora-auto');
+    if(btn)btn.textContent='▶ Auto Play';
+  }
+
+  requestAnimationFrame(()=>render());
+}
+
+// ── TCP vs UDP Animation ──────────────────────────────────────────────────────
+function buildTCPUDPAnim(root) {
+  const TC = '#00d4ff', UC = '#00ff88';
+
+  const SCENARIOS = {
+    tcp: {
+      color: TC, label: 'TCP', icon: '🔒', sublabel: 'Reliable · Connection-oriented · Ordered',
+      steps: [
+        { text: '<strong style="color:#00d4ff">TCP</strong> requires a <strong>3-way handshake</strong> before any data is sent. Both sides agree on sequence numbers and confirm readiness — reliability has a cost.', pkt:null },
+        { text: '① <strong style="color:#00d4ff">SYN</strong> — Client: <em>"I want to connect, my sequence starts at 100"</em>', pkt:{dir:'right',label:'SYN',color:TC} },
+        { text: '② <strong style="color:#7b4fff">SYN-ACK</strong> — Server: <em>"Got it! My sequence starts at 200, acknowledging yours."</em>', pkt:{dir:'left',label:'SYN-ACK',color:'#7b4fff'} },
+        { text: '③ <strong style="color:#00d4ff">ACK</strong> — Client: <em>"Got yours!"</em> — <strong>Connection established.</strong>', pkt:{dir:'right',label:'ACK',color:TC}, badge:'🔒 Connected' },
+        { text: 'Data flows: Client sends <strong>Segment 1</strong>. Server immediately sends back an <strong>ACK</strong> — "received, send more!"', pkt:{dir:'right',label:'DATA 1',color:'#00ff88'}, ackPkt:{dir:'left',label:'ACK ✓',color:TC}, badge:'🔒 Connected' },
+        { text: '<strong style="color:#ff4466">Segment 2 is LOST</strong> — dropped by a congested router. Server never receives it. Timer starts...', pkt:{dir:'right',label:'DATA 2',color:'#ff4466',lost:true}, badge:'🔒 Connected' },
+        { text: '<strong style="color:#ff9900">Timeout! No ACK received.</strong> TCP automatically <strong>retransmits Segment 2.</strong>', pkt:{dir:'right',label:'RETX 2',color:'#ff9900'}, ackPkt:{dir:'left',label:'ACK ✓',color:TC}, badge:'🔒 Connected' },
+        { text: '<strong style="color:#00ff88">✅ All data delivered in order!</strong> TCP guarantees every byte arrives — at the cost of handshakes, ACKs, and retransmits.', pkt:null, badge:'✅ Reliable delivery' },
+      ]
+    },
+    udp: {
+      color: UC, label: 'UDP', icon: '⚡', sublabel: 'Fast · Connectionless · Best-effort',
+      steps: [
+        { text: '<strong style="color:#00ff88">UDP</strong> sends data immediately — <strong>no handshake</strong>, no ACKs, no retransmits. Pure speed.', pkt:null },
+        { text: '<strong style="color:#00ff88">Datagram 1</strong> — fires instantly. No setup needed!', pkt:{dir:'right',label:'DATA 1',color:UC} },
+        { text: '<strong style="color:#00ff88">Datagram 2</strong> — fires. Server receives silently. No ACK sent back.', pkt:{dir:'right',label:'DATA 2',color:UC} },
+        { text: '<strong style="color:#ff4466">Datagram 3 — DROPPED!</strong> Lost in the network. Nobody notices — no ACK expected.', pkt:{dir:'right',label:'DATA 3',color:'#ff4466',lost:true} },
+        { text: '<strong style="color:#00ff88">Datagram 4</strong> — fires anyway. UDP never retransmits. It just keeps going.', pkt:{dir:'right',label:'DATA 4',color:UC} },
+        { text: '<strong>3 of 4 delivered. No guarantee — but blazing fast.</strong><br>Best for: 🎬 video streaming &nbsp;·&nbsp; 🔊 VoIP &nbsp;·&nbsp; 🌐 DNS queries &nbsp;·&nbsp; 🎮 gaming', pkt:null, badge:'⚡ 3/4 delivered (best-effort)' },
+      ]
+    }
+  };
+
+  let mode = 'tcp', step = 0, autoTimer = null;
+
+  root.innerHTML = `<div class="tcpu-wrap">
+    <div class="tcpu-tabs">
+      <button class="tcpu-tab" id="tcpu-tab-tcp">🔒 TCP — Reliable</button>
+      <button class="tcpu-tab" id="tcpu-tab-udp">⚡ UDP — Fast</button>
+    </div>
+    <div class="tcpu-topo" id="tcpu-topo">
+      <div class="tcpu-node" id="tcpu-client">
+        <div class="tcpu-node-box" id="tcpu-cbox">💻</div>
+        <div class="tcpu-node-name">Client</div>
+      </div>
+      <div class="tcpu-wire-track"></div>
+      <div class="tcpu-node" id="tcpu-server">
+        <div class="tcpu-node-box" id="tcpu-sbox">🖥️</div>
+        <div class="tcpu-node-name">Server</div>
+      </div>
+      <div class="tcpu-pkt" id="tcpu-pkt" style="display:none;transition:left 0.55s ease,opacity 0.3s ease;"></div>
+      <div class="tcpu-pkt" id="tcpu-apkt" style="display:none;transition:left 0.55s ease,opacity 0.3s ease;"></div>
+      <div class="tcpu-conn-badge" id="tcpu-badge" style="display:none"></div>
+    </div>
+    <div class="tcpu-desc">
+      <div class="tcpu-mode-lbl" id="tcpu-mode-lbl"></div>
+      <div id="tcpu-desc-text"></div>
+    </div>
+    <div class="tcpu-controls">
+      <button class="tcpu-btn" id="tcpu-prev">◀ Prev</button>
+      <span id="tcpu-step-num" style="color:rgba(255,255,255,0.4);font-size:0.8rem"></span>
+      <button class="tcpu-btn" id="tcpu-next">Next ▶</button>
+      <button class="tcpu-btn tcpu-btn-auto" id="tcpu-auto">▶ Auto Play</button>
+      <button class="tcpu-btn" id="tcpu-reset">↺ Reset</button>
+    </div>
+  </div>`;
+
+  function nodeCenter(id) {
+    const topoR = root.querySelector('#tcpu-topo').getBoundingClientRect();
+    const box = root.querySelector('#' + id + ' .tcpu-node-box').getBoundingClientRect();
+    return { x: box.left + box.width/2 - topoR.left, y: box.top + box.height/2 - topoR.top };
+  }
+
+  function animPkt(el, fx, tx, y, label, color, lost, cb) {
+    el.style.transition = 'none';
+    el.style.display = 'flex';
+    el.style.opacity = '1';
+    el.style.left = (fx - 20) + 'px';
+    el.style.top = y + 'px';
+    el.style.background = color + '28';
+    el.style.borderColor = color;
+    el.style.color = color;
+    el.textContent = label;
+    const destX = lost ? (fx + tx) / 2 : tx;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.transition = 'left 0.55s ease, opacity 0.3s ease';
+      el.style.left = (destX - 20) + 'px';
+      if (lost) {
+        setTimeout(() => { el.style.opacity='0'; setTimeout(() => { el.style.display='none'; cb&&cb(); }, 300); }, 560);
+      } else {
+        setTimeout(() => { cb&&cb(); }, 600);
+      }
+    }));
+  }
+
+  function render() {
+    const sc = SCENARIOS[mode];
+    const s = sc.steps[step];
+
+    // Tab styles
+    ['tcp','udp'].forEach(m => {
+      const c = m === 'tcp' ? TC : UC;
+      const btn = root.querySelector('#tcpu-tab-' + m);
+      if (mode === m) {
+        btn.style.cssText = `color:${c};border:1px solid ${c};background:${c}18;`;
+      } else {
+        btn.style.cssText = 'color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);';
+      }
+    });
+
+    root.querySelector('#tcpu-mode-lbl').innerHTML = `<span style="color:${sc.color}">${sc.icon} ${sc.label}</span> <span style="color:rgba(255,255,255,0.35);font-weight:400;font-size:0.62rem">— ${sc.sublabel}</span>`;
+    root.querySelector('#tcpu-desc-text').innerHTML = s.text;
+    root.querySelector('#tcpu-step-num').textContent = `Step ${step+1} / ${sc.steps.length}`;
+
+    // Node box border
+    root.querySelector('#tcpu-cbox').style.borderColor = sc.color;
+    root.querySelector('#tcpu-cbox').style.boxShadow = `0 0 10px ${sc.color}55`;
+    root.querySelector('#tcpu-sbox').style.borderColor = sc.color;
+    root.querySelector('#tcpu-sbox').style.boxShadow = `0 0 10px ${sc.color}55`;
+
+    // Badge
+    const badge = root.querySelector('#tcpu-badge');
+    if (s.badge) {
+      badge.style.display = 'block';
+      badge.textContent = s.badge;
+      const bc = s.badge.includes('✅') ? '#00ff88' : s.badge.includes('⚡') ? '#ff9900' : '#00d4ff';
+      badge.style.cssText = `display:block;position:absolute;top:7px;left:50%;transform:translateX(-50%);font-size:0.63rem;font-weight:700;padding:3px 10px;border-radius:12px;white-space:nowrap;background:${bc}18;border:1px solid ${bc}44;color:${bc};`;
+    } else {
+      badge.style.display = 'none';
+    }
+
+    // Packets
+    root.querySelector('#tcpu-pkt').style.display = 'none';
+    root.querySelector('#tcpu-apkt').style.display = 'none';
+
+    if (s.pkt) {
+      const cl = nodeCenter('tcpu-client');
+      const sv = nodeCenter('tcpu-server');
+      const fx = s.pkt.dir === 'right' ? cl.x : sv.x;
+      const tx = s.pkt.dir === 'right' ? sv.x : cl.x;
+      const y = cl.y - 11;
+      animPkt(root.querySelector('#tcpu-pkt'), fx, tx, y, s.pkt.label, s.pkt.color, !!s.pkt.lost,
+        s.ackPkt ? () => {
+          const af = s.ackPkt.dir === 'right' ? cl.x : sv.x;
+          const at = s.ackPkt.dir === 'right' ? sv.x : cl.x;
+          animPkt(root.querySelector('#tcpu-apkt'), af, at, y + 26, s.ackPkt.label, s.ackPkt.color, false, null);
+        } : null
+      );
+    }
+
+    root.querySelector('#tcpu-prev').disabled = step === 0;
+    root.querySelector('#tcpu-next').disabled = step === sc.steps.length - 1;
+  }
+
+  function loadMode(m) { mode=m; step=0; stopAuto(); render(); }
+
+  root.querySelector('#tcpu-tab-tcp').addEventListener('click', () => loadMode('tcp'));
+  root.querySelector('#tcpu-tab-udp').addEventListener('click', () => loadMode('udp'));
+  root.querySelector('#tcpu-prev').addEventListener('click', () => { step=Math.max(0,step-1); render(); });
+  root.querySelector('#tcpu-next').addEventListener('click', () => { step=Math.min(SCENARIOS[mode].steps.length-1,step+1); render(); });
+  root.querySelector('#tcpu-reset').addEventListener('click', () => { step=0; stopAuto(); render(); });
+  root.querySelector('#tcpu-auto').addEventListener('click', () => {
+    if (autoTimer) { stopAuto(); return; }
+    root.querySelector('#tcpu-auto').textContent = '⏸ Pause';
+    autoTimer = setInterval(() => {
+      if (step < SCENARIOS[mode].steps.length-1) { step++; render(); } else stopAuto();
+    }, 2200);
+  });
+
+  function stopAuto() {
+    clearInterval(autoTimer); autoTimer=null;
+    const btn = root.querySelector('#tcpu-auto');
+    if (btn) btn.textContent = '▶ Auto Play';
+  }
+
+  requestAnimationFrame(() => render());
+}
+
+// ── STP Animation ────────────────────────────────────────────────────────────
+function buildSTPAnim(root) {
+  const SW_PCT = { 1:[50,16], 2:[16,62], 3:[84,62], 4:[50,87] };
+
+  const STEPS = [
+    {
+      phase:'problem', phaseLabel:'⚠️ The Problem',
+      text:'Four switches are connected in a ring — SW1↔SW2↔SW4↔SW3↔SW1. Every switch has two paths to every other switch. This looks like great redundancy, but it creates a dangerous <strong>Layer 2 loop</strong>.',
+      blockLink:false, showRoot:false, hiSw:[], looping:false, showPorts:{}, showBids:false
+    },
+    {
+      phase:'problem', phaseLabel:'⚠️ Broadcast Storm!',
+      text:'A single broadcast frame enters SW1. It gets forwarded out <em>every</em> port. SW2 and SW3 each receive it and forward it again — and again — forever. This <strong style="color:#ff4466">broadcast storm</strong> consumes all bandwidth and crashes the network!',
+      blockLink:false, showRoot:false, hiSw:[], looping:true, showPorts:{}, showBids:false
+    },
+    {
+      phase:'stp', phaseLabel:'✅ STP: Bridge ID Election',
+      text:'STP kicks in. Every switch sends <strong>BPDUs</strong> (Bridge Protocol Data Units) containing its <strong>Bridge ID</strong> = Priority + MAC address. The switch with the <strong>lowest Bridge ID wins</strong> the Root Bridge election.',
+      blockLink:false, showRoot:false, hiSw:[1,2,3,4], looping:false, showPorts:{}, showBids:true
+    },
+    {
+      phase:'stp', phaseLabel:'✅ Root Bridge Elected',
+      text:'<strong style="color:#ff9900">SW1</strong> has the lowest Bridge ID (priority 4096). It becomes the <strong style="color:#ff9900">👑 Root Bridge</strong> — the central reference for the entire spanning tree. All paths are measured relative to SW1.',
+      blockLink:false, showRoot:true, hiSw:[1], looping:false, showPorts:{}, showBids:true
+    },
+    {
+      phase:'stp', phaseLabel:'✅ Root Ports Selected',
+      text:'Each non-root switch picks its <strong style="color:#00d4ff">Root Port (RP)</strong> — the port with the lowest-cost path to the Root Bridge. SW2 and SW3 connect directly to SW1. SW4\'s best path is via SW2.',
+      blockLink:false, showRoot:true, hiSw:[2,3,4], looping:false, showPorts:{rp:true}, showBids:true
+    },
+    {
+      phase:'stp', phaseLabel:'✅ Blocking the Redundant Port',
+      text:'STP finds the loop: the SW3↔SW4 link. SW4 already has a better path to Root via SW2. So STP <strong style="color:#ff4466">blocks SW4\'s port toward SW3</strong>. No frames can flow through that port.',
+      blockLink:true, showRoot:true, hiSw:[3,4], looping:false, showPorts:{rp:true, blk:true}, showBids:true
+    },
+    {
+      phase:'stp', phaseLabel:'✅ Loop Eliminated!',
+      text:'The loop is broken! Traffic flows in a <strong style="color:#00ff88">tree structure</strong> — no loops possible. <strong style="color:#00ff88">All switches are still reachable.</strong> If a forwarding link fails, STP automatically unblocks the blocked port (within 30–50 seconds).',
+      blockLink:true, showRoot:true, hiSw:[], looping:false, showPorts:{rp:true, blk:true, fwd:true}, showBids:true
+    },
+  ];
+
+  let step = 0, autoTimer = null, loopTimer = null, loopStep = 0;
+
+  root.innerHTML = `<div class="stp-wrap">
+    <div class="stp-topo" id="stp-topo">
+      <svg class="stp-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <line id="stp-L12" x1="50" y1="16" x2="16" y2="62" stroke="rgba(255,255,255,0.25)" stroke-width="0.9"/>
+        <line id="stp-L13" x1="50" y1="16" x2="84" y2="62" stroke="rgba(255,255,255,0.25)" stroke-width="0.9"/>
+        <line id="stp-L24" x1="16" y1="62" x2="50" y2="87" stroke="rgba(255,255,255,0.25)" stroke-width="0.9"/>
+        <line id="stp-L34" x1="84" y1="62" x2="50" y2="87" stroke="rgba(255,255,255,0.25)" stroke-width="0.9"/>
+        <g id="stp-blk-x" style="display:none">
+          <circle cx="67" cy="74.5" r="4" fill="#0a0e1a" stroke="#ff4466" stroke-width="0.8"/>
+          <text x="67" y="76.3" text-anchor="middle" font-size="4.5" fill="#ff4466" font-weight="bold">✕</text>
+        </g>
+      </svg>
+      <div class="stp-sw" id="stp-sw1" style="left:50%;top:16%">
+        <div class="stp-crown" id="stp-crown" style="display:none">👑</div>
+        <div class="stp-sw-box">🖥️</div>
+        <div class="stp-sw-name" style="color:#ff9900">SW1</div>
+        <div class="stp-sw-sub" id="stp-bid1">Pri: 4096</div>
+      </div>
+      <div class="stp-sw" id="stp-sw2" style="left:16%;top:62%">
+        <div class="stp-sw-box">🖥️</div>
+        <div class="stp-sw-name">SW2</div>
+        <div class="stp-sw-sub" id="stp-bid2">Pri: 8192</div>
+        <div id="stp-rp2" class="stp-port-badge stp-port-root" style="display:none">RP ↑</div>
+      </div>
+      <div class="stp-sw" id="stp-sw3" style="left:84%;top:62%">
+        <div class="stp-sw-box">🖥️</div>
+        <div class="stp-sw-name">SW3</div>
+        <div class="stp-sw-sub" id="stp-bid3">Pri: 16384</div>
+        <div id="stp-rp3" class="stp-port-badge stp-port-root" style="display:none">RP ↑</div>
+      </div>
+      <div class="stp-sw" id="stp-sw4" style="left:50%;top:87%">
+        <div class="stp-sw-box">🖥️</div>
+        <div class="stp-sw-name">SW4</div>
+        <div class="stp-sw-sub" id="stp-bid4">Pri: 32768</div>
+        <div id="stp-rp4" class="stp-port-badge stp-port-root" style="display:none">RP ←</div>
+        <div id="stp-blk4" class="stp-port-badge stp-port-blk" style="display:none">BLK →</div>
+      </div>
+      <div class="stp-pkt" id="stp-pkt" style="display:none;background:#ff4466;box-shadow:0 0 10px #ff4466;"></div>
+    </div>
+    <div class="stp-step-box" id="stp-step-box"></div>
+    <div class="stp-controls">
+      <button class="stp-btn" id="stp-prev">◀ Prev</button>
+      <span id="stp-step-num" style="color:rgba(255,255,255,0.4);font-size:0.8rem"></span>
+      <button class="stp-btn" id="stp-next">Next ▶</button>
+      <button class="stp-btn stp-btn-auto" id="stp-auto">▶ Auto Play</button>
+      <button class="stp-btn" id="stp-reset">↺ Reset</button>
+    </div>
+  </div>`;
+
+  function getPktPx(swId) {
+    const topo = root.querySelector('#stp-topo');
+    const w = topo.offsetWidth, h = topo.offsetHeight;
+    const [px, py] = SW_PCT[swId];
+    return { x: w * px / 100, y: h * py / 100 };
+  }
+
+  function stopLoop() {
+    clearInterval(loopTimer); loopTimer = null; loopStep = 0;
+    const pkt = root.querySelector('#stp-pkt');
+    if (pkt) pkt.style.display = 'none';
+    ['L12','L13','L24','L34'].forEach(id => {
+      const el = root.querySelector('#stp-' + id);
+      if (el) el.classList.remove('stp-looping');
+    });
+  }
+
+  function startLoop() {
+    const PATH = [1, 2, 4, 3];
+    const pkt = root.querySelector('#stp-pkt');
+    pkt.style.display = 'block';
+    ['L12','L13','L24','L34'].forEach(id => root.querySelector('#stp-'+id).classList.add('stp-looping'));
+    function tick() {
+      const pos = getPktPx(PATH[loopStep % PATH.length]);
+      pkt.style.left = pos.x + 'px';
+      pkt.style.top  = pos.y + 'px';
+      loopStep = (loopStep + 1) % PATH.length;
+    }
+    tick();
+    loopTimer = setInterval(tick, 550);
+  }
+
+  function render() {
+    const s = STEPS[step];
+    const phaseClass = s.phase === 'problem' ? 'stp-phase-problem' : 'stp-phase-stp';
+    root.querySelector('#stp-step-box').innerHTML = `<div class="stp-phase ${phaseClass}">${s.phaseLabel}</div><div>${s.text}</div>`;
+    root.querySelector('#stp-step-num').textContent = `Step ${step+1} / ${STEPS.length}`;
+
+    // Switch highlights
+    [1,2,3,4].forEach(n => {
+      const el = root.querySelector('#stp-sw'+n);
+      el.classList.remove('stp-sw-root','stp-sw-hi','stp-sw-dim');
+      if (s.showRoot && n===1) el.classList.add('stp-sw-root');
+      else if (s.hiSw.includes(n)) el.classList.add('stp-sw-hi');
+      else if (s.hiSw.length > 0 && !s.hiSw.includes(n)) el.classList.add('stp-sw-dim');
+    });
+
+    root.querySelector('#stp-crown').style.display = s.showRoot ? 'block' : 'none';
+
+    // Bridge ID opacity
+    [1,2,3,4].forEach(n => {
+      root.querySelector('#stp-bid'+n).style.opacity = s.showBids ? '1' : '0.3';
+    });
+
+    // Port badges
+    root.querySelector('#stp-rp2').style.display = s.showPorts.rp ? 'inline-block' : 'none';
+    root.querySelector('#stp-rp3').style.display = s.showPorts.rp ? 'inline-block' : 'none';
+    root.querySelector('#stp-rp4').style.display = s.showPorts.rp ? 'inline-block' : 'none';
+    root.querySelector('#stp-blk4').style.display = s.showPorts.blk ? 'inline-block' : 'none';
+
+    // Link colors
+    const fwdStroke = s.showPorts.fwd ? '#00ff88' : 'rgba(255,255,255,0.3)';
+    const fwdW = s.showPorts.fwd ? '1.3' : '0.9';
+    ['L12','L13','L24'].forEach(id => {
+      const l = root.querySelector('#stp-'+id);
+      l.setAttribute('stroke', fwdStroke);
+      l.setAttribute('stroke-width', fwdW);
+      l.removeAttribute('stroke-dasharray');
+      l.classList.remove('stp-looping');
+    });
+    const l34 = root.querySelector('#stp-L34');
+    if (s.blockLink) {
+      l34.setAttribute('stroke', '#ff4466');
+      l34.setAttribute('stroke-width', '0.9');
+      l34.setAttribute('stroke-dasharray', '2,1.5');
+      l34.classList.remove('stp-looping');
+    } else {
+      l34.setAttribute('stroke', fwdStroke);
+      l34.setAttribute('stroke-width', fwdW);
+      l34.removeAttribute('stroke-dasharray');
+    }
+    root.querySelector('#stp-blk-x').style.display = s.blockLink ? 'block' : 'none';
+
+    // Loop packet
+    if (s.looping) startLoop(); else stopLoop();
+
+    root.querySelector('#stp-prev').disabled = step === 0;
+    root.querySelector('#stp-next').disabled = step === STEPS.length - 1;
+  }
+
+  root.querySelector('#stp-prev').addEventListener('click', () => { step = Math.max(0,step-1); render(); });
+  root.querySelector('#stp-next').addEventListener('click', () => { step = Math.min(STEPS.length-1,step+1); render(); });
+  root.querySelector('#stp-reset').addEventListener('click', () => { step=0; stopAuto(); render(); });
+  root.querySelector('#stp-auto').addEventListener('click', () => {
+    if (autoTimer) { stopAuto(); return; }
+    root.querySelector('#stp-auto').textContent = '⏸ Pause';
+    autoTimer = setInterval(() => {
+      if (step < STEPS.length-1) { step++; render(); } else stopAuto();
+    }, 2800);
+  });
+
+  function stopAuto() {
+    clearInterval(autoTimer); autoTimer = null;
+    const btn = root.querySelector('#stp-auto');
+    if (btn) btn.textContent = '▶ Auto Play';
+  }
+
+  requestAnimationFrame(() => render());
 }
 
 // ── What Is Routing Animation ────────────────────────────────────────────────
@@ -5387,6 +6044,24 @@ function renderLesson(topic) {
         <div id="wir-anim-root"></div>`;
       container.appendChild(card);
       buildWhatIsRoutingAnim(document.getElementById('wir-anim-root'));
+      continue;
+    } else if (section.type === 'dora_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="dora-anim-root"></div>`;
+      container.appendChild(card);
+      buildDORAnim(document.getElementById('dora-anim-root'));
+      continue;
+    } else if (section.type === 'tcp_udp_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="tcpu-anim-root"></div>`;
+      container.appendChild(card);
+      buildTCPUDPAnim(document.getElementById('tcpu-anim-root'));
+      continue;
+    } else if (section.type === 'stp_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="stp-anim-root"></div>`;
+      container.appendChild(card);
+      buildSTPAnim(document.getElementById('stp-anim-root'));
       continue;
     } else if (section.type === 'route_table_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
