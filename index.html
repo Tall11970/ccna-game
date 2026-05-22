@@ -1444,6 +1444,14 @@
     .topic-grid { grid-template-columns: 1fr; }
     .result-stats { grid-template-columns: repeat(3,1fr); }
   }
+  /* ── Confetti ── */
+  .confetti-piece { position:fixed; top:-12px; width:10px; height:14px; border-radius:2px; pointer-events:none; z-index:99999; transform-origin:center bottom; }
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg) scale(1); opacity:1; }
+    80%  { opacity:1; }
+    100% { transform: translateY(105vh) rotate(720deg) scale(0.6); opacity:0; }
+  }
+
   /* ── Auth Modal ── */
   #auth-overlay { position:fixed; inset:0; background:#080c18; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; transition:opacity 0.3s; }
   #auth-overlay.hidden { display:none; }
@@ -6808,6 +6816,7 @@ function showResult() {
 
   saveState();
   updateHUD();
+  if (leveledUp) launchConfetti();
 
   document.getElementById('stat-correct').textContent = correct + '/' + total;
   document.getElementById('stat-acc').textContent = acc + '%';
@@ -6912,6 +6921,41 @@ themeBtn.addEventListener('click', () => {
 loadState();
 updateHUD();
 renderTopics();
+
+// ── Confetti ─────────────────────────────────────────────────────────────────
+function launchConfetti() {
+  const COLORS = ['#00d4ff','#00ff88','#ff9900','#ff4466','#7b4fff','#ffdd00','#ff6ec7','#00ffcc'];
+  const COUNT = 130;
+
+  for (let i = 0; i < COUNT; i++) {
+    const el = document.createElement('div');
+    const color    = COLORS[Math.floor(Math.random() * COLORS.length)];
+    const isCircle = Math.random() > 0.5;
+    const size     = 7 + Math.random() * 9;
+    const left     = Math.random() * 100;
+    const delay    = Math.random() * 700;
+    const dur      = 2200 + Math.random() * 1800;
+    const drift    = (Math.random() - 0.5) * 240;
+    const spin     = 360 + Math.random() * 720;
+
+    el.style.cssText = `
+      position:fixed; top:-14px; left:${left}%; z-index:99999;
+      width:${size}px; height:${isCircle ? size : size * 1.5}px;
+      background:${color}; border-radius:${isCircle ? '50%' : '3px'};
+      pointer-events:none;
+      filter:drop-shadow(0 0 3px ${color});
+    `;
+    document.body.appendChild(el);
+
+    el.animate([
+      { transform:`translateY(0) translateX(0) rotate(0deg)`,            opacity:1 },
+      { transform:`translateY(70vh) translateX(${drift*.6}px) rotate(${spin*.6}deg)`, opacity:1, offset:.75 },
+      { transform:`translateY(108vh) translateX(${drift}px) rotate(${spin}deg)`,      opacity:0 }
+    ], { duration:dur, delay, easing:'ease-in', fill:'forwards' });
+
+    setTimeout(() => el.remove(), dur + delay + 300);
+  }
+}
 </script>
 
 <!-- ── Supabase SDK ── -->
