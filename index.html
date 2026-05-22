@@ -1515,6 +1515,30 @@
   .profile-msg.show { display:block; }
   .profile-msg.ok  { color:#00ff88; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.22); }
   .profile-msg.err { color:#ff4466; background:rgba(255,68,102,0.1); border:1px solid rgba(255,68,102,0.22); }
+  /* ── Protocol Deep-Dive Modal ── */
+  #protocol-modal { display:none !important; }
+  #protocol-modal:not(.hidden) { display:flex !important; }
+  #protocol-modal.hidden { display:none !important; }
+  .protocol-clickable { cursor:pointer; color:#00d4ff; font-weight:600; transition:all 0.2s; }
+  .protocol-clickable:hover { text-decoration:underline; color:#00ff88; text-shadow:0 0 12px rgba(0,255,136,0.4); }
+  .protocol-section { margin:20px 0; }
+  .protocol-title { font-size:1.4rem; font-weight:800; color:#00d4ff; margin-bottom:12px; border-bottom:2px solid rgba(0,212,255,0.2); padding-bottom:8px; }
+  .protocol-overview { background:rgba(0,212,255,0.08); border-left:3px solid #00d4ff; padding:14px 16px; border-radius:8px; margin-bottom:16px; }
+  .protocol-step { background:rgba(255,255,255,0.04); border-radius:8px; padding:12px 14px; margin:8px 0; border-left:2px solid rgba(0,212,255,0.3); }
+  .protocol-step.active { background:rgba(0,212,255,0.12); border-left-color:#00d4ff; box-shadow:0 0 12px rgba(0,212,255,0.2); }
+  .protocol-step-num { display:inline-block; background:#00d4ff; color:#0a0e1a; font-weight:700; padding:2px 8px; border-radius:4px; font-size:0.75rem; margin-right:8px; }
+  .protocol-packet { font-family:monospace; font-size:0.85rem; background:rgba(255,153,0,0.1); border:1px solid rgba(255,153,0,0.3); border-radius:6px; padding:8px 12px; margin:8px 0; overflow-x:auto; }
+  .protocol-controls { display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+  .proto-btn { flex:1; min-width:100px; padding:10px; border:none; border-radius:8px; font-weight:700; cursor:pointer; transition:all 0.2s; font-size:0.9rem; }
+  .proto-btn.primary { background:#00d4ff; color:#0a0e1a; }
+  .proto-btn.secondary { background:rgba(0,212,255,0.12); border:1px solid #00d4ff; color:#00d4ff; }
+  .proto-btn.primary:hover { box-shadow:0 0 12px rgba(0,212,255,0.4); }
+  .proto-btn.secondary:hover { background:rgba(0,212,255,0.22); }
+  .proto-btn:disabled { opacity:0.4; cursor:default; }
+  .protocol-table { width:100%; border-collapse:collapse; font-size:0.85rem; margin:12px 0; }
+  .protocol-table th { background:rgba(0,212,255,0.12); color:#00d4ff; padding:8px 12px; text-align:left; font-weight:700; border-bottom:2px solid rgba(0,212,255,0.3); }
+  .protocol-table td { padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .protocol-table tr:hover { background:rgba(0,212,255,0.06); }
 </style>
 </head>
 <body>
@@ -1617,6 +1641,14 @@
       <div class="auth-msg success" id="su-ok"></div>
       <button class="auth-submit" id="su-btn" type="submit">Create Account →</button>
     </form>
+  </div>
+</div>
+
+<!-- ── Protocol Deep-Dive Modal ── -->
+<div id="protocol-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);z-index:9998;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div id="protocol-content" style="background:var(--panel);border-radius:16px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;border:1px solid var(--border);position:relative;">
+    <button id="protocol-close" onclick="closeProtocolModal()" style="position:sticky;top:12px;right:12px;z-index:100;float:right;background:rgba(255,68,102,.15);border:1px solid #ff4466;color:#ff4466;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:.9rem;">✕ Close</button>
+    <div id="protocol-body" style="padding:20px;"></div>
   </div>
 </div>
 
@@ -8556,6 +8588,298 @@ function buildACLPlacementAnim(root) {
 }
 
 // ── Confetti ─────────────────────────────────────────────────────────────────
+/* ── Protocol Deep-Dive System ─────────────────────────────────────────────── */
+function openProtocolModal(protocol) {
+  const protocolModules = {
+    HTTP: buildHTTPModule,
+    HTTPS: buildHTTPSModule,
+    DNS: buildDNSModule,
+    DHCP: buildDHCPModule,
+    SSH: buildSSHModule,
+  };
+  if (protocolModules[protocol]) {
+    document.getElementById('protocol-body').innerHTML = protocolModules[protocol]();
+    document.getElementById('protocol-modal').classList.remove('hidden');
+  }
+}
+
+function closeProtocolModal() {
+  document.getElementById('protocol-modal').classList.add('hidden');
+  document.querySelectorAll('.protocol-packet').forEach(el => el.remove());
+}
+
+function buildHTTPModule() {
+  return `
+    <h2 class="protocol-title">🌐 HTTP (HyperText Transfer Protocol)</h2>
+    <div class="protocol-overview">
+      <p><strong>HTTP</strong> is the foundation of web browsing. It's a <strong>stateless, request-response protocol</strong> where your browser sends a request and the server sends back a response. Uses <strong>TCP port 80</strong> (unencrypted).</p>
+      <p><strong>Key point for CCNA:</strong> HTTP is unencrypted — anyone on the network can see your traffic. Use HTTPS instead!</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">📋 HTTP Request → Response (Step-by-Step)</h3>
+      <button class="proto-btn primary" onclick="animateHTTPFlow()">▶ Start Animation</button>
+      <div id="http-steps" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">🔍 Common HTTP Methods</h3>
+      <table class="protocol-table">
+        <tr><th>Method</th><th>Purpose</th><th>Example</th></tr>
+        <tr><td><strong>GET</strong></td><td>Retrieve data (read-only)</td><td>GET /index.html</td></tr>
+        <tr><td><strong>POST</strong></td><td>Submit data (create/update)</td><td>POST /form data</td></tr>
+        <tr><td><strong>PUT</strong></td><td>Replace entire resource</td><td>PUT /file.txt</td></tr>
+        <tr><td><strong>DELETE</strong></td><td>Remove resource</td><td>DELETE /user/123</td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>HTTP = port <strong>80</strong>, unencrypted, stateless</li>
+        <li>Each request-response is independent; no session persistence by default</li>
+        <li>Vulnerable to eavesdropping — use HTTPS for sensitive data</li>
+        <li>Can be filtered/blocked in ACLs: permit/deny tcp any any eq 80</li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildHTTPSModule() {
+  return `
+    <h2 class="protocol-title">🔒 HTTPS (HTTP Secure)</h2>
+    <div class="protocol-overview">
+      <p><strong>HTTPS</strong> is HTTP wrapped in <strong>TLS/SSL encryption</strong>. Your browser and server establish a secure tunnel; all traffic inside is encrypted. Uses <strong>TCP port 443</strong>.</p>
+      <p><strong>Key point for CCNA:</strong> HTTPS uses <strong>public key cryptography + symmetric encryption</strong> for speed. The TLS handshake establishes shared keys before any HTTP data is sent.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">🤝 TLS Handshake (4 Steps)</h3>
+      <button class="proto-btn primary" onclick="animateTLSHandshake()">▶ Animate Handshake</button>
+      <div id="https-steps" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">🔑 How TLS Works</h3>
+      <ol style="margin-left:16px;line-height:1.8;">
+        <li><strong>Client sends ClientHello</strong> — lists supported cipher suites</li>
+        <li><strong>Server responds with ServerHello</strong> — picks a cipher suite and sends certificate</li>
+        <li><strong>Key Exchange</strong> — both sides agree on a symmetric key (using public/private key math)</li>
+        <li><strong>Finished messages</strong> — both verify the handshake succeeded; encrypted communication begins</li>
+      </ol>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>HTTPS = port <strong>443</strong>, encrypted, provides confidentiality + integrity + authentication</li>
+        <li>TLS 1.2/1.3 are current standards; SSL 3.0 is deprecated</li>
+        <li>Certificate contains public key; server keeps private key secret</li>
+        <li>Add to ACLs: permit tcp any any eq 443</li>
+        <li>PAT/NAT pass HTTPS traffic without modification (can't inspect encrypted content)</li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildDNSModule() {
+  return `
+    <h2 class="protocol-title">🔎 DNS (Domain Name System)</h2>
+    <div class="protocol-overview">
+      <p><strong>DNS</strong> translates human-readable domain names to IP addresses. Your browser asks a DNS server "What is the IP of google.com?" and gets back an IP. Uses <strong>UDP port 53 for queries</strong>, <strong>TCP port 53 for zone transfers</strong>.</p>
+      <p><strong>Key point for CCNA:</strong> DNS is <strong>recursive</strong> — your DNS server may ask other servers if it doesn't know the answer. Heavily used; blocking it breaks internet access.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">📡 DNS Query Example</h3>
+      <button class="proto-btn primary" onclick="animateDNSQuery()">▶ Animate Query</button>
+      <div id="dns-steps" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">🏗️ DNS Hierarchy</h3>
+      <p style="margin:8px 0;"><strong style="color:#00ff88;">Root Nameserver</strong> (13 worldwide) → <strong style="color:#00ff88;">TLD Server</strong> (.com, .org, etc.) → <strong style="color:#00ff88;">Authoritative Nameserver</strong> (your domain)</p>
+      <p style="font-size:0.85rem;color:#aaa;margin:8px 0;">Your recursive resolver caches answers to avoid repeating queries. TTL (Time to Live) controls how long answers are cached.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>DNS = port <strong>53</strong> (UDP for queries, TCP for zone transfers)</li>
+        <li><strong>DNS spoofing</strong> — attackers reply with fake IPs; DNSSEC adds validation</li>
+        <li>Blocking port 53 = no internet (no domain resolution)</li>
+        <li>NAT/ PAT pass DNS queries unchanged; routers translate source ports</li>
+        <li>Recursive = server looks it up for you; Iterative = server says "ask this other server"</li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildDHCPModule() {
+  return `
+    <h2 class="protocol-title">🔄 DHCP (Dynamic Host Configuration Protocol)</h2>
+    <div class="protocol-overview">
+      <p><strong>DHCP</strong> automatically assigns IP addresses, subnet masks, default gateways, and DNS servers to clients. Uses <strong>UDP ports 67 (server) and 68 (client)</strong>. Every device on your home/office network uses DHCP to get an IP instantly.</p>
+      <p><strong>Key point for CCNA:</strong> DHCP is <strong>four-step (DORA)</strong> process: Discover, Offer, Request, Acknowledge.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">📋 DORA Process (See animation under TCP/IP & Protocols → DHCP)</h3>
+      <p style="margin:12px 0;background:rgba(0,212,255,0.08);padding:12px;border-radius:8px;border-left:3px solid #00d4ff;">
+        <strong>D</strong> = Client broadcasts <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;">DHCP Discover</code> (port 68) asking for an IP<br>
+        <strong>O</strong> = Server replies with <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;">DHCP Offer</code> (port 67) offering an available IP<br>
+        <strong>R</strong> = Client sends <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;">DHCP Request</code> formally requesting that IP<br>
+        <strong>A</strong> = Server sends <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;">DHCP Ack</code> confirming the lease (usually 24h)
+      </p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">⚙️ DHCP Configuration on Cisco Router</h3>
+      <pre style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;overflow-x:auto;font-size:0.8rem;"><code>Router(config)# ip dhcp pool LAB
+Router(dhcp-config)# network 192.168.1.0 255.255.255.0
+Router(dhcp-config)# default-router 192.168.1.1
+Router(dhcp-config)# dns-server 8.8.8.8 8.8.4.4
+Router(dhcp-config)# lease 1  <! 1 day >
+Router(config)# ip dhcp excluded-address 192.168.1.1 192.168.1.10</code></pre>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>DHCP = UDP <strong>port 67 (server) / 68 (client)</strong></li>
+        <li><strong>DHCP Relay</strong> = Router forwards DHCP broadcasts (unicast) to a central DHCP server (ip helper-address)</li>
+        <li><strong>Rogue DHCP server</strong> = attacker runs DHCP; DHCP snooping blocks unauthorized servers</li>
+        <li><strong>Lease</strong> = client owns IP for limited time; must renew at 50% of lease time</li>
+        <li><strong>DHCP starvation</strong> = attacker requests all IPs; causes denial of service</li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildSSHModule() {
+  return `
+    <h2 class="protocol-title">🔐 SSH (Secure Shell)</h2>
+    <div class="protocol-overview">
+      <p><strong>SSH</strong> is the secure replacement for Telnet. It encrypts your entire terminal session (including username/password) using public-key cryptography. Uses <strong>TCP port 22</strong>. Standard for remote management of routers, switches, and servers.</p>
+      <p><strong>Key point for CCNA:</strong> SSH requires four prerequisites: hostname, domain name, RSA key pair, and local user account. This is heavily tested on the CCNA exam!</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">🔑 SSH Setup Prerequisites (CCNA Required Knowledge)</h3>
+      <table class="protocol-table">
+        <tr><th>#</th><th>Step</th><th>Command</th></tr>
+        <tr><td>1</td><td>Set device name</td><td><code style="font-size:0.8rem;">hostname R1</code></td></tr>
+        <tr><td>2</td><td>Set domain name</td><td><code style="font-size:0.8rem;">ip domain-name lab.local</code></td></tr>
+        <tr><td>3</td><td>Generate RSA keypair</td><td><code style="font-size:0.8rem;">crypto key generate rsa modulus 2048</code></td></tr>
+        <tr><td>4</td><td>Create local user</td><td><code style="font-size:0.8rem;">username admin secret cisco</code></td></tr>
+        <tr><td>5</td><td>Enable SSH on VTY</td><td><code style="font-size:0.8rem;">line vty 0 4 → transport input ssh → login local</code></td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">🚫 SSH vs Telnet (Telnet is Insecure!)</h3>
+      <table class="protocol-table">
+        <tr><th>Aspect</th><th>SSH</th><th>Telnet ❌</th></tr>
+        <tr><td><strong>Encryption</strong></td><td>✅ Full session</td><td>❌ Cleartext</td></tr>
+        <tr><td><strong>Port</strong></td><td>TCP 22</td><td>TCP 23</td></tr>
+        <tr><td><strong>Security</strong></td><td>✅ Safe over untrusted networks</td><td>❌ Never over internet</td></tr>
+        <tr><td><strong>Authentication</strong></td><td>Password or public key</td><td>Password only</td></tr>
+        <tr><td><strong>CCNA Recommendation</strong></td><td>✅ <strong>Always use SSH</strong></td><td>❌ <strong>Avoid entirely</strong></td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>SSH = port <strong>22</strong>, encrypted, heavily tested on CCNA</li>
+        <li><strong>SSHv2</strong> (RFC 4251) is the standard; SSHv1 is deprecated</li>
+        <li><strong>transport input ssh</strong> blocks Telnet; <strong>transport input none</strong> blocks both</li>
+        <li><strong>enable secret</strong> ≠ SSH password; <strong>username</strong> creates local user for SSH login</li>
+        <li><strong>ip ssh version 2</strong> forces SSHv2 (more secure than v1)</li>
+        <li>Exam simulations often ask: "Configure SSH from scratch" — know the 5 steps!</li>
+      </ul>
+    </div>
+  `;
+}
+
+/* Animation functions */
+function animateHTTPFlow() {
+  const steps = document.getElementById('http-steps');
+  const httpSteps = [
+    { num: 1, title: 'Client connects to server:80', detail: 'Browser initiates TCP handshake to web server port 80' },
+    { num: 2, title: 'Browser sends GET request', detail: '<code style="font-size:0.85rem;background:rgba(255,153,0,0.1);padding:4px 8px;border-radius:4px;">GET /index.html HTTP/1.1\\r\\nHost: example.com\\r\\nUser-Agent: Mozilla...</code>' },
+    { num: 3, title: 'Server processes request', detail: 'Server finds index.html file and prepares response' },
+    { num: 4, title: 'Server sends response', detail: '<code style="font-size:0.85rem;background:rgba(0,255,136,0.1);padding:4px 8px;border-radius:4px;">HTTP/1.1 200 OK\\r\\nContent-Type: text/html\\r\\nContent-Length: 1234\\r\\n\\r\\n&lt;html&gt;...</code>' },
+    { num: 5, title: 'Browser renders page', detail: 'Browser displays the HTML, CSS, and JavaScript' },
+  ];
+  steps.innerHTML = httpSteps.map((s,i) => `
+    <div class="protocol-step ${i===0?'active':''}" style="animation:fadeIn 0.3s ease;">
+      <span class="protocol-step-num">${s.num}</span><strong>${s.title}</strong>
+      <div style="margin-top:6px;font-size:0.85rem;color:#aaa;">${s.detail}</div>
+    </div>
+  `).join('');
+}
+
+function animateTLSHandshake() {
+  const steps = document.getElementById('https-steps');
+  const tlsSteps = [
+    { num: 1, title: 'ClientHello', detail: 'Browser lists cipher suites it supports, random number' },
+    { num: 2, title: 'ServerHello + Certificate', detail: 'Server picks cipher suite, sends public certificate with RSA key' },
+    { num: 3, title: 'Key Exchange', detail: 'Browser generates session key, encrypts with server\'s public key' },
+    { num: 4, title: 'Finished (Encrypted)', detail: 'Both sides verify handshake; all subsequent data is encrypted with session key' },
+  ];
+  steps.innerHTML = tlsSteps.map((s,i) => `
+    <div class="protocol-step ${i===0?'active':''}" style="animation:fadeIn 0.3s ease;">
+      <span class="protocol-step-num">${s.num}</span><strong>${s.title}</strong>
+      <div style="margin-top:6px;font-size:0.85rem;color:#aaa;">${s.detail}</div>
+    </div>
+  `).join('');
+}
+
+function animateDNSQuery() {
+  const steps = document.getElementById('dns-steps');
+  const dnsSteps = [
+    { num: 1, title: 'Browser queries resolver', detail: 'Browser (client) sends UDP port 53 query to DNS resolver (usually ISP DNS)' },
+    { num: 2, title: 'Resolver queries root server', detail: 'Resolver doesn\'t know answer; asks root nameserver' },
+    { num: 3, title: 'Root redirects to TLD', detail: 'Root says "ask .com TLD server at X.X.X.X"' },
+    { num: 4, title: 'TLD redirects to authoritative', detail: 'TLD says "ask google.com nameserver at Y.Y.Y.Y"' },
+    { num: 5, title: 'Authoritative answers', detail: 'Authoritative nameserver replies: google.com = 142.251.41.14' },
+    { num: 6, title: 'Resolver caches & replies', detail: 'Resolver caches answer, sends back to browser (UDP port 53)' },
+    { num: 7, title: 'Browser connects to IP', detail: 'Browser now has IP; connects to 142.251.41.14:80 for HTTP' },
+  ];
+  steps.innerHTML = dnsSteps.map((s,i) => `
+    <div class="protocol-step ${i===0?'active':''}" style="animation:fadeIn 0.3s ease;">
+      <span class="protocol-step-num">${s.num}</span><strong>${s.title}</strong>
+      <div style="margin-top:6px;font-size:0.85rem;color:#aaa;">${s.detail}</div>
+    </div>
+  `).join('');
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Make protocol names clickable in tables */
+function enableProtocolLinks() {
+  const protocols = ['HTTP', 'HTTPS', 'DNS', 'DHCP', 'SSH', 'FTP', 'Telnet', 'SMTP', 'POP3', 'SNMP', 'Syslog', 'TFTP'];
+  document.querySelectorAll('table tbody td').forEach(td => {
+    const text = td.textContent.trim();
+    if (protocols.includes(text)) {
+      td.className = 'protocol-clickable';
+      td.style.cursor = 'pointer';
+      td.onclick = (e) => { e.stopPropagation(); openProtocolModal(text); };
+    }
+  });
+}
+
+// Hook into renderLesson to enable protocol links
+const origRenderLesson = window.renderLesson;
+window.renderLesson = function(topicId) {
+  origRenderLesson(topicId);
+  setTimeout(() => enableProtocolLinks(), 100);
+};
+
 function launchConfetti() {
   const COLORS = ['#00d4ff','#00ff88','#ff9900','#ff4466','#7b4fff','#ffdd00','#ff6ec7','#00ffcc'];
   const COUNT = 130;
