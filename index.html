@@ -1847,6 +1847,66 @@ const TOPICS = [
         correct: 2,
         explain: 'Routers operate at <strong>Layer 3 – Network</strong>, making forwarding decisions based on IP addresses.'
       },
+      {
+        q: 'A hub broadcasts all signals out every port. At which OSI layer does it operate?',
+        a: ['Layer 2','Layer 3','Layer 1','Layer 4'],
+        correct: 2,
+        explain: 'Hubs are <strong>Layer 1 (Physical)</strong> devices — they repeat electrical signals to all ports with no intelligence. Switches (Layer 2) use MAC addresses to forward selectively.'
+      },
+      {
+        q: 'The FCS (Frame Check Sequence) used for error detection is added by which OSI layer?',
+        a: ['Physical','Data Link','Network','Transport'],
+        correct: 1,
+        explain: '<strong>Layer 2 – Data Link</strong> adds both a header (with source/destination MAC) and a trailer containing the <strong>FCS</strong> for error detection. If the FCS doesn\'t match, the frame is discarded.'
+      },
+      {
+        q: 'What is the PDU called at the Transport layer?',
+        a: ['Packet','Frame','Bit','Segment'],
+        correct: 3,
+        explain: 'PDU names by layer: Layer 1 = <strong>Bit</strong>, Layer 2 = <strong>Frame</strong>, Layer 3 = <strong>Packet</strong>, Layer 4 = <strong>Segment</strong> (TCP) or <strong>Datagram</strong> (UDP).'
+      },
+      {
+        q: 'SSL/TLS encryption is associated with which OSI layer?',
+        a: ['Application','Transport','Session','Presentation'],
+        correct: 3,
+        explain: '<strong>Layer 6 – Presentation</strong> handles encryption, decryption, compression, and data format translation. SSL/TLS lives here (though some models place it at Layer 5 or 7 — Presentation is the CCNA answer).'
+      },
+      {
+        q: 'TCP flow control and windowing operate at which OSI layer?',
+        a: ['Network','Application','Transport','Data Link'],
+        correct: 2,
+        explain: '<strong>Layer 4 – Transport</strong> manages flow control, error recovery, and windowing. TCP\'s sliding window prevents a fast sender from overwhelming a slow receiver.'
+      },
+      {
+        q: 'Which OSI layer is responsible for establishing, managing, and terminating sessions between applications?',
+        a: ['Transport','Presentation','Application','Session'],
+        correct: 3,
+        explain: '<strong>Layer 5 – Session</strong> manages dialog control between applications. Examples include NFS, SQL sessions, and RPC. It\'s often the "forgotten" layer on the CCNA exam.'
+      },
+      {
+        q: 'The process of adding headers (and trailers) as data moves DOWN the OSI stack is called what?',
+        a: ['Decapsulation','Multiplexing','Encapsulation','Fragmentation'],
+        correct: 2,
+        explain: '<strong>Encapsulation</strong> wraps data with protocol information (headers/trailers) as it moves down the OSI model from Layer 7 to Layer 1. The reverse process (moving up) is called <strong>decapsulation</strong>.'
+      },
+      {
+        q: 'The TCP/IP model\'s "Internet Layer" maps to which OSI layer?',
+        a: ['Layer 2','Layer 4','Layer 3','Layers 3 & 4'],
+        correct: 2,
+        explain: 'The TCP/IP <strong>Internet Layer</strong> maps to <strong>OSI Layer 3 – Network</strong>. It handles IP addressing and routing. The TCP/IP model is a 4-layer model; the OSI model is 7 layers.'
+      },
+      {
+        q: 'Which layer converts data into bits for transmission over the physical medium?',
+        a: ['Data Link','Session','Physical','Network'],
+        correct: 2,
+        explain: '<strong>Layer 1 – Physical</strong> converts data into electrical signals, light pulses, or radio waves. It defines cables, connectors, speeds, and signaling standards (e.g., 1000BASE-T).'
+      },
+      {
+        q: 'Which OSI layer provides services directly to end-user applications like a web browser?',
+        a: ['Session','Presentation','Transport','Application'],
+        correct: 3,
+        explain: '<strong>Layer 7 – Application</strong> is the layer closest to the user. It provides network services to apps like browsers (HTTP), email clients (SMTP/IMAP), and file transfer tools (FTP).'
+      },
     ]
   },
   {
@@ -1955,6 +2015,66 @@ const TOPICS = [
         a: ['4','6','8','16'],
         correct: 2,
         explain: '32 – 29 = 3 host bits. 2³ = <strong>8 total addresses</strong> (6 usable hosts, 1 network, 1 broadcast).'
+      },
+      {
+        q: 'What is the subnet mask for a /25 in dotted decimal?',
+        a: ['255.255.255.0','255.255.255.192','255.255.255.128','255.255.255.224'],
+        correct: 2,
+        explain: '/25 turns on 25 bits: the first 24 are 255.255.255 and the last byte is 10000000 = <strong>128</strong>. So the mask is <strong>255.255.255.128</strong>, giving 2 subnets of 126 usable hosts each from a /24.'
+      },
+      {
+        q: 'How many usable host addresses exist in a /27 subnet?',
+        a: ['16','30','14','32'],
+        correct: 1,
+        explain: '32 – 27 = 5 host bits. 2⁵ = 32 total – 2 (network + broadcast) = <strong>30 usable hosts</strong>.'
+      },
+      {
+        q: '192.168.1.130 with a /26 mask — what is the network address?',
+        a: ['192.168.1.0','192.168.1.192','192.168.1.128','192.168.1.64'],
+        correct: 2,
+        explain: '/26 = block size of 64. Subnets: .0, .64, <strong>.128</strong>, .192. Since 130 falls in the .128 block (128–191), the network address is <strong>192.168.1.128</strong>.'
+      },
+      {
+        q: 'How many /28 subnets can you carve from a single /24 network?',
+        a: ['4','8','16','32'],
+        correct: 2,
+        explain: '/28 borrows 4 bits from a /24 (28–24 = 4). 2⁴ = <strong>16 subnets</strong>, each with 14 usable hosts (block size 16).'
+      },
+      {
+        q: 'What is the CIDR notation for the subnet mask 255.255.255.240?',
+        a: ['/25','/26','/27','/28'],
+        correct: 3,
+        explain: '255.255.255.240 = 11111111.11111111.11111111.11110000 — that\'s 28 ones = <strong>/28</strong>. Block size is 16, giving 14 usable hosts per subnet.'
+      },
+      {
+        q: 'What is the valid host range for the subnet 10.0.0.0/30?',
+        a: ['10.0.0.0 – 10.0.0.3','10.0.0.1 – 10.0.0.2','10.0.0.1 – 10.0.0.6','10.0.0.0 – 10.0.0.1'],
+        correct: 1,
+        explain: '/30 has 4 addresses: .0 (network), <strong>.1 and .2 (hosts)</strong>, .3 (broadcast). This is commonly used for point-to-point WAN links.'
+      },
+      {
+        q: 'How many usable subnets result from subnetting 192.168.1.0/24 into /26 networks?',
+        a: ['2','8','4','16'],
+        correct: 2,
+        explain: '/26 borrows 2 bits from a /24 (26–24=2). 2² = <strong>4 subnets</strong>: .0/26, .64/26, .128/26, .192/26 — each with 62 usable hosts.'
+      },
+      {
+        q: 'Which private IP range belongs to Class B?',
+        a: ['10.0.0.0 – 10.255.255.255','192.168.0.0 – 192.168.255.255','172.16.0.0 – 172.31.255.255','169.254.0.0 – 169.254.255.255'],
+        correct: 2,
+        explain: '<strong>172.16.0.0 – 172.31.255.255</strong> is the Class B private range (RFC 1918). Class A private = 10.0.0.0/8. Class C private = 192.168.0.0/16. 169.254.x.x is APIPA (link-local).'
+      },
+      {
+        q: 'How many host bits are in a /21 subnet mask?',
+        a: ['8','10','11','13'],
+        correct: 2,
+        explain: '32 – 21 = <strong>11 host bits</strong>. 2¹¹ = 2048 total addresses, 2046 usable. /21 is often used for large site subnets that need ~2000 hosts.'
+      },
+      {
+        q: 'What is the broadcast address for the subnet 192.168.10.64/26?',
+        a: ['192.168.10.127','192.168.10.128','192.168.10.255','192.168.10.126'],
+        correct: 0,
+        explain: '/26 block size = 64. The subnet starting at .64 ends at .64+64–1 = <strong>.127</strong>. So .127 is the broadcast; usable hosts are .65–.126.'
       },
     ]
   },
@@ -2074,6 +2194,66 @@ const TOPICS = [
         a: ['DBD','LSR','Hello','LSU'],
         correct: 2,
         explain: '<strong>Hello packets</strong> are sent to 224.0.0.5 to discover neighbors and verify they\'re still alive. They also elect DR/BDR on multi-access networks.'
+      },
+      {
+        q: 'What does "administrative distance" (AD) represent in routing?',
+        a: ['The number of hops to a destination','The trustworthiness of a routing source','The cost based on link bandwidth','The time it takes to reach a neighbor'],
+        correct: 1,
+        explain: '<strong>Administrative Distance (AD)</strong> rates the trustworthiness of a routing source. Lower = more trusted. Connected = 0, Static = 1, EIGRP internal = 90, OSPF = 110, RIP = 120.'
+      },
+      {
+        q: 'What is the administrative distance of a directly connected route?',
+        a: ['1','0','5','10'],
+        correct: 1,
+        explain: 'A <strong>directly connected</strong> interface has an AD of <strong>0</strong> — the most trusted source. Static routes are AD 1. No routing protocol can override a directly connected route.'
+      },
+      {
+        q: 'Which letter prefix in a Cisco routing table indicates a static route?',
+        a: ['C','O','S','R'],
+        correct: 2,
+        explain: 'In "show ip route": <strong>C</strong> = Connected, <strong>S</strong> = Static, <strong>O</strong> = OSPF, <strong>R</strong> = RIP, <strong>D</strong> = EIGRP. The <strong>S</strong> prefix marks manually configured static routes.'
+      },
+      {
+        q: 'OSPF calculates the best path using which metric?',
+        a: ['Hop count','Bandwidth + delay','Cost (based on bandwidth)','MTU size'],
+        correct: 2,
+        explain: 'OSPF uses <strong>cost</strong> as its metric, calculated as: Reference Bandwidth ÷ Interface Bandwidth. Default reference = 100 Mbps. FastEthernet (100 Mbps) = cost 1; Serial (1.544 Mbps) ≈ cost 64.'
+      },
+      {
+        q: 'What is the default administrative distance for RIP?',
+        a: ['90','100','110','120'],
+        correct: 3,
+        explain: 'RIP has an AD of <strong>120</strong> — the highest (least trusted) of common IGPs. EIGRP internal = 90, OSPF = 110, RIP = 120. Higher AD means less preferred when multiple sources have the same destination.'
+      },
+      {
+        q: 'Which routing protocol is Cisco proprietary?',
+        a: ['OSPF','RIPv2','EIGRP','BGP'],
+        correct: 2,
+        explain: '<strong>EIGRP (Enhanced Interior Gateway Routing Protocol)</strong> was developed by Cisco. OSPF and RIP are open standards (IETF). BGP is the internet\'s exterior routing protocol and is also open standard.'
+      },
+      {
+        q: 'A "gateway of last resort" corresponds to which type of route?',
+        a: ['Host route','Summary route','Default route','Floating static route'],
+        correct: 2,
+        explain: 'The <strong>default route</strong> (0.0.0.0/0, the "quad-zero" route) is the gateway of last resort. If no more-specific route matches, traffic is forwarded here — typically toward the ISP or core router.'
+      },
+      {
+        q: 'What does routing "convergence" mean?',
+        a: ['All routers have the same number of routes','All routers agree on a consistent, accurate network topology','The network has no more traffic','Routing protocols have been disabled'],
+        correct: 1,
+        explain: '<strong>Convergence</strong> is the state where all routers have the same, consistent view of the network topology. After a topology change, routers must re-converge. Faster convergence = less downtime.'
+      },
+      {
+        q: 'Which command displays OSPF neighbor relationships on a Cisco router?',
+        a: ['show ip route ospf','show ip ospf database','show ip ospf neighbor','debug ip ospf adj'],
+        correct: 2,
+        explain: '<strong>show ip ospf neighbor</strong> lists OSPF neighbors, their state (Full, 2-Way, etc.), Dead Timer, and interface. A neighbor in "Full" state means OSPF has successfully exchanged LSDBs.'
+      },
+      {
+        q: 'What is the default OSPF cost for a FastEthernet (100 Mbps) interface?',
+        a: ['10','64','1','100'],
+        correct: 2,
+        explain: 'OSPF cost = Reference BW ÷ Interface BW = 100 Mbps ÷ 100 Mbps = <strong>1</strong>. GigabitEthernet also equals 1 by default (same reference). Use "auto-cost reference-bandwidth 1000" to differentiate Gig vs Fast.'
       },
     ]
   },
@@ -2211,6 +2391,66 @@ const TOPICS = [
         correct: 1,
         explain: 'The <strong>native VLAN</strong> is sent <strong>without an 802.1Q tag</strong> on a trunk. Both ends must match or frames may end up in the wrong VLAN (VLAN hopping attack).'
       },
+      {
+        q: 'What is the purpose of VTP (VLAN Trunking Protocol)?',
+        a: ['Encrypt VLAN traffic on trunk links','Synchronize VLAN databases across switches in the same domain','Assign IP addresses to VLANs','Prevent switching loops'],
+        correct: 1,
+        explain: '<strong>VTP</strong> propagates VLAN configuration from a VTP Server to all VTP Client switches in the same domain. A VTP Transparent switch passes VTP messages but doesn\'t apply them. Misconfigured VTP can wipe VLAN databases!'
+      },
+      {
+        q: 'Which STP port state learns MAC addresses but does NOT yet forward user traffic?',
+        a: ['Blocking','Listening','Learning','Forwarding'],
+        correct: 2,
+        explain: '<strong>Learning</strong> is the STP state where a port populates its MAC address table but doesn\'t forward frames yet. STP port progression: Blocking → Listening → <strong>Learning</strong> → Forwarding (takes ~30 seconds by default).'
+      },
+      {
+        q: 'What determines which switch becomes the STP root bridge?',
+        a: ['Highest MAC address','Lowest Bridge ID (priority + MAC)','Most VLANs configured','Fastest uplinks'],
+        correct: 1,
+        explain: 'The switch with the <strong>lowest Bridge ID</strong> wins the root bridge election. Bridge ID = Priority (default 32768) + MAC address. Admins lower the priority on the desired root using "spanning-tree vlan X priority 4096".'
+      },
+      {
+        q: 'Which Cisco command assigns switch port Fa0/5 to VLAN 10?',
+        a: ['vlan 10 interface fa0/5','switchport mode vlan 10','switchport access vlan 10','access-group vlan 10'],
+        correct: 2,
+        explain: 'Under the interface: <strong>switchport mode access</strong> then <strong>switchport access vlan 10</strong>. "Mode access" ensures the port won\'t negotiate a trunk; "access vlan 10" places it in VLAN 10.'
+      },
+      {
+        q: 'Which command verifies which VLANs are allowed across a trunk link?',
+        a: ['show vlan brief','show interfaces trunk','show spanning-tree','show cdp neighbors'],
+        correct: 1,
+        explain: '<strong>show interfaces trunk</strong> lists all trunk ports, their encapsulation, native VLAN, and the VLANs allowed/active/forwarding on each trunk. Essential for troubleshooting VLAN connectivity.'
+      },
+      {
+        q: 'What is the purpose of a voice VLAN on a switch port?',
+        a: ['Encrypt VoIP traffic','Separate VoIP traffic from data traffic for QoS prioritization','Provide DHCP to IP phones','Block non-voice traffic'],
+        correct: 1,
+        explain: 'A <strong>voice VLAN</strong> separates VoIP traffic onto its own VLAN so QoS policies can prioritize it. IP phones tag their voice traffic with the voice VLAN ID and pass PC data traffic untagged on the access VLAN.'
+      },
+      {
+        q: 'What is the default STP port cost for a 100 Mbps FastEthernet link?',
+        a: ['4','19','100','1'],
+        correct: 1,
+        explain: 'STP port costs (802.1D): 10 Mbps = 100, <strong>100 Mbps = 19</strong>, 1 Gbps = 4, 10 Gbps = 2. Lower cost = preferred path. The root port is the port with the lowest cumulative cost to the root bridge.'
+      },
+      {
+        q: 'What does the "switchport mode trunk" command do?',
+        a: ['Assigns the port to VLAN 1','Forces the port to operate as a trunk, carrying tagged VLAN traffic','Enables port security','Creates a new VLAN'],
+        correct: 1,
+        explain: '<strong>switchport mode trunk</strong> hardcodes the port as a trunk — it carries multiple VLANs using 802.1Q tagging. Use this on links between switches or between a switch and a router (router-on-a-stick).'
+      },
+      {
+        q: 'What is a "VLAN hopping" attack?',
+        a: ['Flooding a switch with fake MAC addresses','An attacker gains access to traffic on a VLAN they shouldn\'t reach by exploiting trunking','Spoofing ARP replies to redirect traffic','Disabling STP to create a loop'],
+        correct: 1,
+        explain: '<strong>VLAN hopping</strong> exploits the native VLAN or DTP auto-negotiation. Attackers send double-tagged frames or convince a switch to form a trunk. Mitigate by disabling DTP, changing the native VLAN away from VLAN 1, and disabling unused ports.'
+      },
+      {
+        q: 'Which STP enhancement allows an access port to skip the Listening and Learning states and go directly to Forwarding?',
+        a: ['BPDU Guard','Root Guard','PortFast','Rapid STP'],
+        correct: 2,
+        explain: '<strong>PortFast</strong> allows an edge port (connected to a PC, not a switch) to immediately transition to Forwarding, skipping the 30-second Listening + Learning delay. Always pair PortFast with BPDU Guard to prevent rogue switches from connecting.'
+      },
     ]
   },
   {
@@ -2332,6 +2572,66 @@ const TOPICS = [
         a: ['crypto key generate rsa','ssh enable','ip ssh version 2 enable','service ssh on'],
         correct: 0,
         explain: '<strong>crypto key generate rsa</strong> generates the RSA key pair needed for SSH. You also need a hostname, domain name, and local user accounts (or AAA). Then use "ip ssh version 2".'
+      },
+      {
+        q: 'Which type of ACL can filter traffic based on both source IP, destination IP, and port number?',
+        a: ['Standard ACL','Named ACL','Extended ACL','Dynamic ACL'],
+        correct: 2,
+        explain: '<strong>Extended ACLs</strong> (numbered 100–199 or 2000–2699) filter on source IP, destination IP, protocol, and port. <strong>Standard ACLs</strong> (1–99) only match the source IP. Use extended ACLs close to the source.'
+      },
+      {
+        q: 'What does BPDU Guard do when a BPDU is received on a protected port?',
+        a: ['Logs the event and continues','Puts the port into err-disabled state immediately','Blocks the BPDU and sends an alert','Renegotiates STP'],
+        correct: 1,
+        explain: '<strong>BPDU Guard</strong> immediately err-disables any PortFast-enabled port that receives a BPDU. This prevents rogue switches from being connected to edge ports and disrupting STP. Enable with "spanning-tree bpduguard enable".'
+      },
+      {
+        q: 'What does DAI (Dynamic ARP Inspection) protect against?',
+        a: ['MAC address table overflow','STP topology changes','ARP spoofing/poisoning attacks','Rogue DHCP servers'],
+        correct: 2,
+        explain: '<strong>DAI</strong> validates ARP packets against the DHCP snooping binding table. If the ARP MAC-to-IP mapping doesn\'t match the table, the packet is dropped — stopping <strong>ARP spoofing</strong> and man-in-the-middle attacks.'
+      },
+      {
+        q: 'What is an "implicit deny" at the end of every ACL?',
+        a: ['A visible deny any rule you must add manually','An invisible deny any rule that drops all traffic not matched by a permit','A default permit rule for management traffic','A log entry generated automatically'],
+        correct: 1,
+        explain: 'Every ACL ends with an <strong>invisible "deny any"</strong>. If no rule matches incoming traffic, it\'s dropped. This is why you must always include a permit rule for traffic you want to allow, or all traffic will be blocked.'
+      },
+      {
+        q: 'What does 802.1X provide in network security?',
+        a: ['VLAN tagging on trunk ports','Port-based Network Access Control (authentication before network access)','Encrypted routing updates','MAC address filtering'],
+        correct: 1,
+        explain: '<strong>802.1X</strong> is a port-based authentication standard. Devices (supplicants) must authenticate via a RADIUS server (authenticator) before being granted network access. Common in enterprise Wi-Fi and wired networks.'
+      },
+      {
+        q: 'Which command shows which ACL is applied to a router interface?',
+        a: ['show access-lists','show ip interface','show running-config acl','show ip acl bindings'],
+        correct: 1,
+        explain: '<strong>show ip interface [interface]</strong> shows the inbound and outbound ACL applied to that interface. Use <strong>show access-lists</strong> to see the ACL rules and match counters.'
+      },
+      {
+        q: 'What is a "man-in-the-middle" (MitM) attack?',
+        a: ['Flooding the network with traffic','Sending malformed packets to crash a device','An attacker secretly intercepts and possibly alters communication between two hosts','Guessing a password repeatedly'],
+        correct: 2,
+        explain: 'In a <strong>MitM attack</strong>, the attacker positions themselves between two communicating hosts — intercepting, reading, and possibly modifying traffic. ARP spoofing is a common method to achieve MitM on a local network.'
+      },
+      {
+        q: 'What does the "enable secret" command do on a Cisco device?',
+        a: ['Sets the console line password','Creates a user account','Sets an MD5-hashed password for privileged EXEC mode','Enables AAA authentication'],
+        correct: 2,
+        explain: '<strong>enable secret</strong> sets an <strong>MD5-encrypted</strong> password required to enter privileged EXEC mode (the "enable" prompt). It supersedes "enable password" which stores the password in cleartext unless "service password-encryption" is used.'
+      },
+      {
+        q: 'Which violation mode drops unauthorized frames AND increments the violation counter, but keeps the port up?',
+        a: ['Shutdown','Protect','Restrict','Err-disable'],
+        correct: 2,
+        explain: '<strong>Restrict</strong> drops the unauthorized frame and increments the security violation counter (visible in "show port-security"), but the port <em>stays up</em>. Protect drops silently with no log. Shutdown err-disables the port entirely.'
+      },
+      {
+        q: 'What is DHCP snooping and what does it protect against?',
+        a: ['Monitors DHCP traffic to block rogue DHCP servers on untrusted ports','Encrypts DHCP messages between client and server','Rate-limits DHCP Discover messages to prevent floods','Assigns static IPs to known MAC addresses'],
+        correct: 0,
+        explain: '<strong>DHCP snooping</strong> marks switch ports as trusted (uplinks, known DHCP servers) or untrusted (client ports). DHCP Offer/Ack messages on untrusted ports are dropped, preventing <strong>rogue DHCP servers</strong> from handing out fake IPs and gateway addresses.'
       },
     ]
   },
@@ -2467,6 +2767,66 @@ const TOPICS = [
         a: ['SNMP','TFTP','Syslog','NTP'],
         correct: 2,
         explain: '<strong>Syslog</strong> sends log messages (severity 0–7) from routers/switches to a central syslog server. Use "logging host <ip>" on Cisco devices to configure it.'
+      },
+      {
+        q: 'What does ARP broadcast to find an unknown MAC address?',
+        a: ['An ARP Reply to all hosts','A DHCP Discover message','An ARP Request to the broadcast address (FF:FF:FF:FF:FF:FF)','A Gratuitous ARP'],
+        correct: 2,
+        explain: 'ARP sends an <strong>ARP Request</strong> to the Ethernet broadcast (FF:FF:FF:FF:FF:FF) asking "Who has IP x.x.x.x?" The owner replies with an <strong>ARP Reply</strong> (unicast) containing its MAC address.'
+      },
+      {
+        q: 'What is the correct TCP three-way handshake sequence?',
+        a: ['ACK → SYN → SYN-ACK','SYN → SYN-ACK → ACK','SYN → ACK → FIN','SYN-ACK → SYN → ACK'],
+        correct: 1,
+        explain: 'TCP connection establishment: client sends <strong>SYN</strong> → server replies <strong>SYN-ACK</strong> → client sends <strong>ACK</strong>. This three-way handshake synchronizes sequence numbers before data transfer begins.'
+      },
+      {
+        q: 'Which UDP ports does DHCP use (server and client)?',
+        a: ['UDP 67 and 68','UDP 53 and 54','TCP 67 and 68','UDP 68 and 69'],
+        correct: 0,
+        explain: 'DHCP uses <strong>UDP port 67</strong> (server) and <strong>UDP port 68</strong> (client). DHCP uses UDP because the client doesn\'t have an IP address yet and can\'t complete a TCP handshake. Broadcasts use 255.255.255.255.'
+      },
+      {
+        q: 'What is the purpose of the TTL field in an IP packet?',
+        a: ['Encrypts the packet payload','Identifies the transport protocol','Limits the number of hops a packet can traverse to prevent routing loops','Specifies the packet priority'],
+        correct: 2,
+        explain: '<strong>TTL (Time to Live)</strong> is decremented by 1 at each router. When it hits 0, the router drops the packet and sends ICMP "Time Exceeded" back to the source. This prevents packets from looping forever and is how <strong>traceroute</strong> works.'
+      },
+      {
+        q: 'NAT overload (sharing one public IP among many private hosts) is also called what?',
+        a: ['Dynamic NAT','Static NAT','PAT (Port Address Translation)','Proxy ARP'],
+        correct: 2,
+        explain: '<strong>PAT (Port Address Translation)</strong>, also called NAT overload, maps many private IPs to a single public IP by tracking unique source port numbers. This is how most home/office routers share one ISP IP among all devices.'
+      },
+      {
+        q: 'Which ICMP message does a router send when a packet\'s TTL reaches zero?',
+        a: ['Destination Unreachable','Echo Reply','Redirect','Time Exceeded'],
+        correct: 3,
+        explain: 'When TTL hits 0, the router discards the packet and sends <strong>ICMP Type 11 – Time Exceeded</strong> back to the source. Traceroute exploits this by deliberately sending packets with incrementing TTLs (1, 2, 3…) to map each hop.'
+      },
+      {
+        q: 'What is the purpose of NTP (Network Time Protocol)?',
+        a: ['Assign IP addresses to devices','Synchronize clocks across network devices','Translate domain names to IP addresses','Encrypt network management traffic'],
+        correct: 1,
+        explain: '<strong>NTP</strong> synchronizes the clocks of network devices to a reference time source. Accurate timestamps are critical for log correlation, digital certificates, Kerberos authentication, and troubleshooting. NTP uses <strong>UDP port 123</strong>.'
+      },
+      {
+        q: 'FTP uses which two TCP port numbers?',
+        a: ['20 and 21','22 and 23','25 and 26','80 and 443'],
+        correct: 0,
+        explain: 'FTP uses <strong>TCP port 21</strong> for control (commands like USER, PASS, LIST) and <strong>TCP port 20</strong> for data transfer (in active mode). In passive mode, the data port is negotiated dynamically above 1023.'
+      },
+      {
+        q: 'Which protocol does a host use to test basic IP connectivity to another device?',
+        a: ['ARP','TCP','ICMP (ping)','UDP'],
+        correct: 2,
+        explain: '<strong>ICMP (Internet Control Message Protocol)</strong> is used by ping (Echo Request / Echo Reply) to test IP connectivity. On Cisco devices, "ping <ip>" sends 5 ICMP Echo Requests. A "!" means success; a "." means timeout.'
+      },
+      {
+        q: 'What is SNMP used for in networking?',
+        a: ['Sending email alerts','Monitoring and managing network devices via a central NMS','Encrypting VLAN traffic','Distributing routing tables'],
+        correct: 1,
+        explain: '<strong>SNMP (Simple Network Management Protocol)</strong> allows a Network Management System (NMS) to monitor and manage routers, switches, and servers. Devices send <strong>traps</strong> to the NMS for alerts. SNMP v3 adds encryption and authentication.'
       },
     ]
   },
@@ -6703,7 +7063,7 @@ function renderADLesson(key) {
 // ── Quiz ─────────────────────────────────────────────────────────────────────
 function startQuiz(topic) {
   state.currentTopic = topic;
-  state.currentQuestions = shuffle(topic.questions).slice(0, 10);
+  state.currentQuestions = shuffle(topic.questions);
   state.currentIndex = 0;
   state.currentCorrect = 0;
   state.missedQuestions = [];
