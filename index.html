@@ -8599,6 +8599,13 @@ function openProtocolModal(protocol) {
     DNS: buildDNSModule,
     DHCP: buildDHCPModule,
     SSH: buildSSHModule,
+    FTP: buildFTPModule,
+    Telnet: buildTelnetModule,
+    SMTP: buildSMTPModule,
+    POP3: buildPOP3Module,
+    SNMP: buildSNMPModule,
+    Syslog: buildSyslogModule,
+    TFTP: buildTFTPModule,
   };
   if (protocolModules[protocol]) {
     document.getElementById('protocol-body').innerHTML = protocolModules[protocol]();
@@ -8800,6 +8807,314 @@ function buildSSHModule() {
         <li><strong>enable secret</strong> ≠ SSH password; <strong>username</strong> creates local user for SSH login</li>
         <li><strong>ip ssh version 2</strong> forces SSHv2 (more secure than v1)</li>
         <li>Exam simulations often ask: "Configure SSH from scratch" — know the 5 steps!</li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildFTPModule() {
+  return `
+    <h2 class="protocol-title">📤 FTP (File Transfer Protocol)</h2>
+    <div class="protocol-overview">
+      <p><strong>FTP</strong> is used for uploading and downloading files. It uses <strong>two TCP connections</strong>: port 21 for commands (control channel) and port 20 for data transfer (data channel). Data is sent in cleartext — very insecure!</p>
+      <p><strong>Key point for CCNA:</strong> FTP is <strong>Active Mode</strong> (server initiates data connection back to client) or <strong>Passive Mode</strong> (client initiates both connections). Passive is preferred for firewalls.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">⚙️ FTP Modes Comparison</h3>
+      <table class="protocol-table">
+        <tr><th>Aspect</th><th>Active Mode</th><th>Passive Mode</th></tr>
+        <tr><td><strong>Control</strong></td><td>Client → Server:21</td><td>Client → Server:21</td></tr>
+        <tr><td><strong>Data</strong></td><td>Server:20 → Client</td><td>Client → Server (random port)</td></tr>
+        <tr><td><strong>Firewall</strong></td><td>❌ Problematic</td><td>✅ Better (both outbound)</td></tr>
+        <tr><td><strong>Default</strong></td><td>Original mode</td><td>Preferred today</td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">📝 Common FTP Commands</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li><code style="color:#00ff88;">get filename</code> — Download file from server</li>
+        <li><code style="color:#00ff88;">put filename</code> — Upload file to server</li>
+        <li><code style="color:#00ff88;">ls / dir</code> — List files on server</li>
+        <li><code style="color:#00ff88;">pwd</code> — Print working directory</li>
+        <li><code style="color:#00ff88;">quit</code> — Close connection</li>
+      </ul>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>FTP = ports <strong>20 (data)</strong> + <strong>21 (control)</strong>, TCP, unencrypted</li>
+        <li>Credentials sent in cleartext — <strong>never use over untrusted networks</strong></li>
+        <li>SFTP (SSH File Transfer) is the secure alternative using port 22</li>
+        <li><strong>Active Mode</strong> requires inbound firewall rules to port 20</li>
+        <li><strong>Passive Mode</strong> uses ephemeral ports (typically 1024-65535)</li>
+        <li>ACL example: <code style="font-size:0.8rem;">permit tcp any any eq 20</code> + <code style="font-size:0.8rem;">eq 21</code></li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildTelnetModule() {
+  return `
+    <h2 class="protocol-title">⚠️ Telnet (Telecommunication Network)</h2>
+    <div class="protocol-overview">
+      <p><strong>Telnet</strong> provides remote terminal access to devices (routers, switches, servers). It sends <strong>everything in cleartext</strong> including username and password. Uses <strong>TCP port 23</strong>.</p>
+      <p><strong>Key point for CCNA:</strong> <strong>NEVER use Telnet in production!</strong> Use SSH (port 22) instead. Telnet is only used for legacy systems or isolated lab environments. It's heavily tested on CCNA exams as something to <strong>avoid</strong>.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">🚫 Why Telnet is Dangerous</h3>
+      <ol style="margin-left:16px;line-height:1.8;">
+        <li><strong>Cleartext transmission</strong> — All data (including passwords) visible on network</li>
+        <li><strong>No encryption</strong> — Anyone with a packet sniffer can capture credentials</li>
+        <li><strong>No authentication verification</strong> — No way to verify server identity</li>
+        <li><strong>Vulnerable to MITM attacks</strong> — Attacker can intercept and modify traffic</li>
+      </ol>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">🔄 Telnet vs SSH (CCNA Must-Know)</h3>
+      <table class="protocol-table">
+        <tr><th>Feature</th><th>Telnet ❌</th><th>SSH ✅</th></tr>
+        <tr><td><strong>Port</strong></td><td>23 (unencrypted)</td><td>22 (encrypted)</td></tr>
+        <tr><td><strong>Security</strong></td><td>Cleartext — dangerous</td><td>Full encryption</td></tr>
+        <tr><td><strong>Auth</strong></td><td>Username/password visible</td><td>Password or key-based</td></tr>
+        <tr><td><strong>For CCNA</strong></td><td>Know why to <strong>AVOID</strong></td><td>Know how to <strong>CONFIGURE</strong></td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>Telnet = port <strong>23</strong>, TCP, <strong>completely unencrypted</strong></li>
+        <li><strong>Exam fact:</strong> Questions often ask "which protocol is insecure?" → Answer: Telnet</li>
+        <li><strong>transport input none</strong> blocks both Telnet and SSH (safest)</li>
+        <li><strong>transport input ssh</strong> blocks Telnet (recommended)</li>
+        <li>Telnet configuration: <code style="font-size:0.8rem;">line vty 0 4 → transport input telnet</code> (DON'T do this!)</li>
+        <li>Packet sniffers can capture Telnet passwords in seconds</li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildSMTPModule() {
+  return `
+    <h2 class="protocol-title">📬 SMTP (Simple Mail Transfer Protocol)</h2>
+    <div class="protocol-overview">
+      <p><strong>SMTP</strong> is used by email clients and servers to <strong>send/relay emails</strong>. Uses <strong>TCP port 25</strong> (between mail servers), <strong>port 587</strong> (secure submission from clients), or <strong>port 465</strong> (SMTPS with implicit TLS). Data can be encrypted with TLS/SSL.</p>
+      <p><strong>Key point for CCNA:</strong> SMTP is for <strong>sending only</strong>. To <strong>receive</strong> email, use POP3 or IMAP. Many networks block port 25 to prevent spam relay.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">📧 SMTP Email Flow</h3>
+      <ol style="margin-left:16px;line-height:1.8;">
+        <li><strong>Client connects</strong> to SMTP server on port 25/587/465</li>
+        <li><strong>Client authenticates</strong> (username/password or no auth for open relay)</li>
+        <li><strong>Client specifies</strong> sender (FROM) and recipient (TO)</li>
+        <li><strong>Client sends</strong> email body message</li>
+        <li><strong>Server relays</strong> to recipient's mail server using SMTP</li>
+        <li><strong>Recipient retrieves</strong> using POP3 or IMAP</li>
+      </ol>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">⚙️ SMTP Ports & Security</h3>
+      <table class="protocol-table">
+        <tr><th>Port</th><th>Name</th><th>Security</th><th>Use</th></tr>
+        <tr><td><strong>25</strong></td><td>SMTP</td><td>❌ Unencrypted</td><td>Server-to-server relay</td></tr>
+        <tr><td><strong>587</strong></td><td>SMTP Submission</td><td>✅ TLS available</td><td>Client submission (recommended)</td></tr>
+        <tr><td><strong>465</strong></td><td>SMTPS</td><td>✅ Implicit TLS</td><td>Legacy secure SMTP</td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>SMTP = <strong>port 25/587/465</strong>, TCP, for sending email only</li>
+        <li><strong>Open Relay problem:</strong> Misconfigured SMTP servers that allow anyone to relay mail (spam vectors)</li>
+        <li>Port 25 often blocked by ISPs to prevent spam</li>
+        <li>Can use TLS for encryption (STARTTLS or SMTPS)</li>
+        <li>Related protocols: <strong>POP3 (receive, port 110)</strong> and <strong>IMAP (receive, port 143)</strong></li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildPOP3Module() {
+  return `
+    <h2 class="protocol-title">📥 POP3 (Post Office Protocol v3)</h2>
+    <div class="protocol-overview">
+      <p><strong>POP3</strong> is used by email clients to <strong>download/retrieve emails</strong> from a mail server. Uses <strong>TCP port 110</strong> (unencrypted) or <strong>port 995</strong> (POP3S with SSL/TLS). Emails are typically deleted from server after download.</p>
+      <p><strong>Key point for CCNA:</strong> POP3 is <strong>stateful</strong> — the server tracks which emails have been read. Compare to IMAP which keeps emails on server for sync across devices.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">📮 POP3 Email Retrieval</h3>
+      <ol style="margin-left:16px;line-height:1.8;">
+        <li><strong>Client connects</strong> to POP3 server (port 110 or 995)</li>
+        <li><strong>Client authenticates</strong> with username and password</li>
+        <li><strong>Client lists</strong> available messages on server</li>
+        <li><strong>Client retrieves</strong> selected messages</li>
+        <li><strong>Client deletes</strong> messages from server (default) or keeps them</li>
+        <li><strong>Client disconnects</strong> — all further access is local</li>
+      </ol>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">🔄 POP3 vs IMAP (Receive Email)</h3>
+      <table class="protocol-table">
+        <tr><th>Aspect</th><th>POP3</th><th>IMAP</th></tr>
+        <tr><td><strong>Port</strong></td><td>110 (143 encrypted)</td><td>143 (993 encrypted)</td></tr>
+        <tr><td><strong>Server Storage</strong></td><td>Deletes after download</td><td>Keeps all emails on server</td></tr>
+        <tr><td><strong>Multiple Devices</strong></td><td>❌ Emails split across devices</td><td>✅ Sync across all devices</td></tr>
+        <tr><td><strong>Bandwidth</strong></td><td>✅ Lower (downloads all)</td><td>❌ Higher (syncs headers first)</td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>POP3 = <strong>port 110</strong>, TCP, for retrieving email</li>
+        <li>POP3S (secure) = <strong>port 995</strong> with SSL/TLS encryption</li>
+        <li><strong>Stateful protocol</strong> — tracks read/unread status</li>
+        <li>Emails removed from server after download (unless configured otherwise)</li>
+        <li><strong>SMTP sends</strong> (port 25/587), <strong>POP3 retrieves</strong> (port 110)</li>
+        <li>Less commonly tested than SMTP on CCNA, but know the port numbers</li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildSNMPModule() {
+  return `
+    <h2 class="protocol-title">📊 SNMP (Simple Network Management Protocol)</h2>
+    <div class="protocol-overview">
+      <p><strong>SNMP</strong> is used for <strong>monitoring and managing network devices</strong> (routers, switches, servers, printers). It collects device statistics (CPU, memory, interface status) and can send alerts. Uses <strong>UDP port 161</strong> (agent listens), <strong>port 162</strong> (trap/inform notifications).</p>
+      <p><strong>Key point for CCNA:</strong> SNMP uses <strong>community strings</strong> (SNMPv1/v2c, like passwords) or <strong>usernames/passwords</strong> (SNMPv3, more secure). Devices send SNMP traps to alert about problems.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">🔧 SNMP Versions & Security</h3>
+      <table class="protocol-table">
+        <tr><th>Version</th><th>Security</th><th>Authentication</th><th>Status</th></tr>
+        <tr><td><strong>v1</strong></td><td>❌ None</td><td>Community string (cleartext)</td><td>Deprecated</td></tr>
+        <tr><td><strong>v2c</strong></td><td>❌ Weak</td><td>Community string (cleartext)</td><td>Legacy</td></tr>
+        <tr><td><strong>v3</strong></td><td>✅ Strong</td><td>Username + password + encryption</td><td>Recommended</td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">📡 SNMP Operations</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li><strong>GET</strong> — Manager requests device data (CPU, memory, interface status)</li>
+        <li><strong>SET</strong> — Manager changes device configuration (enable/disable interface)</li>
+        <li><strong>TRAP</strong> — Device sends unsolicited alert (link down, high temperature)</li>
+        <li><strong>INFORM</strong> — Like TRAP but manager confirms receipt (SNMPv2+)</li>
+      </ul>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>SNMP = <strong>port 161 (agent)</strong>, <strong>port 162 (traps)</strong>, UDP</li>
+        <li><strong>Community strings</strong> = weak security; use SNMPv3 in production</li>
+        <li><strong>Read-only (ro)</strong> community allows GET only; <strong>read-write (rw)</strong> allows SET</li>
+        <li>SNMP traps alert on device problems (link down, high CPU, temperature)</li>
+        <li>Cisco routers/switches often have SNMP enabled for monitoring with tools like Nagios, Zabbix</li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildSyslogModule() {
+  return `
+    <h2 class="protocol-title">📋 Syslog (System Logging)</h2>
+    <div class="protocol-overview">
+      <p><strong>Syslog</strong> is used by network devices to send <strong>log messages</strong> to a centralized log server. Devices (routers, switches, firewalls) send events like interface status, authentication failures, and errors. Uses <strong>UDP port 514</strong> (typically unencrypted).</p>
+      <p><strong>Key point for CCNA:</strong> Syslog is <strong>essential for troubleshooting</strong>. All Cisco devices can be configured to send logs to a syslog server. Logs help identify configuration errors, device failures, and security breaches.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">📝 Syslog Message Levels (Severity)</h3>
+      <table class="protocol-table">
+        <tr><th>Level</th><th>Priority</th><th>Example</th></tr>
+        <tr><td><strong>0</strong></td><td>EMERGENCY</td><td>System unusable (rare)</td></tr>
+        <tr><td><strong>1</strong></td><td>ALERT</td><td>Immediate action needed</td></tr>
+        <tr><td><strong>2</strong></td><td>CRITICAL</td><td>Critical condition</td></tr>
+        <tr><td><strong>3</strong></td><td>ERROR</td><td>Error condition</td></tr>
+        <tr><td><strong>4</strong></td><td>WARNING</td><td>Warning condition</td></tr>
+        <tr><td><strong>5</strong></td><td>NOTICE</td><td>Normal but significant</td></tr>
+        <tr><td><strong>6</strong></td><td>INFO</td><td>Informational messages</td></tr>
+        <tr><td><strong>7</strong></td><td>DEBUG</td><td>Debug messages (verbose)</td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">⚙️ Cisco Syslog Configuration</h3>
+      <ul style="margin-left:16px;line-height:1.8;font-family:monospace;font-size:0.9rem;">
+        <li><code>logging 192.168.1.100</code> — Send logs to syslog server</li>
+        <li><code>logging trap informational</code> — Only log INFO level and higher</li>
+        <li><code>logging facility local0</code> — Facility code for logs</li>
+        <li><code>service timestamps log datetime</code> — Add timestamps to logs</li>
+      </ul>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8ms;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>Syslog = <strong>port 514</strong>, UDP, unencrypted by default</li>
+        <li><strong>Always configure on production routers/switches</strong> for troubleshooting</li>
+        <li>Syslog helps identify: configuration changes, link down/up events, authentication failures, sysadmin access</li>
+        <li><strong>Syslog is unencrypted</strong> — Don't send sensitive data; use TLS for security (port 6514)</li>
+        <li>Exam sims often ask: "Device crashed, where are the logs?" → Answer: Check syslog server</li>
+      </ul>
+    </div>
+  `;
+}
+
+function buildTFTPModule() {
+  return `
+    <h2 class="protocol-title">📦 TFTP (Trivial File Transfer Protocol)</h2>
+    <div class="protocol-overview">
+      <p><strong>TFTP</strong> is a <strong>lightweight, simplified version of FTP</strong> used mainly for <strong>booting devices and transferring IOS images</strong>. Uses <strong>UDP port 69</strong> (not TCP!). Much simpler than FTP: no authentication, no directory listing, just read/write files.</p>
+      <p><strong>Key point for CCNA:</strong> TFTP is commonly used to backup/restore router and switch configurations, and to upload new IOS firmware. It's <strong>connectionless</strong> (UDP) and relies on timeouts for reliability.</p>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#ff9900;font-size:1.1rem;margin:12px 0 8px;">📋 TFTP Limitations vs FTP</h3>
+      <table class="protocol-table">
+        <tr><th>Feature</th><th>TFTP</th><th>FTP</th></tr>
+        <tr><td><strong>Port</strong></td><td>69 (UDP)</td><td>20/21 (TCP)</td></tr>
+        <tr><td><strong>Authentication</strong></td><td>❌ None</td><td>✅ Username/password</td></tr>
+        <tr><td><strong>Directory listing</strong></td><td>❌ No</td><td>✅ Yes (ls/dir)</td></tr>
+        <tr><td><strong>File permissions</strong></td><td>❌ No</td><td>✅ Yes</td></tr>
+        <tr><td><strong>Connection type</strong></td><td>Connectionless (UDP)</td><td>Connection-oriented (TCP)</td></tr>
+        <tr><td><strong>Speed</strong></td><td>✅ Faster (less overhead)</td><td>Slower (more features)</td></tr>
+      </table>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00d4ff;font-size:1.1rem;margin:12px 0 8px;">🔄 TFTP Read/Write Process</h3>
+      <ol style="margin-left:16px;line-height:1.8;">
+        <li><strong>Client sends RRQ (Read Request)</strong> or <strong>WRQ (Write Request)</strong> to server port 69</li>
+        <li><strong>Server responds</strong> from ephemeral port with DATA packet</li>
+        <li><strong>Client ACKs</strong> each block; <strong>server sends next block</strong></li>
+        <li><strong>After last block</strong> (< 512 bytes), transfer completes</li>
+        <li><strong>Timeout:</strong> If no ACK received, server retransmits (simple error handling)</li>
+      </ol>
+    </div>
+
+    <div class="protocol-section">
+      <h3 style="color:#00ff88;font-size:1.1rem;margin:12px 0 8px;">📌 CCNA Exam Tips</h3>
+      <ul style="margin-left:16px;line-height:1.8;">
+        <li>TFTP = <strong>port 69</strong>, UDP, no authentication, connectionless</li>
+        <li><strong>Cisco device backup:</strong> <code style="font-size:0.8rem;">copy running-config tftp://192.168.1.1/backup.cfg</code></li>
+        <li><strong>Restore config:</strong> <code style="font-size:0.8rem;">copy tftp://192.168.1.1/backup.cfg running-config</code></li>
+        <li><strong>IOS upgrade:</strong> <code style="font-size:0.8rem;">copy tftp://192.168.1.1/c2960-universalk9-mz.sse.bin flash:</code></li>
+        <li>TFTP server must allow RRQ and WRQ — check firewall/ACL rules</li>
+        <li><strong>No encryption</strong> — don't transfer sensitive configs over untrusted networks</li>
       </ul>
     </div>
   `;
