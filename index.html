@@ -6703,6 +6703,9 @@ function renderLesson(topic) {
 
   showScreen('screen-learn');
   window.scrollTo(0, 0);
+
+  // Enable protocol links for clickable modals
+  setTimeout(() => enableProtocolLinks(), 50);
 }
 
 // ── Administrative Distance Deep-Dive Lessons ────────────────────────────────
