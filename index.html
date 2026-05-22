@@ -2702,6 +2702,10 @@ const TOPICS = [
 <p><strong>NAT</strong> (Network Address Translation) allows many devices with <em>private</em> IPs (10.x, 172.16–31.x, 192.168.x) to share one <em>public</em> IP to reach the internet. PAT (Port Address Translation) is the most common form — also called "NAT overload."</p>`
       },
       {
+        title: 'Interactive: How NAT & PAT Work',
+        type: 'nat_pat_anim'
+      },
+      {
         title: 'Must-Know Protocols',
         type: 'tip',
         body: '<strong>ARP</strong> — maps IP → MAC on local network<br><strong>ICMP</strong> — used by ping and traceroute<br><strong>NTP</strong> — synchronizes clocks (port 123)<br><strong>Syslog</strong> — centralized logging (port 514)<br><strong>SNMP</strong> — network monitoring/management (port 161)'
@@ -6584,6 +6588,12 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildOSIAnim(document.getElementById('osi-anim-root'));
       continue;
+    } else if (section.type === 'nat_pat_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="nat-anim-root"></div>`;
+      container.appendChild(card);
+      buildNATPATAnim(document.getElementById('nat-anim-root'));
+      continue;
     } else if (section.type === 'port_security_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="portsec-root"></div>`;
@@ -7301,6 +7311,664 @@ themeBtn.addEventListener('click', () => {
 loadState();
 updateHUD();
 renderTopics();
+
+// ── NAT / PAT Animation ───────────────────────────────────────────────────────
+function buildNATPATAnim(root) {
+  root.innerHTML = `
+<style>
+#nat-wrap { font-family:inherit; padding:8px 0; }
+
+/* ---- top row: nat mode + view mode ---- */
+.nat-top-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.nat-tab {
+  flex:1; min-width:120px; padding:9px 6px; border:2px solid; border-radius:10px;
+  font-size:.85rem; font-weight:700; cursor:pointer; background:transparent;
+  transition:all .22s; text-align:center;
+}
+.nat-tab.static  { color:#00d4ff; border-color:#00d4ff; }
+.nat-tab.pat     { color:#ff9900; border-color:#ff9900; }
+.nat-tab.static.active { background:#00d4ff; color:#0a0e1a; }
+.nat-tab.pat.active    { background:#ff9900; color:#0a0e1a; }
+.nat-view-toggle {
+  display:flex; border-radius:10px; overflow:hidden;
+  border:2px solid rgba(255,255,255,.15); flex-shrink:0;
+}
+.nat-view-btn {
+  padding:9px 14px; border:none; background:transparent; cursor:pointer;
+  font-size:.82rem; font-weight:700; color:#aaa; transition:all .2s;
+}
+.nat-view-btn.active { background:rgba(255,255,255,.12); color:#fff; }
+
+/* ---- scene ---- */
+#nat-scene {
+  display:grid;
+  grid-template-columns: 1fr 50px 76px 50px 1fr;
+  align-items:center; justify-items:center;
+  padding:16px 4px 8px; position:relative; min-height:200px;
+}
+.nat-zone-label {
+  font-size:.65rem; font-weight:800; letter-spacing:.08em;
+  text-transform:uppercase; padding:3px 9px; border-radius:20px; margin-bottom:5px;
+}
+.nat-zone-label.inside  { background:rgba(0,212,255,.12); color:#00d4ff; }
+.nat-zone-label.router  { background:rgba(123,79,255,.15); color:#c8b8ff; }
+.nat-zone-label.outside { background:rgba(0,255,136,.12);  color:#00ff88; }
+.nat-hosts { display:flex; flex-direction:column; gap:8px; align-items:flex-end; width:100%; }
+.nat-host {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(0,212,255,.07); border:1.5px solid rgba(0,212,255,.25);
+  border-radius:10px; padding:5px 9px; width:100%;
+  transition:box-shadow .3s, border-color .3s, opacity .3s;
+  cursor:default;
+}
+.nat-host.active  { border-color:#00d4ff; box-shadow:0 0 14px rgba(0,212,255,.4); }
+.nat-host.faded   { opacity:.28; }
+.nat-host.selectable { cursor:pointer; }
+.nat-host.selectable:hover { border-color:#00d4ff; box-shadow:0 0 10px rgba(0,212,255,.25); }
+.nat-host-icon { font-size:1.3rem; }
+.nat-host-info { display:flex; flex-direction:column; }
+.nat-host-name { font-size:.7rem; font-weight:700; color:#ccc; }
+.nat-host-ip   { font-size:.65rem; font-family:monospace; color:#00d4ff; }
+.nat-host-port { font-size:.6rem; font-family:monospace; color:#7b4fff; }
+.nat-wire-left { width:100%; height:3px; background:rgba(255,255,255,.1); border-radius:2px; transition:all .4s; }
+.nat-wire-left.fwd  { background:linear-gradient(90deg,#00d4ff,rgba(0,212,255,.2)); box-shadow:0 0 6px #00d4ff; }
+.nat-wire-left.rev  { background:linear-gradient(270deg,#7b4fff,rgba(123,79,255,.2)); box-shadow:0 0 6px #7b4fff; }
+#nat-router-box { display:flex; flex-direction:column; align-items:center; gap:3px; }
+#nat-router-icon {
+  width:64px; height:64px; border-radius:14px;
+  background:rgba(123,79,255,.18); border:2px solid #7b4fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.9rem; transition:box-shadow .3s;
+}
+#nat-router-icon.glow { box-shadow:0 0 22px #7b4fff; }
+#nat-router-label { font-size:.62rem; font-weight:700; color:#c8b8ff; text-align:center; }
+#nat-pub-ip-badge {
+  font-size:.62rem; font-family:monospace; font-weight:700; padding:2px 7px;
+  border-radius:8px; background:rgba(0,255,136,.12); color:#00ff88;
+  border:1px solid rgba(0,255,136,.3); margin-top:2px; text-align:center;
+}
+.nat-wire-right { width:100%; height:3px; background:rgba(255,255,255,.1); border-radius:2px; transition:all .4s; }
+.nat-wire-right.fwd { background:linear-gradient(90deg,rgba(0,255,136,.2),#00ff88); box-shadow:0 0 6px #00ff88; }
+.nat-wire-right.rev { background:linear-gradient(270deg,rgba(0,255,136,.2),#00ff88); box-shadow:0 0 6px #00ff88; }
+#nat-server-col { display:flex; flex-direction:column; align-items:flex-start; gap:6px; width:100%; }
+.nat-server {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(0,255,136,.07); border:1.5px solid rgba(0,255,136,.2);
+  border-radius:10px; padding:5px 9px; width:100%;
+  transition:box-shadow .3s, border-color .3s;
+}
+.nat-server.active { border-color:#00ff88; box-shadow:0 0 14px rgba(0,255,136,.35); }
+.nat-server-icon { font-size:1.3rem; }
+.nat-server-name { font-size:.7rem; font-weight:700; color:#ccc; }
+.nat-server-ip   { font-size:.65rem; font-family:monospace; color:#00ff88; }
+
+/* floating packet label */
+.nat-pkt {
+  position:absolute; pointer-events:none; z-index:30;
+  font-size:.65rem; font-weight:700; padding:3px 7px; border-radius:8px;
+  white-space:nowrap; border:1.5px solid; transform:translate(-50%,-50%);
+  transition:left .55s ease-in-out, top .55s ease-in-out, opacity .3s;
+}
+
+/* NAT table */
+#nat-table-wrap {
+  margin:12px auto 0; border-radius:10px; overflow:hidden;
+  border:1px solid rgba(123,79,255,.3);
+}
+#nat-table-wrap table { width:100%; border-collapse:collapse; font-size:.76rem; }
+#nat-table-wrap th { background:rgba(123,79,255,.2); color:#c8b8ff; padding:5px 9px; text-align:left; white-space:nowrap; }
+#nat-table-wrap td { padding:5px 9px; border-top:1px solid rgba(255,255,255,.07); font-family:monospace; white-space:nowrap; }
+#nat-table-wrap tr.new-row td { background:rgba(255,153,0,.12); color:#ff9900; }
+#nat-table-wrap tr.ret-row td { background:rgba(0,255,136,.08); color:#00ff88; }
+.nat-table-title { font-size:.7rem; font-weight:800; letter-spacing:.06em; color:#c8b8ff;
+  text-transform:uppercase; padding:5px 9px 2px; background:rgba(123,79,255,.1); }
+
+/* step explanation */
+#nat-step {
+  margin:12px 0 0; border-radius:12px; padding:12px 16px; min-height:58px;
+  font-size:.9rem; line-height:1.65; text-align:center;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); transition:opacity .2s;
+}
+
+/* step-by-step controls */
+#nat-step-controls {
+  display:none; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap;
+}
+#nat-step-counter {
+  font-size:.78rem; font-weight:700; color:#aaa; white-space:nowrap;
+  background:rgba(255,255,255,.06); padding:5px 12px; border-radius:8px;
+}
+.nat-nav-btn {
+  flex:1; padding:10px 8px; border:none; border-radius:10px;
+  font-size:.9rem; font-weight:700; cursor:pointer; transition:all .2s;
+}
+.nat-nav-btn.prev { background:rgba(255,255,255,.1); color:#ccc; }
+.nat-nav-btn.next { background:#00ff88; color:#0a0e1a; }
+.nat-nav-btn.next.pat { background:#ff9900; }
+.nat-nav-btn:disabled { opacity:.35; cursor:default; }
+
+/* auto-play buttons */
+.nat-btn-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.nat-btn {
+  flex:1; padding:10px 6px; border:none; border-radius:10px;
+  font-size:.85rem; font-weight:700; cursor:pointer; transition:all .2s;
+}
+.nat-btn.pc1   { background:#00d4ff; color:#0a0e1a; }
+.nat-btn.pc2   { background:#7b4fff; color:#fff; }
+.nat-btn.pc3   { background:#ff9900; color:#0a0e1a; }
+.nat-btn.reset { background:rgba(255,255,255,.09); color:#ccc; border:1px solid rgba(255,255,255,.14); }
+.nat-btn:disabled { opacity:.35; cursor:default; }
+
+/* step-by-step device pick row */
+#nat-pick-row {
+  display:none; gap:8px; margin-top:10px; flex-wrap:wrap;
+}
+.nat-pick-btn {
+  flex:1; padding:10px 6px; border:none; border-radius:10px;
+  font-size:.85rem; font-weight:700; cursor:pointer; transition:all .2s;
+}
+.nat-pick-btn.pc1  { background:#00d4ff; color:#0a0e1a; }
+.nat-pick-btn.pc2  { background:#7b4fff; color:#fff; }
+.nat-pick-btn.pc3  { background:#ff9900; color:#0a0e1a; }
+</style>
+
+<div id="nat-wrap">
+  <!-- Top: NAT type + view mode -->
+  <div class="nat-top-row">
+    <button class="nat-tab static active" onclick="natSetMode('static')">🔁 Static NAT<br><span style="font-weight:400;font-size:.74rem">1 private → 1 public IP</span></button>
+    <button class="nat-tab pat"           onclick="natSetMode('pat')">🌐 PAT / Overload<br><span style="font-weight:400;font-size:.74rem">Many → 1 public IP</span></button>
+    <div class="nat-view-toggle">
+      <button class="nat-view-btn active" id="nat-vbtn-auto" onclick="natSetView('auto')">▶ Auto</button>
+      <button class="nat-view-btn"        id="nat-vbtn-step" onclick="natSetView('step')">👆 Step</button>
+    </div>
+  </div>
+
+  <!-- Scene -->
+  <div id="nat-scene">
+    <div class="nat-hosts" id="nat-hosts-col">
+      <div class="nat-host" id="nat-h-pc1">
+        <div class="nat-host-icon">💻</div>
+        <div class="nat-host-info">
+          <span class="nat-host-name">PC-1</span>
+          <span class="nat-host-ip">192.168.1.10</span>
+          <span class="nat-host-port" id="nat-pc1-port"></span>
+        </div>
+      </div>
+      <div class="nat-host" id="nat-h-pc2">
+        <div class="nat-host-icon">💻</div>
+        <div class="nat-host-info">
+          <span class="nat-host-name">PC-2</span>
+          <span class="nat-host-ip">192.168.1.20</span>
+          <span class="nat-host-port" id="nat-pc2-port"></span>
+        </div>
+      </div>
+      <div class="nat-host" id="nat-h-pc3">
+        <div class="nat-host-icon">📱</div>
+        <div class="nat-host-info">
+          <span class="nat-host-name">Phone</span>
+          <span class="nat-host-ip">192.168.1.30</span>
+          <span class="nat-host-port" id="nat-pc3-port"></span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+      <div class="nat-wire-left" id="nat-wl1"></div>
+      <div class="nat-wire-left" id="nat-wl2"></div>
+      <div class="nat-wire-left" id="nat-wl3"></div>
+    </div>
+    <div id="nat-router-box">
+      <div class="nat-zone-label router">Router / NAT</div>
+      <div id="nat-router-icon">🔀</div>
+      <div id="nat-router-label">inside | outside</div>
+      <div id="nat-pub-ip-badge">203.0.113.1</div>
+    </div>
+    <div style="width:100%;"><div class="nat-wire-right" id="nat-wr1"></div></div>
+    <div id="nat-server-col">
+      <div class="nat-zone-label outside">Internet</div>
+      <div class="nat-server" id="nat-srv">
+        <div class="nat-server-icon">🌐</div>
+        <div>
+          <div class="nat-server-name">Web Server</div>
+          <div class="nat-server-ip">93.184.216.34:80</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zone footer -->
+  <div style="display:flex;justify-content:space-between;padding:0 4px;margin-top:2px;">
+    <span class="nat-zone-label inside">🔒 Inside (Private)</span>
+    <span class="nat-zone-label outside">🌍 Outside (Public)</span>
+  </div>
+
+  <!-- NAT table -->
+  <div id="nat-table-wrap">
+    <div class="nat-table-title">📋 NAT Translation Table</div>
+    <table><thead><tr id="nat-thead"></tr></thead><tbody id="nat-tbody"></tbody></table>
+  </div>
+
+  <!-- Step box -->
+  <div id="nat-step">Choose a NAT type above, then pick a view mode.</div>
+
+  <!-- AUTO mode buttons -->
+  <div class="nat-btn-row" id="nat-auto-row">
+    <button class="nat-btn pc1"  id="nat-btn-pc1"   onclick="natSend(0)">💻 PC-1 → Web</button>
+    <button class="nat-btn pc2"  id="nat-btn-pc2"   onclick="natSend(1)">💻 PC-2 → Web</button>
+    <button class="nat-btn pc3"  id="nat-btn-pc3"   onclick="natSend(2)">📱 Phone → Web</button>
+    <button class="nat-btn reset" id="nat-btn-reset" onclick="natReset()">↺ Reset</button>
+  </div>
+
+  <!-- STEP mode: device pick -->
+  <div id="nat-pick-row">
+    <button class="nat-pick-btn pc1" onclick="natStepPick(0)">💻 Trace PC-1</button>
+    <button class="nat-pick-btn pc2" onclick="natStepPick(1)">💻 Trace PC-2</button>
+    <button class="nat-pick-btn pc3" onclick="natStepPick(2)">📱 Trace Phone</button>
+  </div>
+
+  <!-- STEP mode: nav controls -->
+  <div id="nat-step-controls">
+    <button class="nat-nav-btn prev" id="nat-prev-btn" onclick="natStepNav(-1)">← Prev</button>
+    <span id="nat-step-counter">Step 1 / 8</span>
+    <button class="nat-nav-btn next" id="nat-next-btn" onclick="natStepNav(1)">Next →</button>
+    <button class="nat-btn reset" style="flex:0.5;padding:10px 6px;" onclick="natStepReset()">↺</button>
+  </div>
+</div>
+`;
+
+  /* ─── constants ─────────────────────────────────────────────────────── */
+  const HOSTS = [
+    { id:'nat-h-pc1', wl:'nat-wl1', name:'PC-1',  priv:'192.168.1.10', portEl:'nat-pc1-port', color:'#00d4ff' },
+    { id:'nat-h-pc2', wl:'nat-wl2', name:'PC-2',  priv:'192.168.1.20', portEl:'nat-pc2-port', color:'#7b4fff' },
+    { id:'nat-h-pc3', wl:'nat-wl3', name:'Phone', priv:'192.168.1.30', portEl:'nat-pc3-port', color:'#ff9900' },
+  ];
+  const PUB_IP = '203.0.113.1';
+  const STATIC_PUBS = ['203.0.113.10','203.0.113.20','203.0.113.30'];
+
+  let natMode = 'static';   // 'static' | 'pat'
+  let natView = 'auto';     // 'auto'   | 'step'
+  let natRunning = false;
+  let natTableRows = [];
+  let stepIdx = 0;
+  let stepDefs = [];
+  let stepHostIdx = -1;
+  let stepPkt = null;       // the floating packet element in step mode
+
+  /* ─── table helpers ─────────────────────────────────────────────────── */
+  function natInitTable() {
+    const mode = natMode;
+    document.getElementById('nat-thead').innerHTML = mode === 'static'
+      ? '<th>Inside Local (Private)</th><th>Inside Global (Public)</th><th>Status</th>'
+      : '<th>Inside Local</th><th>Inside Global</th><th>Outside</th><th>Status</th>';
+    document.getElementById('nat-tbody').innerHTML = '';
+    natTableRows = [];
+    HOSTS.forEach((h,i) => { document.getElementById(h.portEl).textContent = ''; });
+    if (mode === 'static') {
+      HOSTS.forEach((h,i) => addNatRow([h.priv, STATIC_PUBS[i], '⏳ idle'], 'nsr-'+i, ''));
+    }
+  }
+
+  function addNatRow(cells, id, cls) {
+    const tbody = document.getElementById('nat-tbody');
+    let tr = document.getElementById(id);
+    if (!tr) { tr = document.createElement('tr'); tr.id = id; tbody.appendChild(tr); }
+    tr.className = cls || '';
+    tr.innerHTML = cells.map(c=>`<td>${c}</td>`).join('');
+  }
+
+  /* ─── visual reset ───────────────────────────────────────────────────── */
+  function natClearVisuals() {
+    HOSTS.forEach((h,i) => {
+      document.getElementById(h.id).classList.remove('active','faded','selectable');
+      document.getElementById('nat-wl'+(i+1)).className = 'nat-wire-left';
+      document.getElementById(h.portEl).textContent = '';
+    });
+    document.getElementById('nat-wr1').className = 'nat-wire-right';
+    document.getElementById('nat-srv').classList.remove('active');
+    document.getElementById('nat-router-icon').classList.remove('glow');
+    document.querySelectorAll('.nat-pkt').forEach(p => p.remove());
+    stepPkt = null;
+  }
+
+  /* ─── mode / view setters ────────────────────────────────────────────── */
+  window.natSetMode = function(m) {
+    natMode = m;
+    document.querySelectorAll('.nat-tab').forEach(b => b.classList.toggle('active', b.classList.contains(m)));
+    natReset();
+    document.getElementById('nat-step').innerHTML = m === 'static'
+      ? '🔁 <strong>Static NAT</strong>: each private IP has its own dedicated public IP. Click a device to send a packet.'
+      : '🌐 <strong>PAT</strong>: all devices share <strong>one public IP</strong>, tracked by unique port numbers. Click a device to send a packet.';
+  };
+
+  window.natSetView = function(v) {
+    natView = v;
+    document.getElementById('nat-vbtn-auto').classList.toggle('active', v==='auto');
+    document.getElementById('nat-vbtn-step').classList.toggle('active', v==='step');
+    natReset();
+    if (v === 'auto') {
+      document.getElementById('nat-auto-row').style.display = '';
+      document.getElementById('nat-pick-row').style.display = 'none';
+      document.getElementById('nat-step-controls').style.display = 'none';
+      document.getElementById('nat-step').innerHTML = natMode === 'static'
+        ? '▶ Auto mode: click a device below to send a packet and watch the full animation.'
+        : '▶ Auto mode: click a device below to send a packet and watch PAT in action.';
+    } else {
+      document.getElementById('nat-auto-row').style.display = 'none';
+      document.getElementById('nat-pick-row').style.display = 'flex';
+      document.getElementById('nat-step-controls').style.display = 'none';
+      document.getElementById('nat-step').innerHTML = '👆 <strong>Step-by-step mode</strong>: choose a device to trace, then click <strong>Next →</strong> to walk through each stage.';
+    }
+  };
+
+  /* ─── AUTO mode ──────────────────────────────────────────────────────── */
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function makePkt(text, color, x, y) {
+    const scene = document.getElementById('nat-scene');
+    const p = document.createElement('div');
+    p.className = 'nat-pkt';
+    p.textContent = text;
+    p.style.cssText = `left:${x}px;top:${y}px;color:${color};border-color:${color};background:rgba(10,14,26,.88);`;
+    scene.appendChild(p);
+    return p;
+  }
+
+  function animPkt(pkt, x1, y1, x2, y2, dur) {
+    pkt.style.left = x1+'px'; pkt.style.top = y1+'px';
+    return new Promise(resolve => {
+      pkt.animate([{left:x1+'px',top:y1+'px',opacity:1},{left:x2+'px',top:y2+'px',opacity:1}],
+        {duration:dur, easing:'ease-in-out', fill:'forwards'});
+      setTimeout(resolve, dur);
+    });
+  }
+
+  function getPos(elId) {
+    const scene = document.getElementById('nat-scene');
+    const sR = scene.getBoundingClientRect();
+    const eR = document.getElementById(elId).getBoundingClientRect();
+    return { x: eR.left - sR.left + eR.width/2, y: eR.top - sR.top + eR.height/2 };
+  }
+
+  window.natSend = async function(idx) {
+    if (natRunning) return;
+    natRunning = true;
+    ['nat-btn-pc1','nat-btn-pc2','nat-btn-pc3'].forEach(id => document.getElementById(id).disabled = true);
+    const h = HOSTS[idx];
+    const srcPort = 1024 + idx * 11 + natTableRows.length * 3;
+    const privLabel = natMode==='static' ? `${h.priv}→93.184.216.34` : `${h.priv}:${srcPort}→93.184.216.34:80`;
+
+    document.getElementById(h.id).classList.add('active');
+    document.getElementById('nat-wl'+(idx+1)).classList.add('fwd');
+    document.getElementById('nat-step').innerHTML = `📦 <strong>${h.name}</strong> sends: <code>${privLabel}</code>`;
+
+    const hP = getPos(h.id); const rP = getPos('nat-router-icon'); const sP = getPos('nat-srv');
+
+    const p1 = makePkt(privLabel, h.color, hP.x, hP.y);
+    await animPkt(p1, hP.x, hP.y, rP.x, rP.y, 650); await sleep(100); p1.remove();
+
+    document.getElementById('nat-router-icon').classList.add('glow');
+    await sleep(350);
+
+    let transLabel;
+    if (natMode === 'static') {
+      const pub = STATIC_PUBS[idx]; transLabel = `${pub}→93.184.216.34`;
+      addNatRow([h.priv, pub, '✅ active'], 'nsr-'+idx, 'new-row');
+      document.getElementById('nat-step').innerHTML = `🔁 Router rewrites source: <code>${h.priv}</code> → <strong style="color:${h.color}">${pub}</strong>`;
+    } else {
+      const pub = srcPort; transLabel = `${PUB_IP}:${pub}→93.184.216.34:80`;
+      const rid = 'npr-'+natTableRows.length; natTableRows.push(rid);
+      addNatRow([`${h.priv}:${srcPort}`, `${PUB_IP}:${pub}`, '93.184.216.34:80', '✅ active'], rid, 'new-row');
+      document.getElementById(h.portEl).textContent = `Port: ${srcPort}`;
+      document.getElementById('nat-step').innerHTML = `🌐 PAT maps <code>${h.priv}:${srcPort}</code> → <strong style="color:${h.color}">${PUB_IP}:${pub}</strong> (unique port)`;
+    }
+
+    document.getElementById('nat-wr1').classList.add('fwd');
+    document.getElementById('nat-srv').classList.add('active');
+    const p2 = makePkt(transLabel, '#00ff88', rP.x, rP.y);
+    await animPkt(p2, rP.x, rP.y, sP.x, sP.y, 650); await sleep(150); p2.remove();
+    await sleep(400);
+
+    document.getElementById('nat-step').innerHTML += `<br>↩️ Server replies — router de-translates back to private IP.`;
+    const p3 = makePkt('Reply ↩', '#00ff88', sP.x, sP.y);
+    await animPkt(p3, sP.x, sP.y, rP.x, rP.y, 550); await sleep(100); p3.remove();
+    document.getElementById('nat-router-icon').classList.add('glow');
+
+    const p4 = makePkt(`→${h.priv}`, h.color, rP.x, rP.y);
+    await animPkt(p4, rP.x, rP.y, hP.x, hP.y, 550); await sleep(100); p4.remove();
+
+    if (natMode === 'static') addNatRow([h.priv, STATIC_PUBS[idx], '🔄 complete'], 'nsr-'+idx, 'ret-row');
+    else { const lr = natTableRows[natTableRows.length-1]; addNatRow([`${h.priv}:${srcPort}`,`${PUB_IP}:${srcPort}`,'93.184.216.34:80','🔄 complete'], lr, 'ret-row'); }
+
+    document.getElementById('nat-router-icon').classList.remove('glow');
+    natRunning = false;
+    ['nat-btn-pc1','nat-btn-pc2','nat-btn-pc3'].forEach(id => document.getElementById(id).disabled = false);
+  };
+
+  window.natReset = function() {
+    if (natRunning) return;
+    natClearVisuals();
+    natTableRows = [];
+    natInitTable();
+    stepIdx = -1; stepHostIdx = -1; stepDefs = [];
+    document.getElementById('nat-step-controls').style.display = 'none';
+    if (natView === 'step') {
+      document.getElementById('nat-pick-row').style.display = 'flex';
+      document.getElementById('nat-step').innerHTML = '👆 Choose a device to trace step-by-step.';
+    }
+  };
+
+  /* ─── STEP mode ──────────────────────────────────────────────────────── */
+  function buildStepDefs(idx) {
+    const h = HOSTS[idx];
+    const srcPort = 1030 + idx * 7;
+    const pubIP   = STATIC_PUBS[idx];
+    if (natMode === 'static') {
+      return [
+        {
+          title:'Step 1 — Source packet created',
+          desc:`<strong>${h.name}</strong> wants to reach the web server. It creates a packet with its <strong>private IP</strong> as the source address.<br><code style="font-size:.82rem">${h.priv} → 93.184.216.34</code>`,
+          visuals(){ setHost(idx,'active'); setWire(idx,''); setRouter(''); setWireR(''); setSrv(false); showPkt(`📦 ${h.priv}→web`, h.color, 'host'); }
+        },
+        {
+          title:'Step 2 — Packet travels to router',
+          desc:`The packet travels across the inside network toward the router's <strong>inside interface (Fa0/0)</strong>. The source IP is still the private address.`,
+          visuals(){ setHost(idx,'active'); setWire(idx,'fwd'); setRouter(''); setWireR(''); setSrv(false); showPkt(`📦 ${h.priv}→web`, h.color, 'mid-left'); }
+        },
+        {
+          title:'Step 3 — Router checks NAT table',
+          desc:`The router looks up <code>${h.priv}</code> in its <strong>Static NAT table</strong>. It finds a pre-configured permanent mapping: <code>${h.priv} ↔ ${pubIP}</code>.`,
+          visuals(){ setHost(idx,'active'); setWire(idx,'fwd'); setRouter('glow'); setWireR(''); setSrv(false); showPkt(`📦 ${h.priv}→web`, h.color, 'router'); hlTableRow('nsr-'+idx,'new-row'); }
+        },
+        {
+          title:'Step 4 — Source IP rewritten',
+          desc:`The router <strong>rewrites the source IP</strong> in the packet header — replacing the private IP with the mapped public IP.<br><code>${h.priv}</code> → <strong style="color:${h.color}">${pubIP}</strong>`,
+          visuals(){ setHost(idx,'active'); setWire(idx,'fwd'); setRouter('glow'); setWireR(''); setSrv(false); showPkt(`📦 ${pubIP}→web`, h.color, 'router'); hlTableRow('nsr-'+idx,'new-row'); }
+        },
+        {
+          title:'Step 5 — Translated packet sent to internet',
+          desc:`The translated packet exits through the router's <strong>outside interface (Fa0/1)</strong>. The internet sees it as coming from <strong style="color:${h.color}">${pubIP}</strong> — it has no idea about the private network!`,
+          visuals(){ setHost(idx,'active'); setWire(idx,'fwd'); setRouter('glow'); setWireR('fwd'); setSrv(true); showPkt(`📦 ${pubIP}→web`, '#00ff88', 'server'); hlTableRow('nsr-'+idx,'new-row'); }
+        },
+        {
+          title:'Step 6 — Server sends a reply',
+          desc:`The web server processes the request and sends a reply back addressed to <strong>${pubIP}</strong>. It knows nothing about <code>${h.priv}</code>.`,
+          visuals(){ setHost(idx,'faded'); setWire(idx,''); setRouter(''); setWireR('rev'); setSrv(true); showPkt(`↩ reply→${pubIP}`, '#00ff88', 'mid-right'); }
+        },
+        {
+          title:'Step 7 — Router looks up reply',
+          desc:`The reply arrives at the router's outside interface. The router looks up the <strong>destination IP (${pubIP})</strong> in the NAT table and finds the original private IP: <code>${h.priv}</code>.`,
+          visuals(){ setHost(idx,'faded'); setWire(idx,''); setRouter('glow'); setWireR('rev'); setSrv(false); showPkt(`↩ reply→${pubIP}`, '#00ff88', 'router'); hlTableRow('nsr-'+idx,'ret-row'); }
+        },
+        {
+          title:'Step 8 — Reply delivered ✅',
+          desc:`The router rewrites the destination IP back to <code>${h.priv}</code> and forwards the reply down the inside network. <strong>${h.name}</strong> receives the response! 🎉<br><br><strong>Key point:</strong> Static NAT requires one public IP per inside host — great for servers, but uses up public IPs fast.`,
+          visuals(){ setHost(idx,'active'); setWire(idx,'rev'); setRouter(''); setWireR(''); setSrv(false); showPkt(`↩ →${h.priv}`, h.color, 'host'); hlTableRow('nsr-'+idx,'ret-row'); }
+        },
+      ];
+    } else {
+      // PAT steps
+      const pubPort = 1024 + idx * 13;
+      return [
+        {
+          title:'Step 1 — Source packet created',
+          desc:`<strong>${h.name}</strong> creates a packet. The OS assigns a random <strong>source port</strong> (${srcPort}):<br><code>${h.priv}:${srcPort} → 93.184.216.34:80</code>`,
+          visuals(){ setHost(idx,'active'); setWire(idx,''); setRouter(''); setWireR(''); setSrv(false); showPkt(`📦 ${h.priv}:${srcPort}`, h.color, 'host'); }
+        },
+        {
+          title:'Step 2 — Packet arrives at router',
+          desc:`The packet crosses the inside network and arrives at the <strong>NAT router</strong>. The router checks its PAT table — no existing entry for this session yet.`,
+          visuals(){ setHost(idx,'active'); setWire(idx,'fwd'); setRouter(''); setWireR(''); setSrv(false); showPkt(`📦 ${h.priv}:${srcPort}`, h.color, 'mid-left'); }
+        },
+        {
+          title:'Step 3 — Router creates PAT entry',
+          desc:`The router creates a new <strong>PAT (port translation) entry</strong>, assigning a unique outside port (<strong>${pubPort}</strong>) to identify this session:<br><code>${h.priv}:${srcPort} ↔ ${PUB_IP}:${pubPort}</code>`,
+          visuals(){
+            setHost(idx,'active'); setWire(idx,'fwd'); setRouter('glow'); setWireR(''); setSrv(false);
+            showPkt(`📦 ${h.priv}:${srcPort}`, h.color, 'router');
+            const rid='npr-s-'+idx; natTableRows.push(rid);
+            addNatRow([`${h.priv}:${srcPort}`,`${PUB_IP}:${pubPort}`,'93.184.216.34:80','✅ active'], rid, 'new-row');
+            document.getElementById(h.portEl).textContent = `Port: ${srcPort}`;
+          }
+        },
+        {
+          title:'Step 4 — Source IP and port rewritten',
+          desc:`The router rewrites <strong>both the source IP and source port</strong>:<br><code>${h.priv}:${srcPort}</code> → <strong style="color:${h.color}">${PUB_IP}:${pubPort}</strong><br>All three devices share the same public IP — only the port number differs!`,
+          visuals(){ setHost(idx,'active'); setWire(idx,'fwd'); setRouter('glow'); setWireR(''); setSrv(false); showPkt(`📦 ${PUB_IP}:${pubPort}`, h.color, 'router'); }
+        },
+        {
+          title:'Step 5 — Translated packet sent to internet',
+          desc:`The packet leaves through the outside interface. The web server sees it as coming from <strong style="color:${h.color}">${PUB_IP}:${pubPort}</strong> — it has no idea there's a private network behind it.`,
+          visuals(){ setHost(idx,'active'); setWire(idx,'fwd'); setRouter(''); setWireR('fwd'); setSrv(true); showPkt(`📦 ${PUB_IP}:${pubPort}`, '#00ff88', 'server'); }
+        },
+        {
+          title:'Step 6 — Server replies to public port',
+          desc:`The server sends a reply to <code>${PUB_IP}:<strong>${pubPort}</strong></code>. Because each session uses a <strong>different port number</strong>, the router can tell exactly which inside host this reply belongs to.`,
+          visuals(){ setHost(idx,'faded'); setWire(idx,''); setRouter(''); setWireR('rev'); setSrv(true); showPkt(`↩ →${PUB_IP}:${pubPort}`, '#00ff88', 'mid-right'); }
+        },
+        {
+          title:'Step 7 — Router matches reply to session',
+          desc:`The router checks port <strong>${pubPort}</strong> in the PAT table → finds the original session: <code>${h.priv}:${srcPort}</code>. It rewrites the destination back to the private IP and port.`,
+          visuals(){ setHost(idx,'faded'); setWire(idx,''); setRouter('glow'); setWireR('rev'); setSrv(false); showPkt(`↩ →${PUB_IP}:${pubPort}`, '#00ff88', 'router'); const rid='npr-s-'+idx; addNatRow([`${h.priv}:${srcPort}`,`${PUB_IP}:${pubPort}`,'93.184.216.34:80','🔄 complete'], rid, 'ret-row'); }
+        },
+        {
+          title:'Step 8 — Reply delivered ✅',
+          desc:`<strong>${h.name}</strong> receives the reply on port ${srcPort}. Session complete! 🎉<br><br><strong>Key point:</strong> PAT lets <em>thousands</em> of devices share a single public IP. This is how almost every home/office router works — it\'s why the world didn\'t run out of IPv4 addresses sooner.`,
+          visuals(){ setHost(idx,'active'); setWire(idx,'rev'); setRouter(''); setWireR(''); setSrv(false); showPkt(`↩ →${h.priv}:${srcPort}`, h.color, 'host'); }
+        },
+      ];
+    }
+  }
+
+  /* helpers for step visuals */
+  function setHost(idx, cls) {
+    HOSTS.forEach((h,i) => {
+      const el = document.getElementById(h.id);
+      el.classList.remove('active','faded');
+      if (cls && i===idx) el.classList.add(cls);
+      else if (cls && i!==idx) el.classList.add('faded');
+    });
+  }
+  function setWire(idx, cls) {
+    HOSTS.forEach((_,i) => {
+      const el = document.getElementById('nat-wl'+(i+1));
+      el.className = 'nat-wire-left' + (i===idx && cls ? ' '+cls : '');
+    });
+  }
+  function setRouter(cls) {
+    const el = document.getElementById('nat-router-icon');
+    el.classList.remove('glow');
+    if (cls) el.classList.add(cls);
+  }
+  function setWireR(cls) {
+    document.getElementById('nat-wr1').className = 'nat-wire-right' + (cls ? ' '+cls : '');
+  }
+  function setSrv(active) {
+    document.getElementById('nat-srv').classList.toggle('active', active);
+  }
+  function hlTableRow(id, cls) {
+    const tr = document.getElementById(id);
+    if (tr) tr.className = cls;
+  }
+
+  function showPkt(text, color, pos) {
+    document.querySelectorAll('.nat-pkt').forEach(p => p.remove());
+    const scene = document.getElementById('nat-scene');
+    const sR = scene.getBoundingClientRect();
+    let x, y;
+    if (pos === 'host') {
+      const h = HOSTS[stepHostIdx];
+      const eR = document.getElementById(h.id).getBoundingClientRect();
+      x = eR.right - sR.left - 10; y = eR.top - sR.top + eR.height/2;
+    } else if (pos === 'router') {
+      const eR = document.getElementById('nat-router-icon').getBoundingClientRect();
+      x = eR.left - sR.left + eR.width/2; y = eR.top - sR.top + eR.height/2;
+    } else if (pos === 'server') {
+      const eR = document.getElementById('nat-srv').getBoundingClientRect();
+      x = eR.left - sR.left + 20; y = eR.top - sR.top + eR.height/2;
+    } else if (pos === 'mid-left') {
+      const hR = document.getElementById(HOSTS[stepHostIdx].id).getBoundingClientRect();
+      const rR = document.getElementById('nat-router-icon').getBoundingClientRect();
+      x = (hR.right + rR.left)/2 - sR.left; y = hR.top - sR.top + hR.height/2;
+    } else if (pos === 'mid-right') {
+      const rR = document.getElementById('nat-router-icon').getBoundingClientRect();
+      const srvR = document.getElementById('nat-srv').getBoundingClientRect();
+      x = (rR.right + srvR.left)/2 - sR.left; y = rR.top - sR.top + rR.height/2;
+    }
+    const p = document.createElement('div');
+    p.className = 'nat-pkt';
+    p.textContent = text;
+    p.style.cssText = `left:${x}px;top:${y}px;color:${color};border-color:${color};background:rgba(10,14,26,.9);`;
+    scene.appendChild(p);
+    stepPkt = p;
+  }
+
+  window.natStepPick = function(idx) {
+    natClearVisuals();
+    natTableRows = [];
+    natInitTable();
+    stepHostIdx = idx;
+    stepIdx = 0;
+    stepDefs = buildStepDefs(idx);
+    document.getElementById('nat-pick-row').style.display = 'none';
+    document.getElementById('nat-step-controls').style.display = 'flex';
+    const nextBtn = document.getElementById('nat-next-btn');
+    nextBtn.className = 'nat-nav-btn next' + (natMode==='pat' ? ' pat' : '');
+    renderStep();
+  };
+
+  window.natStepNav = function(dir) {
+    const newIdx = stepIdx + dir;
+    if (newIdx < 0 || newIdx >= stepDefs.length) return;
+    stepIdx = newIdx;
+    renderStep();
+  };
+
+  function renderStep() {
+    const s = stepDefs[stepIdx];
+    const total = stepDefs.length;
+    document.getElementById('nat-step-counter').textContent = `Step ${stepIdx+1} / ${total}`;
+    document.getElementById('nat-prev-btn').disabled = stepIdx === 0;
+    document.getElementById('nat-next-btn').disabled = stepIdx === total-1;
+    document.getElementById('nat-next-btn').textContent = stepIdx === total-1 ? '✅ Done' : 'Next →';
+    document.getElementById('nat-step').innerHTML =
+      `<strong style="display:block;margin-bottom:4px;font-size:.82rem;opacity:.7;letter-spacing:.04em">${s.title}</strong>${s.desc}`;
+    s.visuals();
+  }
+
+  window.natStepReset = function() {
+    natClearVisuals();
+    natTableRows = [];
+    natInitTable();
+    stepIdx = -1; stepHostIdx = -1; stepDefs = [];
+    document.getElementById('nat-step-controls').style.display = 'none';
+    document.getElementById('nat-pick-row').style.display = 'flex';
+    document.getElementById('nat-step').innerHTML = '👆 Choose a device to trace step-by-step.';
+  };
+
+  /* ─── init ───────────────────────────────────────────────────────────── */
+  natInitTable();
+  document.getElementById('nat-step').innerHTML =
+    '▶ <strong>Auto mode</strong> active — click a device button to watch the full animation, or switch to <strong>Step</strong> mode to walk through each stage manually.';
+}
 
 // ── Port Security Animation ───────────────────────────────────────────────────
 function buildPortSecurityAnim(root) {
