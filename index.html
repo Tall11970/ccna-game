@@ -2231,6 +2231,10 @@ const TOPICS = [
         body: '<strong>Standard ACLs</strong> → place close to the <strong>destination</strong> (they only match source IP, so placing them near the source could block too much traffic).<br><br><strong>Extended ACLs</strong> → place close to the <strong>source</strong> (they can be very specific, so block traffic early before it wastes bandwidth).'
       },
       {
+        title: 'Interactive: ACL Placement',
+        type: 'acl_placement_anim'
+      },
+      {
         title: 'Securing Device Access',
         type: 'table',
         headers: ['Method', 'Port', 'Secure?', 'Command'],
@@ -2262,6 +2266,10 @@ const TOPICS = [
         title: 'Port Security',
         type: 'tip',
         body: '<strong>Port Security</strong> limits which/how many MAC addresses can use a switch port.<br><br>Violation modes: <strong>Shutdown</strong> (err-disable port) | <strong>Restrict</strong> (drop + log) | <strong>Protect</strong> (drop silently)<br><br>Command: <code style="background:rgba(0,0,0,0.2);padding:2px 5px;border-radius:4px;">switchport port-security maximum 2</code>'
+      },
+      {
+        title: 'Interactive: Port Security in Action',
+        type: 'port_security_anim'
       },
     ],
     questions: [
@@ -6216,6 +6224,18 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildOSIAnim(document.getElementById('osi-anim-root'));
       continue;
+    } else if (section.type === 'port_security_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="portsec-root"></div>`;
+      container.appendChild(card);
+      buildPortSecurityAnim(document.getElementById('portsec-root'));
+      continue;
+    } else if (section.type === 'acl_placement_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="acl-place-root"></div>`;
+      container.appendChild(card);
+      buildACLPlacementAnim(document.getElementById('acl-place-root'));
+      continue;
     } else if (section.type === 'what_is_routing_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="wir-anim-root"></div>`;
@@ -6921,6 +6941,591 @@ themeBtn.addEventListener('click', () => {
 loadState();
 updateHUD();
 renderTopics();
+
+// ── Port Security Animation ───────────────────────────────────────────────────
+function buildPortSecurityAnim(root) {
+  root.innerHTML = `
+<style>
+#ps-wrap { font-family:inherit; padding:8px 0; user-select:none; }
+/* ---- violation mode pills ---- */
+.ps-mode-row { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.ps-mode-btn {
+  flex:1; min-width:90px; padding:9px 6px; border:2px solid; border-radius:10px;
+  font-size:.85rem; font-weight:700; cursor:pointer; background:transparent;
+  transition:all .22s; text-align:center;
+}
+.ps-mode-btn[data-mode="shutdown"]{ color:#ff4466; border-color:#ff4466; }
+.ps-mode-btn[data-mode="restrict"]{ color:#ff9900; border-color:#ff9900; }
+.ps-mode-btn[data-mode="protect"] { color:#00d4ff; border-color:#00d4ff; }
+.ps-mode-btn[data-mode="shutdown"].active{ background:#ff4466; color:#0a0e1a; }
+.ps-mode-btn[data-mode="restrict"].active{ background:#ff9900; color:#0a0e1a; }
+.ps-mode-btn[data-mode="protect"].active { background:#00d4ff; color:#0a0e1a; }
+/* ---- scene ---- */
+#ps-scene {
+  display:flex; align-items:flex-end; justify-content:center;
+  gap:14px; padding:20px 10px 10px; position:relative;
+  min-height:180px; flex-wrap:wrap;
+}
+.ps-device {
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  position:relative;
+}
+.ps-icon {
+  width:56px; height:56px; border-radius:14px; font-size:1.7rem;
+  display:flex; align-items:center; justify-content:center;
+  border:2px solid; transition:box-shadow .3s, transform .2s;
+}
+.ps-icon.allowed { border-color:#00ff88; background:rgba(0,255,136,.1); }
+.ps-icon.unknown { border-color:#aaa; background:rgba(255,255,255,.05); }
+.ps-icon.rogue   { border-color:#ff4466; background:rgba(255,68,102,.1); }
+.ps-label { font-size:.68rem; font-weight:700; color:#aaa; text-align:center; max-width:70px; }
+.ps-mac   { font-size:.6rem; color:#555; font-family:monospace; }
+/* ---- switch ---- */
+#ps-switch-box {
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+#ps-switch-icon {
+  width:100px; height:44px; border-radius:12px;
+  background:rgba(123,79,255,.15); border:2px solid #7b4fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.5rem; font-weight:700; color:#7b4fff;
+  transition:box-shadow .3s;
+  position:relative;
+}
+#ps-port-slot {
+  width:70px; height:18px; border-radius:6px;
+  background:rgba(123,79,255,.2); border:2px dashed #7b4fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.62rem; color:#7b4fff; font-weight:700;
+  letter-spacing:.04em; transition:background .3s, border-color .3s;
+}
+#ps-port-slot.active  { background:rgba(0,255,136,.15); border-color:#00ff88; color:#00ff88; }
+#ps-port-slot.err-dis { background:rgba(255,68,102,.2);  border-color:#ff4466; color:#ff4466; }
+/* ---- cable / connection line ---- */
+.ps-cable {
+  width:2px; height:32px; background:rgba(255,255,255,.15);
+  border-radius:1px; margin-bottom:-6px; transition:background .3s;
+}
+.ps-cable.ok      { background:#00ff88; box-shadow:0 0 6px #00ff88; }
+.ps-cable.blocked { background:#ff4466; box-shadow:0 0 6px #ff4466; }
+/* ---- packet flying ---- */
+.ps-pkt {
+  position:absolute; font-size:1.1rem; pointer-events:none;
+  transition:none; z-index:30;
+}
+/* ---- MAC table ---- */
+#ps-mac-table {
+  margin:14px auto 0; max-width:340px;
+  border-radius:10px; overflow:hidden;
+  border:1px solid rgba(123,79,255,.35);
+}
+#ps-mac-table table { width:100%; border-collapse:collapse; font-size:.8rem; }
+#ps-mac-table th { background:rgba(123,79,255,.25); color:#c8b8ff; padding:6px 10px; text-align:left; }
+#ps-mac-table td { padding:5px 10px; border-top:1px solid rgba(255,255,255,.07); font-family:monospace; }
+#ps-mac-table tr.highlight td { background:rgba(0,255,136,.12); color:#00ff88; }
+#ps-mac-table tr.denied   td { background:rgba(255,68,102,.12); color:#ff4466; }
+/* ---- step box ---- */
+#ps-step {
+  margin:14px 0 0; min-height:60px; border-radius:12px; padding:12px 16px;
+  font-size:.92rem; line-height:1.6; text-align:center;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
+  transition:opacity .3s;
+}
+/* ---- controls ---- */
+.ps-btn-row { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.ps-btn {
+  flex:1; padding:11px 8px; border:none; border-radius:10px;
+  font-size:.9rem; font-weight:700; cursor:pointer; transition:all .2s;
+}
+.ps-btn.green  { background:#00ff88; color:#0a0e1a; }
+.ps-btn.red    { background:#ff4466; color:#fff; }
+.ps-btn.reset  { background:rgba(255,255,255,.1); color:#ccc; border:1px solid rgba(255,255,255,.15); }
+.ps-btn:disabled { opacity:.45; cursor:default; }
+/* ---- status badge ---- */
+#ps-status-badge {
+  display:inline-block; padding:3px 12px; border-radius:20px;
+  font-size:.78rem; font-weight:800; letter-spacing:.05em;
+  margin-left:8px; vertical-align:middle; transition:all .3s;
+}
+#ps-status-badge.ok      { background:#00ff88; color:#0a0e1a; }
+#ps-status-badge.warn    { background:#ff9900; color:#0a0e1a; }
+#ps-status-badge.err-dis { background:#ff4466; color:#fff; }
+</style>
+<div id="ps-wrap">
+
+  <!-- Violation mode selector -->
+  <div style="font-size:.82rem;color:#aaa;margin-bottom:8px;font-weight:600;">SELECT VIOLATION MODE:</div>
+  <div class="ps-mode-row">
+    <button class="ps-mode-btn active" data-mode="shutdown"
+      onclick="psSetMode('shutdown')">🔴 Shutdown<br><span style="font-weight:400;font-size:.75rem">err-disable port</span></button>
+    <button class="ps-mode-btn" data-mode="restrict"
+      onclick="psSetMode('restrict')">🟠 Restrict<br><span style="font-weight:400;font-size:.75rem">drop + log</span></button>
+    <button class="ps-mode-btn" data-mode="protect"
+      onclick="psSetMode('protect')">🔵 Protect<br><span style="font-weight:400;font-size:.75rem">drop silently</span></button>
+  </div>
+
+  <!-- Scene -->
+  <div id="ps-scene">
+    <!-- Allowed PC -->
+    <div class="ps-device" id="ps-dev-pc1">
+      <div class="ps-icon allowed" id="ps-icon-pc1">💻</div>
+      <div class="ps-cable" id="ps-cable-pc1"></div>
+      <div class="ps-label">PC-1<br><span class="ps-mac">AA:BB:CC:DD:EE:01</span></div>
+    </div>
+    <!-- Allowed PC 2 -->
+    <div class="ps-device" id="ps-dev-pc2">
+      <div class="ps-icon allowed" id="ps-icon-pc2">💻</div>
+      <div class="ps-cable" id="ps-cable-pc2"></div>
+      <div class="ps-label">PC-2<br><span class="ps-mac">AA:BB:CC:DD:EE:02</span></div>
+    </div>
+    <!-- Switch in center (bottom) -->
+    <div class="ps-device" id="ps-dev-sw" style="margin:0 8px;">
+      <div id="ps-switch-box">
+        <div id="ps-switch-icon">🔀 Fa0/1</div>
+        <div id="ps-port-slot">PORT OPEN</div>
+        <span id="ps-status-badge" class="ok">SECURE</span>
+      </div>
+    </div>
+    <!-- Rogue device -->
+    <div class="ps-device" id="ps-dev-rogue" style="opacity:.45;transition:opacity .4s">
+      <div class="ps-icon rogue" id="ps-icon-rogue">💀</div>
+      <div class="ps-cable" id="ps-cable-rogue"></div>
+      <div class="ps-label">Rogue Device<br><span class="ps-mac">DE:AD:BE:EF:00:99</span></div>
+    </div>
+  </div>
+
+  <!-- MAC Address Table -->
+  <div id="ps-mac-table">
+    <table>
+      <thead><tr><th>MAC Address</th><th>Status</th><th>Port</th></tr></thead>
+      <tbody id="ps-mac-tbody">
+        <tr id="ps-row-pc1"><td>AA:BB:CC:DD:EE:01</td><td>✅ Secure (sticky)</td><td>Fa0/1</td></tr>
+        <tr id="ps-row-pc2"><td>AA:BB:CC:DD:EE:02</td><td>✅ Secure (sticky)</td><td>Fa0/1</td></tr>
+        <tr id="ps-row-rogue" style="display:none"><td>DE:AD:BE:EF:00:99</td><td id="ps-rogue-status">—</td><td>Fa0/1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Step explanation -->
+  <div id="ps-step">Choose a violation mode above, then connect an <strong>allowed</strong> or <strong>rogue</strong> device to see how port security responds.</div>
+
+  <!-- Buttons -->
+  <div class="ps-btn-row">
+    <button class="ps-btn green" id="ps-btn-allowed" onclick="psConnectAllowed()">✅ Connect Allowed PC</button>
+    <button class="ps-btn red"   id="ps-btn-rogue"   onclick="psConnectRogue()">💀 Connect Rogue Device</button>
+    <button class="ps-btn reset" id="ps-btn-reset"   onclick="psReset()">↺ Reset</button>
+  </div>
+</div>
+`;
+
+  let psMode = 'shutdown';
+  let psRunning = false;
+  let psPortDown = false;
+
+  window.psSetMode = function(m) {
+    psMode = m;
+    document.querySelectorAll('.ps-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+    psUpdateStep(`Mode set to <strong>${m.charAt(0).toUpperCase()+m.slice(1)}</strong>. ${
+      m==='shutdown' ? 'Any violation will <strong>err-disable</strong> the port — no traffic at all until an admin re-enables it.' :
+      m==='restrict' ? 'Violations are <strong>dropped and logged</strong>. The port stays up; allowed devices keep working.' :
+                       'Violations are <strong>dropped silently</strong> — no log, no shutdown. Allowed traffic continues unaffected.'
+    }`);
+    if (psPortDown) psReset();
+  };
+
+  function psUpdateStep(html) {
+    document.getElementById('ps-step').innerHTML = html;
+  }
+
+  function setBadge(state) {
+    const b = document.getElementById('ps-status-badge');
+    b.className = 'ok warn err-dis'.split(' ').reduce((acc,c) => acc.replace(c,''), b.className).trim();
+    if (state === 'ok')      { b.className = 'ok';      b.textContent = 'SECURE'; }
+    if (state === 'warn')    { b.className = 'warn';    b.textContent = 'VIOLATION!'; }
+    if (state === 'err-dis') { b.className = 'err-dis'; b.textContent = 'ERR-DISABLED'; }
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function animPacket(fromId, toId, emoji, color, durationMs) {
+    return new Promise(resolve => {
+      const scene = document.getElementById('ps-scene');
+      const sceneRect = scene.getBoundingClientRect();
+      const fromEl = document.getElementById(fromId);
+      const toEl   = document.getElementById(toId);
+      const fromRect = fromEl.getBoundingClientRect();
+      const toRect   = toEl.getBoundingClientRect();
+      const pkt = document.createElement('div');
+      pkt.className = 'ps-pkt';
+      pkt.textContent = emoji;
+      pkt.style.cssText = `left:${fromRect.left - sceneRect.left + fromRect.width/2}px;top:${fromRect.top - sceneRect.top + fromRect.height/2}px;color:${color};position:absolute;`;
+      scene.appendChild(pkt);
+      const x2 = toRect.left - sceneRect.left + toRect.width/2;
+      const y2 = toRect.top  - sceneRect.top  + toRect.height/2;
+      pkt.animate([
+        { transform:'translate(-50%,-50%) scale(1)', opacity:1 },
+        { transform:`translate(calc(${x2 - (fromRect.left - sceneRect.left + fromRect.width/2)}px - 50%), calc(${y2 - (fromRect.top - sceneRect.top + fromRect.height/2)}px - 50%)) scale(1.3)`, opacity:1 }
+      ], { duration:durationMs, easing:'ease-in-out', fill:'forwards' });
+      setTimeout(() => { pkt.remove(); resolve(); }, durationMs + 80);
+    });
+  }
+
+  window.psConnectAllowed = async function() {
+    if (psRunning || psPortDown) return;
+    psRunning = true;
+    setBtns(true);
+
+    // Light up cable for pc1
+    document.getElementById('ps-cable-pc1').className = 'ps-cable ok';
+    document.getElementById('ps-icon-pc1').style.boxShadow = '0 0 18px #00ff88';
+    document.getElementById('ps-port-slot').className = 'ps-port-slot active';
+    document.getElementById('ps-port-slot').textContent = 'TRAFFIC OK';
+    document.getElementById('ps-row-pc1').className = 'highlight';
+
+    psUpdateStep('📡 PC-1 connects with MAC <code>AA:BB:CC:DD:EE:01</code>. Switch checks against the secure MAC list…');
+    await sleep(900);
+    await animPacket('ps-icon-pc1', 'ps-switch-icon', '📦', '#00ff88', 600);
+    await sleep(400);
+    psUpdateStep('✅ <strong>MAC recognised!</strong> PC-1\'s MAC is in the secure list. Traffic is forwarded normally. Port stays up. Maximum allowed: <strong>2 MACs</strong>.');
+    setBadge('ok');
+
+    psRunning = false;
+    setBtns(false);
+  };
+
+  window.psConnectRogue = async function() {
+    if (psRunning || psPortDown) return;
+    psRunning = true;
+    setBtns(true);
+
+    const rogueEl = document.getElementById('ps-dev-rogue');
+    rogueEl.style.opacity = '1';
+    document.getElementById('ps-cable-rogue').className = 'ps-cable blocked';
+    document.getElementById('ps-icon-rogue').style.boxShadow = '0 0 18px #ff4466';
+    document.getElementById('ps-row-rogue').style.display = '';
+
+    psUpdateStep('⚠️ Unknown device connects with MAC <code>DE:AD:BE:EF:00:99</code>. This MAC is <strong>NOT</strong> in the secure list — violation triggered!');
+    setBadge('warn');
+    await sleep(700);
+    await animPacket('ps-icon-rogue', 'ps-switch-icon', '📦', '#ff4466', 600);
+    await sleep(400);
+
+    if (psMode === 'shutdown') {
+      psPortDown = true;
+      document.getElementById('ps-port-slot').className = 'ps-port-slot err-dis';
+      document.getElementById('ps-port-slot').textContent = 'ERR-DISABLED';
+      document.getElementById('ps-switch-icon').style.boxShadow = '0 0 24px #ff4466';
+      document.getElementById('ps-cable-pc1').className  = 'ps-cable blocked';
+      document.getElementById('ps-cable-pc2').className  = 'ps-cable blocked';
+      document.getElementById('ps-row-rogue').className  = 'denied';
+      document.getElementById('ps-rogue-status').textContent = '🚫 VIOLATION – port err-disabled';
+      setBadge('err-dis');
+      psUpdateStep('🔴 <strong>SHUTDOWN</strong>: Port Fa0/1 is now <strong>err-disabled</strong>. <em>All</em> traffic stops — even the allowed PCs are cut off! An admin must run <code>shutdown → no shutdown</code> to recover the port.');
+    } else if (psMode === 'restrict') {
+      document.getElementById('ps-row-rogue').className  = 'denied';
+      document.getElementById('ps-rogue-status').textContent = '🚫 VIOLATION – dropped + logged';
+      setBadge('warn');
+      await animPacket('ps-switch-icon', 'ps-icon-rogue', '🚫', '#ff4466', 500);
+      psUpdateStep('🟠 <strong>RESTRICT</strong>: Rogue packet <strong>dropped</strong>. A Syslog/SNMP violation count is incremented. Allowed PCs (PC-1, PC-2) <strong>continue working</strong> normally. Port stays up.');
+    } else {
+      document.getElementById('ps-row-rogue').className  = 'denied';
+      document.getElementById('ps-rogue-status').textContent = '🔇 VIOLATION – dropped silently';
+      setBadge('warn');
+      await animPacket('ps-switch-icon', 'ps-icon-rogue', '🔇', '#00d4ff', 500);
+      psUpdateStep('🔵 <strong>PROTECT</strong>: Rogue packet <strong>dropped silently</strong> — no log, no counter, no shutdown. Allowed PCs keep working. The attacker gets no feedback that they\'ve been blocked.');
+    }
+
+    psRunning = false;
+    setBtns(false);
+  };
+
+  window.psReset = function() {
+    if (psRunning) return;
+    psPortDown = false;
+    // cables
+    ['ps-cable-pc1','ps-cable-pc2','ps-cable-rogue'].forEach(id => {
+      document.getElementById(id).className = 'ps-cable';
+    });
+    // icons
+    ['ps-icon-pc1','ps-icon-pc2','ps-icon-rogue'].forEach(id => {
+      document.getElementById(id).style.boxShadow = '';
+    });
+    // switch
+    document.getElementById('ps-port-slot').className = 'ps-port-slot';
+    document.getElementById('ps-port-slot').textContent = 'PORT OPEN';
+    document.getElementById('ps-switch-icon').style.boxShadow = '';
+    setBadge('ok');
+    // rogue
+    document.getElementById('ps-dev-rogue').style.opacity = '0.45';
+    document.getElementById('ps-row-pc1').className = '';
+    document.getElementById('ps-row-rogue').style.display = 'none';
+    document.getElementById('ps-row-rogue').className = '';
+    psUpdateStep('Port reset. Choose a violation mode and connect a device to see port security in action.');
+    setBtns(false);
+  };
+
+  function setBtns(disabled) {
+    document.getElementById('ps-btn-allowed').disabled = disabled;
+    document.getElementById('ps-btn-rogue').disabled   = disabled;
+  }
+}
+
+// ── ACL Placement Animation ───────────────────────────────────────────────────
+function buildACLPlacementAnim(root) {
+  root.innerHTML = `
+<style>
+#acl-wrap { font-family:inherit; padding:8px 0; }
+.acl-tabs { display:flex; gap:8px; margin-bottom:18px; }
+.acl-tab-btn {
+  flex:1; padding:10px 0; border:none; border-radius:10px; font-size:.95rem;
+  font-weight:700; cursor:pointer; transition:all .25s;
+  outline:none;
+}
+.acl-tab-btn.std  { background:#1a3a5c; color:#00d4ff; border:2px solid #00d4ff; }
+.acl-tab-btn.ext  { background:#2a1a3a; color:#ff9900; border:2px solid #ff9900; }
+.acl-tab-btn.std.active  { background:#00d4ff; color:#0a0e1a; }
+.acl-tab-btn.ext.active  { background:#ff9900; color:#0a0e1a; }
+#acl-rule-box {
+  border-radius:12px; padding:12px 16px; margin-bottom:18px;
+  font-size:.92rem; line-height:1.6; text-align:center; font-weight:600;
+  transition:background .3s, border-color .3s;
+}
+#acl-rule-box.std { background:rgba(0,212,255,.08); border:2px solid #00d4ff; color:#00d4ff; }
+#acl-rule-box.ext { background:rgba(255,153,0,.08); border:2px solid #ff9900; color:#ff9900; }
+.acl-topo {
+  display:flex; align-items:center; justify-content:center;
+  gap:0; margin:0 auto 18px; flex-wrap:nowrap; overflow-x:auto;
+  padding:8px 0;
+}
+.acl-node {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  min-width:60px;
+}
+.acl-node-icon {
+  width:52px; height:52px; border-radius:14px; display:flex;
+  align-items:center; justify-content:center; font-size:1.6rem;
+  transition:transform .2s, box-shadow .3s;
+  position:relative;
+}
+.acl-node-label { font-size:.72rem; font-weight:700; color:#aaa; letter-spacing:.03em; text-align:center; }
+.acl-link {
+  width:60px; height:4px; background:rgba(255,255,255,.15);
+  border-radius:2px; flex-shrink:0; position:relative; overflow:visible;
+  align-self:center;
+}
+.acl-shield {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(0);
+  font-size:1.6rem; z-index:10; transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none; filter:drop-shadow(0 0 8px currentColor);
+}
+.acl-shield.show { transform:translate(-50%,-50%) scale(1.2); }
+.acl-packet {
+  width:16px; height:16px; border-radius:4px; position:absolute;
+  top:50%; left:0; transform:translateY(-50%);
+  font-size:.8rem; display:flex; align-items:center; justify-content:center;
+  z-index:20;
+}
+.acl-step-box {
+  min-height:64px; border-radius:12px; padding:14px 18px;
+  font-size:.93rem; line-height:1.6; text-align:center;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
+  margin-bottom:16px; transition:opacity .3s;
+}
+.acl-step-box span { display:block; }
+#acl-send-btn {
+  display:block; width:100%; padding:12px 0; border:none; border-radius:10px;
+  font-size:1rem; font-weight:700; cursor:pointer; transition:all .2s;
+  letter-spacing:.04em;
+}
+#acl-send-btn.std { background:#00d4ff; color:#0a0e1a; }
+#acl-send-btn.ext { background:#ff9900; color:#0a0e1a; }
+#acl-send-btn:active { transform:scale(.97); }
+#acl-send-btn:disabled { opacity:.5; cursor:default; }
+.acl-badge {
+  font-size:.65rem; font-weight:800; padding:2px 7px; border-radius:20px;
+  text-transform:uppercase; letter-spacing:.06em; margin-left:6px;
+  vertical-align:middle;
+}
+.acl-badge.std { background:#00d4ff; color:#0a0e1a; }
+.acl-badge.ext { background:#ff9900; color:#0a0e1a; }
+.acl-node-icon.glow-std { box-shadow:0 0 22px 6px #00d4ff; transform:scale(1.12); }
+.acl-node-icon.glow-ext { box-shadow:0 0 22px 6px #ff9900; transform:scale(1.12); }
+.acl-link.active-std { background:linear-gradient(90deg,#00d4ff,#00ff88); }
+.acl-link.active-ext { background:linear-gradient(90deg,#ff9900,#ff4466); }
+</style>
+<div id="acl-wrap">
+  <div class="acl-tabs">
+    <button class="acl-tab-btn std active" id="acl-btn-std" onclick="aclSetMode('std')">📋 Standard ACL</button>
+    <button class="acl-tab-btn ext" id="acl-btn-ext" onclick="aclSetMode('ext')">🔍 Extended ACL</button>
+  </div>
+  <div id="acl-rule-box" class="std">
+    Standard ACL filters by <strong>source IP only</strong> — place it
+    <strong>close to the destination</strong> to avoid blocking unintended traffic.
+  </div>
+  <div class="acl-topo" id="acl-topo">
+    <div class="acl-node" id="acl-n-pc">
+      <div class="acl-node-icon" style="background:rgba(0,212,255,.12);border:2px solid #00d4ff;">💻</div>
+      <div class="acl-node-label">PC<br>(Source)</div>
+    </div>
+    <div class="acl-link" id="acl-l0"><div class="acl-packet" id="acl-pkt0"></div></div>
+    <div class="acl-node" id="acl-n-r1">
+      <div class="acl-node-icon" style="background:rgba(123,79,255,.15);border:2px solid #7b4fff;">🔀</div>
+      <div class="acl-node-label">Router A<br>(Close to src)</div>
+    </div>
+    <div class="acl-link" id="acl-l1"><div class="acl-packet" id="acl-pkt1"></div><div class="acl-shield" id="acl-sh1">🛡️</div></div>
+    <div class="acl-node" id="acl-n-r2">
+      <div class="acl-node-icon" style="background:rgba(123,79,255,.15);border:2px solid #7b4fff;">🔀</div>
+      <div class="acl-node-label">Router B<br>(Close to dst)</div>
+    </div>
+    <div class="acl-link" id="acl-l2"><div class="acl-packet" id="acl-pkt2"></div><div class="acl-shield" id="acl-sh2">🛡️</div></div>
+    <div class="acl-node" id="acl-n-srv">
+      <div class="acl-node-icon" style="background:rgba(0,255,136,.12);border:2px solid #00ff88;">🖥️</div>
+      <div class="acl-node-label">Server<br>(Destination)</div>
+    </div>
+  </div>
+  <div class="acl-step-box" id="acl-step">
+    <span>Choose a mode above, then press <strong>Send Packet</strong> to see where the ACL fires.</span>
+  </div>
+  <button id="acl-send-btn" class="std" onclick="aclSendPacket()">▶ Send Packet</button>
+</div>
+`;
+
+  const STD_STEPS = [
+    { pkt:0, msg:'📦 Packet leaves the PC heading for the server. Source IP: <strong>10.0.0.5</strong>' },
+    { pkt:1, msg:'🔀 Packet arrives at <strong>Router A</strong> (close to source). No ACL here — it passes right through.' },
+    { pkt:2, msg:'🔀 Packet arrives at <strong>Router B</strong> (close to destination). The Standard ACL checks the <strong>source IP</strong> — match found! <span id="acl-verdict"></span>' },
+    { pkt:'done', msg:'<strong>✅ Why here?</strong> Standard ACL only knows the source IP — if placed at Router A it could accidentally block traffic meant for <em>other</em> destinations. Placing it at Router B keeps the blast radius small.' }
+  ];
+  const EXT_STEPS = [
+    { pkt:0, msg:'📦 Packet leaves the PC. Source: <strong>10.0.0.5</strong> → Dest: <strong>203.0.113.10:80</strong> (HTTP)' },
+    { pkt:'block', msg:'🔀 Packet hits <strong>Router A</strong> (close to source). The Extended ACL checks <strong>src IP + dst IP + protocol + port</strong> — match found! <span id="acl-verdict2"></span>' },
+    { pkt:'done', msg:'<strong>✅ Why here?</strong> Extended ACLs are highly specific, so we block traffic <em>as early as possible</em> — this saves bandwidth on all links between Router A and the destination.' }
+  ];
+
+  let mode = 'std';
+  let animRunning = false;
+
+  window.aclSetMode = function(m) {
+    mode = m;
+    document.getElementById('acl-btn-std').classList.toggle('active', m==='std');
+    document.getElementById('acl-btn-ext').classList.toggle('active', m==='ext');
+    document.getElementById('acl-rule-box').className = m==='std' ? 'std' : 'ext';
+    document.getElementById('acl-rule-box').innerHTML = m === 'std'
+      ? 'Standard ACL filters by <strong>source IP only</strong> — place it <strong>close to the destination</strong> to avoid blocking unintended traffic.'
+      : 'Extended ACL filters by <strong>src IP + dst IP + protocol + port</strong> — place it <strong>close to the source</strong> to block traffic early and save bandwidth.';
+    document.getElementById('acl-send-btn').className = m;
+    document.getElementById('acl-step').innerHTML = '<span>Press <strong>Send Packet</strong> to see how a ' + (m==='std'?'Standard':'Extended') + ' ACL is applied.</span>';
+    aclResetVisuals();
+  };
+
+  function aclResetVisuals() {
+    ['acl-l0','acl-l1','acl-l2'].forEach(id => {
+      const el = document.getElementById(id);
+      el.className = 'acl-link';
+    });
+    ['acl-pkt0','acl-pkt1','acl-pkt2'].forEach(id => {
+      const el = document.getElementById(id);
+      el.style.cssText = 'display:none';
+    });
+    ['acl-sh1','acl-sh2'].forEach(id => {
+      document.getElementById(id).className = 'acl-shield';
+    });
+    ['acl-n-pc','acl-n-r1','acl-n-r2','acl-n-srv'].forEach(id => {
+      const icon = document.getElementById(id).querySelector('.acl-node-icon');
+      icon.classList.remove('glow-std','glow-ext');
+    });
+  }
+
+  function pktColor() { return mode === 'std' ? '#00d4ff' : '#ff9900'; }
+  function linkClass() { return mode === 'std' ? 'active-std' : 'active-ext'; }
+
+  function animatePktAcrossLink(linkId, pktId, duration) {
+    return new Promise(resolve => {
+      const pkt = document.getElementById(pktId);
+      const color = pktColor();
+      pkt.style.cssText = `width:16px;height:16px;border-radius:4px;position:absolute;top:50%;left:0;transform:translateY(-50%);background:${color};box-shadow:0 0 8px ${color};z-index:20;`;
+      document.getElementById(linkId).classList.add(linkClass());
+      pkt.animate([
+        { left:'0%', opacity:1 },
+        { left:'100%', opacity:1 }
+      ], { duration, easing:'ease-in-out', fill:'forwards' });
+      setTimeout(resolve, duration);
+    });
+  }
+
+  function glowNode(id) {
+    const icon = document.getElementById(id).querySelector('.acl-node-icon');
+    icon.classList.add(mode === 'std' ? 'glow-std' : 'glow-ext');
+  }
+
+  function showShield(id, verdict) {
+    const sh = document.getElementById(id);
+    sh.style.color = verdict === 'permit' ? '#00ff88' : '#ff4466';
+    sh.textContent = verdict === 'permit' ? '✅' : '🚫';
+    sh.classList.add('show');
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  window.aclSendPacket = async function() {
+    if (animRunning) return;
+    animRunning = true;
+    document.getElementById('acl-send-btn').disabled = true;
+    aclResetVisuals();
+    await sleep(200);
+
+    const step = document.getElementById('acl-step');
+
+    if (mode === 'std') {
+      // Step 1: PC sends packet
+      glowNode('acl-n-pc');
+      step.innerHTML = STD_STEPS[0].msg;
+      await animatePktAcrossLink('acl-l0','acl-pkt0', 800);
+      await sleep(400);
+
+      // Step 2: Router A — no ACL
+      glowNode('acl-n-r1');
+      step.innerHTML = STD_STEPS[1].msg;
+      await sleep(900);
+      await animatePktAcrossLink('acl-l1','acl-pkt1', 800);
+      await sleep(200);
+
+      // Step 3: Router B — ACL fires
+      glowNode('acl-n-r2');
+      step.innerHTML = STD_STEPS[2].msg;
+      showShield('acl-sh2', 'block');
+      await sleep(600);
+      const v = document.getElementById('acl-verdict');
+      if (v) v.innerHTML = '<strong style="color:#ff4466">🚫 Packet DENIED!</strong>';
+      await sleep(1200);
+
+      // Step 4: Explanation
+      step.innerHTML = STD_STEPS[3].msg;
+    } else {
+      // Step 1: PC sends packet
+      glowNode('acl-n-pc');
+      step.innerHTML = EXT_STEPS[0].msg;
+      await sleep(600);
+      await animatePktAcrossLink('acl-l0','acl-pkt0', 800);
+      await sleep(200);
+
+      // Step 2: Router A — ACL fires immediately
+      glowNode('acl-n-r1');
+      step.innerHTML = EXT_STEPS[1].msg;
+      showShield('acl-sh1', 'block');
+      await sleep(600);
+      const v2 = document.getElementById('acl-verdict2');
+      if (v2) v2.innerHTML = '<strong style="color:#ff4466">🚫 Packet DENIED at the source!</strong>';
+      await sleep(1200);
+
+      // Step 3: Bandwidth saved explanation
+      step.innerHTML = EXT_STEPS[2].msg;
+    }
+
+    animRunning = false;
+    document.getElementById('acl-send-btn').disabled = false;
+  };
+}
 
 // ── Confetti ─────────────────────────────────────────────────────────────────
 function launchConfetti() {
