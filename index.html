@@ -4291,7 +4291,7 @@ Switch# show ip arp inspection statistics vlan 10</pre>`
       },
       {
         q: 'What command enables DHCP Snooping on a VLAN?',
-        a: ['ip dhcp snooping enable 10','ip dhcp snooping vlan 10','dhcp snooping vlan 10','enable dhcp-snooping']
+        a: ['ip dhcp snooping enable 10','ip dhcp snooping vlan 10','dhcp snooping vlan 10','enable dhcp-snooping'],
         correct: 1,
         explain: '<strong><code>ip dhcp snooping vlan 10</code></strong> enables snooping for VLAN 10 (after <code>ip dhcp snooping</code> globally).'
       },
@@ -4303,7 +4303,7 @@ Switch# show ip arp inspection statistics vlan 10</pre>`
       },
       {
         q: 'What command enables DAI on a VLAN?',
-        a: ['ip arp inspection enable 10','ip arp inspection vlan 10','arp inspection vlan 10','enable arp-inspection']
+        a: ['ip arp inspection enable 10','ip arp inspection vlan 10','arp inspection vlan 10','enable arp-inspection'],
         correct: 1,
         explain: '<strong><code>ip arp inspection vlan 10</code></strong> enables DAI for VLAN 10.'
       },
@@ -4662,7 +4662,7 @@ resource "aci_application_profile" "web" {
       },
       {
         q: 'What is idempotency in automation?',
-        a: ['Running code multiple times','Running same task multiple times produces same result; safe to rerun without side effects','Using encryption','Version control']
+        a: ['Running code multiple times','Running same task multiple times produces same result; safe to rerun without side effects','Using encryption','Version control'],
         correct: 1,
         explain: '<strong>Idempotent tasks:</strong> Can run 1x or 10x with same outcome. Critical in automation — safe to rerun without breaking things.'
       },
