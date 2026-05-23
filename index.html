@@ -1690,7 +1690,7 @@
       </div>
       <div class="eula-buttons">
         <button class="eula-btn decline" id="eula-decline-btn" onclick="declineEula()">Decline</button>
-        <button class="eula-btn accept" id="eula-accept-btn" onclick="acceptEula()" disabled>Accept</button>
+        <button class="eula-btn accept" id="eula-accept-btn" onclick="acceptEula()">Accept</button>
       </div>
     </div>
   </div>
@@ -9453,8 +9453,14 @@ function initializeEulaModal() {
   document.getElementById('eula-body').innerHTML = EULA_HTML;
 
   // Setup checkbox handler
-  document.getElementById('eula-checkbox').addEventListener('change', function() {
-    document.getElementById('eula-accept-btn').disabled = !this.checked;
+  const checkbox = document.getElementById('eula-checkbox');
+  const acceptBtn = document.getElementById('eula-accept-btn');
+
+  // Initial state - button disabled
+  acceptBtn.disabled = true;
+
+  checkbox.addEventListener('change', function() {
+    acceptBtn.disabled = !this.checked;
   });
 }
 
@@ -9470,9 +9476,11 @@ function showEulaModal(isNewSignup = false) {
     declineBtn.style.display = 'block';
   }
 
-  // Reset checkbox
-  document.getElementById('eula-checkbox').checked = false;
-  document.getElementById('eula-accept-btn').disabled = true;
+  // Reset checkbox and button state
+  const checkbox = document.getElementById('eula-checkbox');
+  const acceptBtn = document.getElementById('eula-accept-btn');
+  checkbox.checked = false;
+  acceptBtn.disabled = true;
 
   // Show modal
   modal.classList.remove('hidden');
