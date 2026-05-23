@@ -9885,7 +9885,17 @@ let profileCurrentAvatar = '👤';
 
 async function authOnLogin(user) {
   profileUserId = user.id;
-  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  let { data: profile, error: profileError } = await sb.from('profiles').select('*').eq('id', user.id).single();
+
+  // If profile doesn't exist, create one (in case it was deleted or user is logging in for first time)
+  if (!profile || profileError) {
+    console.log('[AUTH] Profile not found, creating new profile for user:', user.id);
+    const username = user.user_metadata?.username || user.email?.split('@')[0] || 'user';
+    await authCreateProfile(user, username, true); // Create with EULA already accepted
+    // Fetch the newly created profile
+    const { data: newProfile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    profile = newProfile;
+  }
 
   // Set up logout button and profile data first
   document.getElementById('logout-btn').style.display = 'inline';
