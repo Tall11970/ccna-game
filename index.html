@@ -9579,47 +9579,77 @@ function declineEula() {
 }
 
 function openEulaForReading(event) {
-  // Prevent the default label behavior and stop event from bubbling
-  event.preventDefault();
-  event.stopPropagation();
+  console.log('[EULA-READ] Click detected on EULA link');
+  console.log('[EULA-READ] Event:', event);
 
-  console.log('[EULA] Opening EULA for reading during signup');
+  // Prevent the default label behavior and stop event from bubbling
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  console.log('[EULA-READ] Opening EULA for reading during signup');
 
   const modal = document.getElementById('eula-modal');
   const declineBtn = document.getElementById('eula-decline-btn');
   const acceptBtn = document.getElementById('eula-accept-btn');
 
+  if (!modal) {
+    console.error('[EULA-READ] EULA modal element not found!');
+    return;
+  }
+
+  console.log('[EULA-READ] Elements found:', { modal, declineBtn, acceptBtn });
+
   // Show modal in read-only mode
   // Hide both buttons and show a close button instead
-  declineBtn.style.display = 'none';
-  acceptBtn.style.display = 'none';
+  if (declineBtn) declineBtn.style.display = 'none';
+  if (acceptBtn) acceptBtn.style.display = 'none';
+
+  console.log('[EULA-READ] Buttons hidden');
 
   // Create a close button if it doesn't exist
   let closeBtn = document.getElementById('eula-read-only-close');
-  if (!closeBtn) {
+  const eulaButtons = document.querySelector('.eula-buttons');
+
+  if (!closeBtn && eulaButtons) {
+    console.log('[EULA-READ] Creating new close button');
     closeBtn = document.createElement('button');
     closeBtn.id = 'eula-read-only-close';
     closeBtn.className = 'eula-btn decline';
     closeBtn.textContent = 'Got It, Close';
     closeBtn.style.cursor = 'pointer';
-    closeBtn.onclick = function() {
-      console.log('[EULA] Closing EULA modal (read-only mode)');
+    closeBtn.type = 'button'; // Ensure it's a button, not submit
+    closeBtn.onclick = function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      console.log('[EULA-READ] Closing EULA modal (read-only mode)');
       hideEulaModal();
       // Restore the accept/decline buttons for login flow
-      document.getElementById('eula-decline-btn').style.display = 'block';
-      document.getElementById('eula-accept-btn').style.display = 'block';
+      const decBtn = document.getElementById('eula-decline-btn');
+      const accBtn = document.getElementById('eula-accept-btn');
+      if (decBtn) decBtn.style.display = 'block';
+      if (accBtn) accBtn.style.display = 'block';
     };
-    document.querySelector('.eula-buttons').appendChild(closeBtn);
-  } else {
+    eulaButtons.appendChild(closeBtn);
+    console.log('[EULA-READ] Close button created and added');
+  } else if (closeBtn) {
+    console.log('[EULA-READ] Close button already exists, showing it');
     closeBtn.style.display = 'block';
+  } else {
+    console.error('[EULA-READ] Could not find or create close button');
   }
 
   // Reset checkbox (user hasn't accepted yet, just reading)
-  document.getElementById('eula-checkbox').checked = false;
+  const checkbox = document.getElementById('eula-checkbox');
+  if (checkbox) checkbox.checked = false;
 
   // Show modal
   modal.classList.remove('hidden');
-  console.log('[EULA] EULA modal opened for reading');
+  console.log('[EULA-READ] Modal hidden class removed, modal should be visible now');
+  console.log('[EULA-READ] EULA modal opened for reading');
 }
 
 // Signup checkbox handler
