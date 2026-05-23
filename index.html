@@ -11369,8 +11369,11 @@ async function acceptEula() {
           console.log('[EULA] Auth tabs shown');
         }
         if (authOverlay) {
+          // Reset inline styles that were set for EULA modal interaction
+          authOverlay.style.opacity = '';
+          authOverlay.style.pointerEvents = '';
           authOverlay.classList.add('hidden');
-          console.log('[EULA] Auth overlay hidden');
+          console.log('[EULA] Auth overlay hidden and styles reset');
         }
 
         console.log('[EULA] Showing screen-topics');
@@ -11675,8 +11678,13 @@ async function authOnLogin(user) {
     if (profile.hasOwnProperty('eula_accepted')) {
       if (!profile.eula_accepted || profile.eula_version !== CURRENT_EULA_VERSION) {
         // EULA not accepted or version mismatch - show EULA modal
+        console.log('[AUTH] EULA acceptance required - showing modal');
         showEulaModal(false);
         document.getElementById('auth-tabs').style.display = 'none';
+        // Hide the auth overlay so EULA modal is interactive
+        document.getElementById('auth-overlay').style.opacity = '0';
+        document.getElementById('auth-overlay').style.pointerEvents = 'none';
+        console.log('[AUTH] Auth overlay made transparent for EULA interaction');
         return; // Don't complete login yet
       }
     }
