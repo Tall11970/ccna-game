@@ -9492,27 +9492,39 @@ function hideEulaModal() {
 }
 
 async function acceptEula() {
-  // Update profile in Supabase
-  if (profileUserId) {
-    try {
-      await sb.from('profiles').update({
+  try {
+    // Update profile in Supabase with EULA acceptance
+    if (profileUserId) {
+      const { error } = await sb.from('profiles').update({
         eula_accepted: true,
         eula_version: CURRENT_EULA_VERSION
       }).eq('id', profileUserId);
-    } catch (error) {
-      console.error('Error updating EULA acceptance:', error);
+
+      if (error) {
+        console.error('Supabase update error:', error);
+        alert('Error saving EULA acceptance. Please try again.');
+        return;
+      }
     }
-  }
 
-  hideEulaModal();
+    // Hide the EULA modal
+    hideEulaModal();
 
-  // Complete the login flow
-  try {
-    document.getElementById('auth-tabs').style.display = ''; // Restore auth tabs
-    document.getElementById('auth-overlay').classList.add('hidden');
-    showScreen('screen-topics');
+    // Complete the login flow - show the app
+    setTimeout(() => {
+      try {
+        const authOverlay = document.getElementById('auth-overlay');
+        const authTabs = document.getElementById('auth-tabs');
+        if (authTabs) authTabs.style.display = '';
+        if (authOverlay) authOverlay.classList.add('hidden');
+        showScreen('screen-topics');
+      } catch (e) {
+        console.error('Error showing app:', e);
+      }
+    }, 100);
   } catch (error) {
-    console.error('Error completing login after EULA:', error);
+    console.error('Error in acceptEula:', error);
+    alert('An error occurred. Please refresh the page.');
   }
 }
 
@@ -9618,15 +9630,15 @@ async function authOnLogin(user) {
     document.getElementById('prof-uemail').textContent = user.email || '';
     document.getElementById('prof-avatar-big').textContent = profileCurrentAvatar;
 
-    // TODO: Check EULA acceptance (only if eula_accepted column exists in database)
-    // Temporarily disabled for debugging - will re-enable after fixing modal display
-    // if (profile.hasOwnProperty('eula_accepted')) {
-    //   if (!profile.eula_accepted || profile.eula_version !== CURRENT_EULA_VERSION) {
-    //     showEulaModal(false);
-    //     document.getElementById('auth-tabs').style.display = 'none';
-    //     return;
-    //   }
-    // }
+    // Check EULA acceptance (only if eula_accepted column exists in database)
+    if (profile.hasOwnProperty('eula_accepted')) {
+      if (!profile.eula_accepted || profile.eula_version !== CURRENT_EULA_VERSION) {
+        // EULA not accepted or version mismatch - show EULA modal
+        showEulaModal(false);
+        document.getElementById('auth-tabs').style.display = 'none';
+        return; // Don't complete login yet
+      }
+    }
   }
 
   // User accepted EULA (or no EULA columns) - complete login
