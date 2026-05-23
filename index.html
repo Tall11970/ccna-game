@@ -3628,6 +3628,10 @@ const TOPICS = [
         body: `<p><strong>Step 1: Steady State</strong></p><ul><li>Active router owns virtual IP 192.168.1.1 and virtual MAC 0000.0c07.ac01</li><li>Hosts use 192.168.1.1 as their gateway</li><li>Active router forwards all traffic</li><li>Standby router monitors active via hello messages (default every 3 seconds)</li></ul><p><strong>Step 2: Active Router Fails</strong></p><ul><li>Standby stops receiving hello messages</li><li>After 10 seconds of no hellos (dead interval), standby declares active dead</li></ul><p><strong>Step 3: Failover</strong></p><ul><li>Standby router becomes active</li><li>Sends <strong>Gratuitous ARP</strong> announcing it now owns virtual MAC</li><li>Switches learn new MAC on this port and update forwarding tables</li><li>Traffic seamlessly redirects to new active router</li></ul><p><strong>Step 4: Recovery</strong></p><ul><li>Original active router comes back online</li><li>If preemption is enabled, it takes back active role</li><li>If preemption is disabled, it stays standby</li></ul>`
       },
       {
+        type: 'hsrp_anim',
+        title: 'HSRP Failover Animation'
+      },
+      {
         title: 'HSRP Configuration Basics',
         body: `<p><strong>Basic HSRP Configuration (Cisco IOS):</strong></p><pre>R1(config)# interface GigabitEthernet 0/0
 R1(config-if)# ip address 192.168.1.10 255.255.255.0
@@ -6238,6 +6242,164 @@ function buildARPAnim(root) {
   g('arp-reset').addEventListener('click', reset);
 }
 
+// ── HSRP Failover Animation ──────────────────────────────────────────────────
+function buildHSRPAnim(root) {
+  let state = 'normal'; // normal, detecting, failover, active
+  const colors = { active: '#00ff88', standby: '#666', inactive: '#333' };
+
+  root.innerHTML = `<div style="background:#0a0e1a;border-radius:12px;padding:20px;color:#aaa">
+    <div style="display:flex;gap:30px;margin-bottom:20px;align-items:flex-start">
+      <!-- Left side: Routers -->
+      <div style="flex:1;min-width:300px">
+        <div style="font-size:0.8rem;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em">Router Layer</div>
+
+        <!-- Active Router -->
+        <div style="background:rgba(0,255,136,0.1);border:2px solid #00ff88;border-radius:8px;padding:12px;margin-bottom:12px;position:relative">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:1.5rem">🔀</div>
+            <div>
+              <div style="font-weight:700;color:#00ff88" id="hsrp-r1-label">R1 (Active) 🟢</div>
+              <div style="font-size:0.8rem;color:#888">192.168.1.10 | Pri: 150</div>
+            </div>
+          </div>
+          <div style="font-size:0.75rem;color:#666;margin-top:8px">State: <span id="hsrp-r1-state" style="color:#00ff88">Active (Forwarding)</span></div>
+        </div>
+
+        <!-- Standby Router -->
+        <div style="background:rgba(100,100,100,0.1);border:2px solid #666;border-radius:8px;padding:12px;position:relative">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:1.5rem">🔀</div>
+            <div>
+              <div style="font-weight:700;color:#999" id="hsrp-r2-label">R2 (Standby) ⚪</div>
+              <div style="font-size:0.8rem;color:#888">192.168.1.11 | Pri: 100</div>
+            </div>
+          </div>
+          <div style="font-size:0.75rem;color:#666;margin-top:8px">State: <span id="hsrp-r2-state" style="color:#999">Standby (Monitoring)</span></div>
+        </div>
+      </div>
+
+      <!-- Right side: Hosts -->
+      <div style="flex:1;min-width:300px">
+        <div style="font-size:0.8rem;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em">Host Layer</div>
+
+        <!-- Virtual Gateway -->
+        <div style="background:rgba(0,212,255,0.15);border:2px dashed #00d4ff;border-radius:8px;padding:12px;margin-bottom:12px;text-align:center">
+          <div style="font-weight:700;color:#00d4ff;font-size:1.1rem">Virtual Gateway</div>
+          <div style="font-size:0.9rem;color:#888;margin-top:4px">IP: 192.168.1.1</div>
+          <div style="font-size:0.75rem;color:#666;margin-top:4px">MAC: 0000.0c07.ac01</div>
+        </div>
+
+        <!-- Hosts -->
+        <div style="background:rgba(255,153,0,0.1);border:1px solid #ff9900;border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:0.9rem">🖥️ PC-A 🖥️ PC-B 🖥️ PC-C</div>
+          <div style="font-size:0.75rem;color:#888;margin-top:4px">All use gateway: 192.168.1.1</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Traffic Flow Visualization -->
+    <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:12px;margin-bottom:16px">
+      <div style="font-size:0.8rem;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em">Traffic Flow</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;height:40px">
+        <div style="flex:1;text-align:right;font-size:0.9rem">Hosts</div>
+        <div style="position:relative;width:100px;height:2px;background:#333">
+          <div id="hsrp-arrow" style="position:absolute;left:0;top:50%;transform:translateY(-50%);color:#00ff88;font-weight:bold;font-size:1rem;animation:hsrp-flow 1s linear infinite">→</div>
+        </div>
+        <div style="flex:1;font-size:0.9rem" id="hsrp-target">Active Router</div>
+      </div>
+      <style>
+        @keyframes hsrp-flow { 0% { left: 0; } 100% { left: 100%; } }
+        @keyframes hsrp-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+      </style>
+    </div>
+
+    <!-- Status Display -->
+    <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:12px;margin-bottom:16px">
+      <div style="font-size:0.9rem;line-height:1.6">
+        <div id="hsrp-status" style="color:#aaa">✓ Network running normally. Active router is healthy.</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button id="hsrp-fail-btn" style="padding:8px 16px;background:#ff4466;border:none;border-radius:6px;color:#fff;font-weight:700;cursor:pointer">Simulate Failure</button>
+      <button id="hsrp-reset-btn" style="padding:8px 16px;background:#00d4ff;border:none;border-radius:6px;color:#000;font-weight:700;cursor:pointer">Reset</button>
+    </div>
+  </div>`;
+
+  const failBtn = root.querySelector('#hsrp-fail-btn');
+  const resetBtn = root.querySelector('#hsrp-reset-btn');
+  const statusEl = root.querySelector('#hsrp-status');
+  const r1Label = root.querySelector('#hsrp-r1-label');
+  const r2Label = root.querySelector('#hsrp-r2-label');
+  const r1State = root.querySelector('#hsrp-r1-state');
+  const r2State = root.querySelector('#hsrp-r2-state');
+  const targetEl = root.querySelector('#hsrp-target');
+  const arrowEl = root.querySelector('#hsrp-arrow');
+
+  function updateDisplay() {
+    if (state === 'normal') {
+      r1Label.style.color = '#00ff88';
+      r2Label.style.color = '#999';
+      r1State.style.color = '#00ff88';
+      r1State.textContent = 'Active (Forwarding)';
+      r2State.style.color = '#999';
+      r2State.textContent = 'Standby (Monitoring)';
+      targetEl.textContent = 'Active Router';
+      targetEl.style.color = '#00ff88';
+      arrowEl.style.color = '#00ff88';
+      statusEl.textContent = '✓ Network running normally. Active router is healthy.';
+      statusEl.style.color = '#aaa';
+      failBtn.disabled = false;
+      failBtn.textContent = 'Simulate Failure';
+    } else if (state === 'detecting') {
+      r1Label.style.color = '#ff4466';
+      r1State.style.color = '#ff4466';
+      r1State.textContent = 'Failed ❌';
+      targetEl.textContent = 'No Response...';
+      targetEl.style.color = '#ff4466';
+      arrowEl.style.color = '#ff4466';
+      statusEl.textContent = '⚠️ Active router not responding! Standby detected failure. Starting failover...';
+      statusEl.style.color = '#ff9900';
+      failBtn.disabled = true;
+    } else if (state === 'failover') {
+      r2Label.style.color = '#00ff88';
+      r2State.style.color = '#00ff88';
+      r2State.textContent = 'Active (Taking Over) 🟢';
+      r1Label.style.color = '#666';
+      r1State.style.color = '#666';
+      r1State.textContent = 'Down';
+      targetEl.textContent = 'New Active Router';
+      targetEl.style.color = '#00ff88';
+      arrowEl.style.color = '#00ff88';
+      statusEl.textContent = '🔄 Failover complete! R2 is now active. Traffic flowing through R2. Hosts still use 192.168.1.1 (no reconfiguration needed!)';
+      statusEl.style.color = '#00ff88';
+      failBtn.disabled = false;
+      failBtn.textContent = 'Reset Network';
+    }
+  }
+
+  failBtn.addEventListener('click', async () => {
+    if (state === 'normal') {
+      state = 'detecting';
+      updateDisplay();
+      await new Promise(r => setTimeout(r, 2000));
+      state = 'failover';
+      updateDisplay();
+    } else if (state === 'failover') {
+      state = 'normal';
+      updateDisplay();
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    state = 'normal';
+    updateDisplay();
+  });
+
+  updateDisplay();
+}
+
 // ── Hub vs Switch Animation ───────────────────────────────────────────────────
 function buildHubSwitchAnim(root) {
   const HUB_C = '#ff9900', SW_C = '#00d4ff';
@@ -8470,6 +8632,12 @@ function renderLesson(topic) {
         <div id="stp-anim-root"></div>`;
       container.appendChild(card);
       buildSTPAnim(document.getElementById('stp-anim-root'));
+      continue;
+    } else if (section.type === 'hsrp_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="hsrp-anim-root"></div>`;
+      container.appendChild(card);
+      buildHSRPAnim(document.getElementById('hsrp-anim-root'));
       continue;
     } else if (section.type === 'route_table_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
