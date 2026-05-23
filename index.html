@@ -1512,6 +1512,14 @@
   .profile-save { background:rgba(0,212,255,0.14); border:1px solid rgba(0,212,255,0.4); color:#00d4ff; border-radius:8px; padding:9px 18px; font-size:0.82rem; font-weight:700; cursor:pointer; transition:background 0.2s; }
   .profile-save:hover:not(:disabled) { background:rgba(0,212,255,0.25); }
   .profile-save:disabled { opacity:0.4; cursor:default; }
+  .profile-privacy-options { display:flex; flex-direction:column; gap:8px; margin:12px 0; }
+  .profile-privacy-btn { padding:10px 16px; border:none; border-radius:8px; font-weight:600; cursor:pointer; transition:all 0.2s; font-size:0.9rem; text-align:left; }
+  .profile-privacy-btn.view-eula { background:rgba(0,212,255,0.15); color:#00d4ff; border:1px solid rgba(0,212,255,0.3); }
+  .profile-privacy-btn.view-eula:hover { background:rgba(0,212,255,0.25); box-shadow:0 0 12px rgba(0,212,255,0.3); }
+  .profile-privacy-btn.download-data { background:rgba(0,255,136,0.15); color:#00ff88; border:1px solid rgba(0,255,136,0.3); }
+  .profile-privacy-btn.download-data:hover { background:rgba(0,255,136,0.25); box-shadow:0 0 12px rgba(0,255,136,0.3); }
+  .profile-privacy-btn.delete-account { background:rgba(255,102,102,0.15); color:#ff6666; border:1px solid rgba(255,102,102,0.3); }
+  .profile-privacy-btn.delete-account:hover { background:rgba(255,102,102,0.25); box-shadow:0 0 12px rgba(255,102,102,0.3); }
   .profile-msg { font-size:0.73rem; border-radius:6px; padding:7px 10px; margin-top:7px; display:none; }
   .profile-msg.show { display:block; }
   .profile-msg.ok  { color:#00ff88; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.22); }
@@ -1620,6 +1628,15 @@
       <input class="profile-input" id="prof-conf-pass" type="password" placeholder="Confirm new password" autocomplete="new-password">
       <button class="profile-save" onclick="profileUpdatePassword()">Save Password</button>
       <div class="profile-msg" id="pass-msg"></div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">📋 Data & Privacy</div>
+      <div class="profile-privacy-options">
+        <button class="profile-privacy-btn view-eula" onclick="profileViewEula()">📄 View Terms & Conditions</button>
+        <button class="profile-privacy-btn download-data" onclick="profileDownloadData()">💾 Download My Data</button>
+        <button class="profile-privacy-btn delete-account" onclick="profileRequestDeleteAccount()">🗑️ Delete Account</button>
+      </div>
+      <div class="profile-msg" id="privacy-msg"></div>
     </div>
   </div>
 </div>
@@ -9974,6 +9991,196 @@ async function profileUpdatePassword() {
   msg.textContent = '✅ Password updated successfully!'; msg.className = 'profile-msg ok show';
   document.getElementById('prof-new-pass').value = '';
   document.getElementById('prof-conf-pass').value = '';
+}
+
+// ── Data & Privacy Functions ──────────────────────────────────────────────────
+function profileViewEula() {
+  console.log('[PROFILE] Opening EULA from profile modal');
+
+  const modal = document.getElementById('eula-modal');
+  const declineBtn = document.getElementById('eula-decline-btn');
+  const acceptBtn = document.getElementById('eula-accept-btn');
+
+  if (!modal) {
+    alert('Error: EULA modal not found');
+    return;
+  }
+
+  // Hide accept/decline buttons
+  if (declineBtn) declineBtn.style.display = 'none';
+  if (acceptBtn) acceptBtn.style.display = 'none';
+
+  // Create or show close button
+  let closeBtn = document.getElementById('eula-read-only-close');
+  const eulaButtons = document.querySelector('.eula-buttons');
+
+  if (!closeBtn && eulaButtons) {
+    closeBtn = document.createElement('button');
+    closeBtn.id = 'eula-read-only-close';
+    closeBtn.className = 'eula-btn decline';
+    closeBtn.textContent = 'Got It, Close';
+    closeBtn.type = 'button';
+    closeBtn.onclick = function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      hideEulaModal();
+      // Restore buttons
+      const decBtn = document.getElementById('eula-decline-btn');
+      const accBtn = document.getElementById('eula-accept-btn');
+      if (decBtn) decBtn.style.display = 'block';
+      if (accBtn) accBtn.style.display = 'block';
+    };
+    eulaButtons.appendChild(closeBtn);
+  } else if (closeBtn) {
+    closeBtn.style.display = 'block';
+  }
+
+  // Reset checkbox and show modal
+  const checkbox = document.getElementById('eula-checkbox');
+  if (checkbox) checkbox.checked = false;
+
+  modal.style.display = 'flex';
+  modal.style.visibility = 'visible';
+  modal.style.opacity = '1';
+  modal.style.pointerEvents = 'auto';
+
+  console.log('[PROFILE] EULA modal opened');
+}
+
+async function profileDownloadData() {
+  console.log('[PROFILE] Downloading user data');
+  const msg = document.getElementById('privacy-msg');
+
+  try {
+    // Gather all user data
+    const userData = {
+      profile: {
+        id: profileUserId,
+        username: profileUsername,
+        avatar: profileCurrentAvatar,
+        xp: state.xp,
+        level: state.level,
+        streak: state.streak,
+        topicScores: state.topicScores
+      },
+      eula: {
+        accepted: true,
+        version: CURRENT_EULA_VERSION,
+        timestamp: new Date().toISOString()
+      },
+      exported: {
+        date: new Date().toISOString(),
+        format: 'JSON'
+      }
+    };
+
+    // Create JSON file
+    const dataJson = JSON.stringify(userData, null, 2);
+    const blob = new Blob([dataJson], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    // Download the file
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `netquest-data-${profileUsername}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    msg.textContent = '✅ Your data has been downloaded!';
+    msg.className = 'profile-msg ok show';
+    console.log('[PROFILE] Data exported successfully');
+  } catch (error) {
+    console.error('[PROFILE] Error downloading data:', error);
+    msg.textContent = 'Error downloading data: ' + error.message;
+    msg.className = 'profile-msg err show';
+  }
+}
+
+function profileRequestDeleteAccount() {
+  console.log('[PROFILE] Delete account requested');
+  const msg = document.getElementById('privacy-msg');
+
+  // First confirmation
+  const confirm1 = confirm('⚠️ DELETE ACCOUNT WARNING\n\nThis action is PERMANENT and CANNOT be undone.\n\nYour account, profile, all progress, scores, and data will be completely deleted.\n\nAre you absolutely sure?');
+
+  if (!confirm1) {
+    console.log('[PROFILE] Delete account cancelled by user');
+    return;
+  }
+
+  // Second confirmation with specific instruction
+  const confirm2 = confirm('⚠️ FINAL WARNING\n\nThis is your LAST chance to cancel.\n\nType "DELETE" in the next prompt to permanently delete your account.\n\nCancel here to keep your account.');
+
+  if (!confirm2) {
+    console.log('[PROFILE] Delete account cancelled by user (second prompt)');
+    return;
+  }
+
+  // Third confirmation - require typing DELETE
+  const userInput = prompt('Type DELETE (exactly) to permanently delete your account.\n\nThis cannot be undone:');
+
+  if (userInput !== 'DELETE') {
+    msg.textContent = 'Account deletion cancelled. Your account is safe.';
+    msg.className = 'profile-msg ok show';
+    console.log('[PROFILE] Delete account cancelled - incorrect confirmation text');
+    return;
+  }
+
+  // Actually delete the account
+  profileExecuteDeleteAccount();
+}
+
+async function profileExecuteDeleteAccount() {
+  const msg = document.getElementById('privacy-msg');
+  msg.textContent = 'Deleting account... please wait...';
+  msg.className = 'profile-msg show';
+
+  try {
+    console.log('[PROFILE] Executing account deletion for user:', profileUserId);
+
+    // Delete profile from database
+    const { error: deleteProfileError } = await sb
+      .from('profiles')
+      .delete()
+      .eq('id', profileUserId);
+
+    if (deleteProfileError) {
+      console.error('[PROFILE] Error deleting profile:', deleteProfileError);
+      throw deleteProfileError;
+    }
+
+    console.log('[PROFILE] Profile deleted from database');
+
+    // Delete auth account
+    const { error: deleteAuthError } = await sb.auth.admin.deleteUser(profileUserId);
+
+    if (deleteAuthError) {
+      console.error('[PROFILE] Error deleting auth account:', deleteAuthError);
+      // Profile is already deleted, but log the error
+      msg.textContent = '⚠️ Account data deleted, but auth account deletion failed. Contact support.';
+      msg.className = 'profile-msg err show';
+      return;
+    }
+
+    console.log('[PROFILE] Account completely deleted');
+
+    // Log out
+    msg.textContent = '✅ Account deleted successfully. Logging out...';
+    msg.className = 'profile-msg ok show';
+
+    setTimeout(() => {
+      authHandleSignOut();
+    }, 1500);
+
+  } catch (error) {
+    console.error('[PROFILE] Error deleting account:', error);
+    msg.textContent = 'Error deleting account: ' + error.message;
+    msg.className = 'profile-msg err show';
+  }
 }
 
 // ── Supabase save (debounced 4 seconds) ──────────────────────────────────────
