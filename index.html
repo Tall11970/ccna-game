@@ -1568,6 +1568,8 @@
   .eula-checkbox-signup { display:flex; align-items:center; gap:8px; margin:12px 0; padding:12px; background:rgba(0,212,255,0.05); border:1px solid rgba(0,212,255,0.2); border-radius:8px; }
   .eula-checkbox-signup input { cursor:pointer; width:18px; height:18px; }
   .eula-checkbox-signup label { cursor:pointer; user-select:none; color:#ccc; font-size:0.9rem; flex:1; }
+  .eula-link { color:#00d4ff; text-decoration:underline; cursor:pointer; font-weight:600; transition:all 0.2s; }
+  .eula-link:hover { color:#00ffff; text-decoration:underline wavy; }
 </style>
 </head>
 <body>
@@ -1670,7 +1672,7 @@
       <div class="auth-msg success" id="su-ok"></div>
       <div class="eula-checkbox-signup">
         <input type="checkbox" id="su-eula-checkbox">
-        <label for="su-eula-checkbox">I agree to the NetQuest Terms of Service & EULA</label>
+        <label for="su-eula-checkbox">I agree to the <span class="eula-link" onclick="openEulaForReading(event)">NetQuest Terms of Service & EULA</span></label>
       </div>
       <button class="auth-submit" id="su-btn" type="submit" disabled>Create Account →</button>
     </form>
@@ -9574,6 +9576,50 @@ function declineEula() {
   hideEulaModal();
   // Log out the user
   authHandleSignOut();
+}
+
+function openEulaForReading(event) {
+  // Prevent the default label behavior and stop event from bubbling
+  event.preventDefault();
+  event.stopPropagation();
+
+  console.log('[EULA] Opening EULA for reading during signup');
+
+  const modal = document.getElementById('eula-modal');
+  const declineBtn = document.getElementById('eula-decline-btn');
+  const acceptBtn = document.getElementById('eula-accept-btn');
+
+  // Show modal in read-only mode
+  // Hide both buttons and show a close button instead
+  declineBtn.style.display = 'none';
+  acceptBtn.style.display = 'none';
+
+  // Create a close button if it doesn't exist
+  let closeBtn = document.getElementById('eula-read-only-close');
+  if (!closeBtn) {
+    closeBtn = document.createElement('button');
+    closeBtn.id = 'eula-read-only-close';
+    closeBtn.className = 'eula-btn decline';
+    closeBtn.textContent = 'Got It, Close';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.onclick = function() {
+      console.log('[EULA] Closing EULA modal (read-only mode)');
+      hideEulaModal();
+      // Restore the accept/decline buttons for login flow
+      document.getElementById('eula-decline-btn').style.display = 'block';
+      document.getElementById('eula-accept-btn').style.display = 'block';
+    };
+    document.querySelector('.eula-buttons').appendChild(closeBtn);
+  } else {
+    closeBtn.style.display = 'block';
+  }
+
+  // Reset checkbox (user hasn't accepted yet, just reading)
+  document.getElementById('eula-checkbox').checked = false;
+
+  // Show modal
+  modal.classList.remove('hidden');
+  console.log('[EULA] EULA modal opened for reading');
 }
 
 // Signup checkbox handler
