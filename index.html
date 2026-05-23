@@ -10006,6 +10006,10 @@ function profileViewEula() {
     return;
   }
 
+  // Remove hidden class to make modal visible
+  modal.classList.remove('hidden');
+  console.log('[PROFILE] Hidden class removed from modal');
+
   // Hide accept/decline buttons
   if (declineBtn) declineBtn.style.display = 'none';
   if (acceptBtn) acceptBtn.style.display = 'none';
@@ -10033,11 +10037,13 @@ function profileViewEula() {
       if (accBtn) accBtn.style.display = 'block';
     };
     eulaButtons.appendChild(closeBtn);
+    console.log('[PROFILE] Close button created');
   } else if (closeBtn) {
     closeBtn.style.display = 'block';
+    console.log('[PROFILE] Close button shown');
   }
 
-  // Reset checkbox and show modal
+  // Reset checkbox and show modal with inline styles
   const checkbox = document.getElementById('eula-checkbox');
   if (checkbox) checkbox.checked = false;
 
@@ -10045,8 +10051,9 @@ function profileViewEula() {
   modal.style.visibility = 'visible';
   modal.style.opacity = '1';
   modal.style.pointerEvents = 'auto';
+  modal.style.zIndex = '9997';
 
-  console.log('[PROFILE] EULA modal opened');
+  console.log('[PROFILE] EULA modal opened and styled');
 }
 
 async function profileDownloadData() {
