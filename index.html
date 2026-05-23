@@ -9905,10 +9905,6 @@ async function authOnLogin(user) {
     console.log('[AUTH] Signing out user');
     await sb.auth.signOut();
 
-    // Show signup tab
-    console.log('[AUTH] Switching to signup tab');
-    authSwitchTab('signup');
-
     // Clear any cached user data
     profileUserId = null;
     profileUsername = '';
@@ -9918,6 +9914,13 @@ async function authOnLogin(user) {
     state.streak = 0;
     state.topicScores = {};
     saveState();
+
+    // Show signup tab after a delay so user can read the error message
+    console.log('[AUTH] Switching to signup tab in 3 seconds');
+    setTimeout(() => {
+      authSwitchTab('signup');
+      console.log('[AUTH] Switched to signup tab');
+    }, 3000);
 
     console.log('[AUTH] Login blocked - profile missing');
     return;
