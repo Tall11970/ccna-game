@@ -9600,13 +9600,15 @@ async function authOnLogin(user) {
     document.getElementById('prof-uemail').textContent = user.email || '';
     document.getElementById('prof-avatar-big').textContent = profileCurrentAvatar;
 
-    // Check EULA acceptance
-    if (!profile.eula_accepted || profile.eula_version !== CURRENT_EULA_VERSION) {
-      // EULA not accepted or version mismatch - show EULA modal
-      showEulaModal(false);
-      // Hide auth tabs to prevent switching
-      document.getElementById('auth-tabs').style.display = 'none';
-      return; // Don't hide auth overlay yet
+    // Check EULA acceptance (only if eula_accepted column exists in database)
+    if (profile.hasOwnProperty('eula_accepted')) {
+      if (!profile.eula_accepted || profile.eula_version !== CURRENT_EULA_VERSION) {
+        // EULA not accepted or version mismatch - show EULA modal
+        showEulaModal(false);
+        // Hide auth tabs to prevent switching
+        document.getElementById('auth-tabs').style.display = 'none';
+        return; // Don't hide auth overlay yet
+      }
     }
   }
   document.getElementById('logout-btn').style.display = 'inline';
