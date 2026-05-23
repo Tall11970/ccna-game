@@ -9486,20 +9486,26 @@ function hideEulaModal() {
 async function acceptEula() {
   // Update profile in Supabase
   if (profileUserId) {
-    await sb.from('profiles').update({
-      eula_accepted: true,
-      eula_version: CURRENT_EULA_VERSION
-    }).eq('id', profileUserId);
+    try {
+      await sb.from('profiles').update({
+        eula_accepted: true,
+        eula_version: CURRENT_EULA_VERSION
+      }).eq('id', profileUserId);
+    } catch (error) {
+      console.error('Error updating EULA acceptance:', error);
+    }
   }
 
   hideEulaModal();
 
-  // Complete the login flow - hide auth overlay and show app
-  document.getElementById('logout-btn').style.display = 'inline';
-  document.getElementById('auth-overlay').classList.add('hidden');
-
-  // Show the main app screen
-  showScreen('screen-topics');
+  // Complete the login flow
+  try {
+    document.getElementById('auth-tabs').style.display = ''; // Restore auth tabs
+    document.getElementById('auth-overlay').classList.add('hidden');
+    showScreen('screen-topics');
+  } catch (error) {
+    console.error('Error completing login after EULA:', error);
+  }
 }
 
 function declineEula() {
@@ -9582,6 +9588,10 @@ let profileCurrentAvatar = '👤';
 async function authOnLogin(user) {
   profileUserId = user.id;
   const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+
+  // Set up logout button and profile data first
+  document.getElementById('logout-btn').style.display = 'inline';
+
   if (profile) {
     state.xp = profile.xp || 0;
     state.level = profile.level || 1;
@@ -9604,15 +9614,17 @@ async function authOnLogin(user) {
     if (profile.hasOwnProperty('eula_accepted')) {
       if (!profile.eula_accepted || profile.eula_version !== CURRENT_EULA_VERSION) {
         // EULA not accepted or version mismatch - show EULA modal
+        // Don't hide auth overlay yet - user must accept EULA first
         showEulaModal(false);
-        // Hide auth tabs to prevent switching
         document.getElementById('auth-tabs').style.display = 'none';
-        return; // Don't hide auth overlay yet
+        return; // Exit without hiding auth overlay
       }
     }
   }
-  document.getElementById('logout-btn').style.display = 'inline';
+
+  // User accepted EULA (or no EULA columns) - complete login
   document.getElementById('auth-overlay').classList.add('hidden');
+  showScreen('screen-topics');
 }
 
 async function authHandleSignOut() {
