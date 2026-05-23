@@ -1539,6 +1539,34 @@
   .protocol-table th { background:rgba(0,212,255,0.12); color:#00d4ff; padding:8px 12px; text-align:left; font-weight:700; border-bottom:2px solid rgba(0,212,255,0.3); }
   .protocol-table td { padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.08); }
   .protocol-table tr:hover { background:rgba(0,212,255,0.06); }
+
+  /* ── EULA Modal ── */
+  .eula-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9997; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .eula-container { background:var(--panel); border-radius:16px; max-width:900px; width:100%; max-height:90vh; display:flex; flex-direction:column; border:1px solid var(--border); }
+  .eula-header { padding:20px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .eula-header h2 { margin:0; color:#00d4ff; font-size:1.3rem; }
+  .eula-content { flex:1; overflow-y:auto; padding:20px; line-height:1.7; color:#ccc; font-size:0.95rem; }
+  .eula-section { margin-bottom:20px; }
+  .eula-content h3 { color:#00d4ff; margin:16px 0 8px 0; font-size:1.1rem; }
+  .eula-content p { margin:8px 0; }
+  .eula-content ul { margin:8px 0 8px 20px; }
+  .eula-content li { margin:4px 0; }
+  .eula-footer { padding:20px; border-top:1px solid var(--border); display:flex; gap:12px; align-items:center; flex-shrink:0; }
+  .eula-checkbox { display:flex; align-items:center; gap:8px; flex:1; cursor:pointer; }
+  .eula-checkbox input { cursor:pointer; width:18px; height:18px; }
+  .eula-checkbox label { cursor:pointer; user-select:none; }
+  .eula-buttons { display:flex; gap:8px; }
+  .eula-btn { padding:10px 20px; border:none; border-radius:8px; font-weight:700; cursor:pointer; transition:all 0.2s; font-size:0.95rem; }
+  .eula-btn.accept { background:#00ff88; color:#0a0e1a; }
+  .eula-btn.accept:disabled { opacity:0.4; cursor:default; }
+  .eula-btn.accept:not(:disabled):hover { box-shadow:0 0 16px rgba(0,255,136,0.5); transform:translateY(-2px); }
+  .eula-btn.decline { background:rgba(255,255,255,0.1); color:#aaa; border:1px solid rgba(255,255,255,0.2); }
+  .eula-btn.decline:hover { background:rgba(255,255,255,0.15); color:#ccc; }
+
+  /* ── EULA Signup Checkbox ── */
+  .eula-checkbox-signup { display:flex; align-items:center; gap:8px; margin:12px 0; padding:12px; background:rgba(0,212,255,0.05); border:1px solid rgba(0,212,255,0.2); border-radius:8px; }
+  .eula-checkbox-signup input { cursor:pointer; width:18px; height:18px; }
+  .eula-checkbox-signup label { cursor:pointer; user-select:none; color:#ccc; font-size:0.9rem; flex:1; }
 </style>
 </head>
 <body>
@@ -1639,8 +1667,32 @@
       </div>
       <div class="auth-msg error" id="su-err"></div>
       <div class="auth-msg success" id="su-ok"></div>
-      <button class="auth-submit" id="su-btn" type="submit">Create Account →</button>
+      <div class="eula-checkbox-signup">
+        <input type="checkbox" id="su-eula-checkbox">
+        <label for="su-eula-checkbox">I agree to the NetQuest Terms of Service & EULA</label>
+      </div>
+      <button class="auth-submit" id="su-btn" type="submit" disabled>Create Account →</button>
     </form>
+  </div>
+</div>
+
+<!-- ── EULA Modal ── -->
+<div id="eula-modal" class="hidden eula-overlay">
+  <div class="eula-container">
+    <div class="eula-header">
+      <h2>📋 NetQuest Terms of Service & License Agreement</h2>
+    </div>
+    <div class="eula-content" id="eula-body"></div>
+    <div class="eula-footer">
+      <div class="eula-checkbox">
+        <input type="checkbox" id="eula-checkbox">
+        <label for="eula-checkbox">I have read and agree to the above terms</label>
+      </div>
+      <div class="eula-buttons">
+        <button class="eula-btn decline" id="eula-decline-btn" onclick="declineEula()">Decline</button>
+        <button class="eula-btn accept" id="eula-accept-btn" onclick="acceptEula()" disabled>Accept</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -9240,6 +9292,100 @@ const SUPABASE_ANON_KEY = 'sb_publishable_tbuL2d2tDtrW3bGXa7RPtg_QPN639-V';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let sbSaveTimer = null;
 
+// ── EULA System ──────────────────────────────────────────────────────────────
+const CURRENT_EULA_VERSION = '1.0';
+let eulaAcceptanceRequired = false;
+
+const EULA_HTML = `
+  <div class="eula-section">
+    <h3>🎓 Welcome to NetQuest</h3>
+    <p>NetQuest is an educational platform designed to help you master Cisco Certified Network Associate (CCNA) concepts through interactive lessons, animations, and quizzes. Before you can use NetQuest, you need to agree to these Terms of Service and End User License Agreement (EULA).</p>
+  </div>
+
+  <div class="eula-section">
+    <h3>📜 Your License</h3>
+    <p>NetQuest grants you a <strong>limited, non-exclusive, non-transferable</strong> license to use the platform for <strong>personal, educational purposes only</strong>. This means:</p>
+    <ul>
+      <li>You can use NetQuest to learn CCNA topics for your own benefit</li>
+      <li>You cannot share your account with others or sell access</li>
+      <li>You cannot transfer your license to another person</li>
+      <li>NetQuest can modify or revoke this license at any time</li>
+    </ul>
+  </div>
+
+  <div class="eula-section">
+    <h3>🏠 House Rules</h3>
+    <p>To keep NetQuest a great learning environment for everyone, you agree to:</p>
+    <ul>
+      <li><strong>No cheating:</strong> Don't use unauthorized tools, scripts, or external resources during quizzes</li>
+      <li><strong>No account sharing:</strong> Your account is for you alone; don't share login credentials</li>
+      <li><strong>No commercial use:</strong> Don't use NetQuest to teach others for money or profit</li>
+      <li><strong>No spam:</strong> Don't create fake accounts or abuse the system</li>
+      <li><strong>Be respectful:</strong> Use NetQuest for its intended educational purpose</li>
+    </ul>
+  </div>
+
+  <div class="eula-section">
+    <h3>📊 Your Data & Privacy</h3>
+    <p>When you use NetQuest, we collect and store:</p>
+    <ul>
+      <li>Your username, email, and avatar</li>
+      <li>Your quiz scores, progress, and learning data</li>
+      <li>Your XP points, level, and streak information</li>
+      <li>Information about which topics you've completed</li>
+    </ul>
+    <p>We use this data to: (1) save your progress between sessions, (2) personalize your learning experience, (3) show you your achievements. We will never sell your data to third parties.</p>
+  </div>
+
+  <div class="eula-section">
+    <h3>🔒 Our Content & IP Rights</h3>
+    <p>All NetQuest content—lessons, animations, quiz questions, images, code, and designs—is owned by NetQuest. You may not:</p>
+    <ul>
+      <li>Copy, download, or screenshot lesson content for redistribution</li>
+      <li>Remix or create derivative works from NetQuest materials</li>
+      <li>Share quiz questions or answers publicly</li>
+      <li>Reverse-engineer or attempt to extract the source code</li>
+    </ul>
+    <p>You own any notes or study materials you create yourself, but they cannot include verbatim NetQuest content.</p>
+  </div>
+
+  <div class="eula-section">
+    <h3>⚠️ No Warranty & Limitations</h3>
+    <p>NetQuest is provided "<strong>as-is</strong>" without any guarantees. Specifically:</p>
+    <ul>
+      <li>We don't guarantee NetQuest will always be available or error-free</li>
+      <li>We're not responsible for lost data, deleted accounts, or interrupted learning</li>
+      <li>We're not liable for any damages, losses, or indirect harm from using NetQuest</li>
+      <li>NetQuest is not a substitute for official Cisco training or exam preparation</li>
+    </ul>
+  </div>
+
+  <div class="eula-section">
+    <h3>🔄 Changes to These Terms</h3>
+    <p>NetQuest may update these terms anytime. When we do, we'll update the version number (currently v1.0). If we make major changes, we'll ask you to accept the new terms before you can continue using NetQuest. Your continued use means you accept the new terms.</p>
+  </div>
+
+  <div class="eula-section">
+    <h3>🚫 Account Suspension</h3>
+    <p>NetQuest reserves the right to suspend or terminate your account if you:</p>
+    <ul>
+      <li>Violate these terms or the House Rules</li>
+      <li>Use NetQuest for harmful, illegal, or unauthorized purposes</li>
+      <li>Create multiple accounts to cheat or abuse the system</li>
+      <li>Attempt to hack, disrupt, or damage the platform</li>
+    </ul>
+    <p>Suspended accounts cannot be recovered. Use responsibly!</p>
+  </div>
+
+  <div class="eula-section" style="border-top: 1px solid rgba(0,212,255,0.2); padding-top: 16px; margin-top: 20px;">
+    <p style="font-size: 0.9rem; color: #888;">
+      <strong>NetQuest Terms of Service & EULA v1.0</strong><br>
+      Last updated: ${new Date().toLocaleDateString()}<br>
+      By using NetQuest, you agree to be bound by these terms.
+    </p>
+  </div>
+`;
+
 // ── Auth UI ──────────────────────────────────────────────────────────────────
 function authSwitchTab(tab) {
   const isSignin = tab === 'signin';
@@ -9301,6 +9447,81 @@ async function authSetNewPassword(e) {
   }, 1200);
 }
 
+// ── EULA Functions ──────────────────────────────────────────────────────────
+function initializeEulaModal() {
+  // Populate EULA content
+  document.getElementById('eula-body').innerHTML = EULA_HTML;
+
+  // Setup checkbox handler
+  document.getElementById('eula-checkbox').addEventListener('change', function() {
+    document.getElementById('eula-accept-btn').disabled = !this.checked;
+  });
+}
+
+function showEulaModal(isNewSignup = false) {
+  eulaAcceptanceRequired = true;
+  const modal = document.getElementById('eula-modal');
+  const declineBtn = document.getElementById('eula-decline-btn');
+
+  // For new signups, hide decline button (user must accept)
+  if (isNewSignup) {
+    declineBtn.style.display = 'none';
+  } else {
+    declineBtn.style.display = 'block';
+  }
+
+  // Reset checkbox
+  document.getElementById('eula-checkbox').checked = false;
+  document.getElementById('eula-accept-btn').disabled = true;
+
+  // Show modal
+  modal.classList.remove('hidden');
+}
+
+function hideEulaModal() {
+  document.getElementById('eula-modal').classList.add('hidden');
+  eulaAcceptanceRequired = false;
+}
+
+async function acceptEula() {
+  // Update profile in Supabase
+  if (profileUserId) {
+    await sb.from('profiles').update({
+      eula_accepted: true,
+      eula_version: CURRENT_EULA_VERSION
+    }).eq('id', profileUserId);
+  }
+
+  hideEulaModal();
+
+  // Complete the login flow - hide auth overlay and show app
+  document.getElementById('logout-btn').style.display = 'inline';
+  document.getElementById('auth-overlay').classList.add('hidden');
+
+  // Show the main app screen
+  showScreen('screen-topics');
+}
+
+function declineEula() {
+  hideEulaModal();
+  // Log out the user
+  authHandleSignOut();
+}
+
+// Signup checkbox handler
+function setupSignupEulaCheckbox() {
+  const checkbox = document.getElementById('su-eula-checkbox');
+  const submitBtn = document.getElementById('su-btn');
+
+  if (checkbox && submitBtn) {
+    checkbox.addEventListener('change', function() {
+      submitBtn.disabled = !this.checked;
+    });
+    // Initially disabled
+    submitBtn.disabled = true;
+  }
+}
+
 async function authHandleSignIn(e) {
   e.preventDefault();
   authHideMsg('si-err');
@@ -9320,6 +9541,14 @@ async function authHandleSignUp(e) {
   const username = document.getElementById('su-name').value.trim();
   const email    = document.getElementById('su-email').value.trim();
   const pass     = document.getElementById('su-pass').value;
+  const eulaChecked = document.getElementById('su-eula-checkbox').checked;
+
+  // Check EULA acceptance
+  if (!eulaChecked) {
+    authShowMsg('su-err', 'You must accept the Terms of Service & EULA to sign up.', 'error');
+    return;
+  }
+
   if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
     authShowMsg('su-err', 'Username must be 3–20 characters, letters/numbers/underscores only.', 'error'); return;
   }
@@ -9332,15 +9561,17 @@ async function authHandleSignUp(e) {
     authShowMsg('su-ok', '✅ Check your email to confirm your account, then sign in.', 'success'); return;
   }
   // Auto-confirmed (e.g. email confirmation disabled in Supabase)
-  await authCreateProfile(data.user, username);
+  await authCreateProfile(data.user, username, true);
   await authOnLogin(data.user);
 }
 
-async function authCreateProfile(user, username) {
+async function authCreateProfile(user, username, eulaAccepted = false) {
   await sb.from('profiles').upsert({
     id: user.id, username,
     xp: state.xp, level: state.level, streak: state.streak,
-    topic_scores: state.topicScores
+    topic_scores: state.topicScores,
+    eula_accepted: eulaAccepted,
+    eula_version: eulaAccepted ? CURRENT_EULA_VERSION : null
   });
 }
 
@@ -9368,6 +9599,15 @@ async function authOnLogin(user) {
     document.getElementById('prof-uname').textContent = profileUsername;
     document.getElementById('prof-uemail').textContent = user.email || '';
     document.getElementById('prof-avatar-big').textContent = profileCurrentAvatar;
+
+    // Check EULA acceptance
+    if (!profile.eula_accepted || profile.eula_version !== CURRENT_EULA_VERSION) {
+      // EULA not accepted or version mismatch - show EULA modal
+      showEulaModal(false);
+      // Hide auth tabs to prevent switching
+      document.getElementById('auth-tabs').style.display = 'none';
+      return; // Don't hide auth overlay yet
+    }
   }
   document.getElementById('logout-btn').style.display = 'inline';
   document.getElementById('auth-overlay').classList.add('hidden');
@@ -9476,6 +9716,10 @@ sb.auth.onAuthStateChange(async (event, session) => {
     history.replaceState(null, '', window.location.pathname);
   }
 });
+
+// ── Initialize EULA Modal ───────────────────────────────────────────────────
+initializeEulaModal();
+setupSignupEulaCheckbox();
 
 // ── Session restore on page load ─────────────────────────────────────────────
 (async () => {
