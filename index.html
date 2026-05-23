@@ -2953,6 +2953,1728 @@ const TOPICS = [
       },
     ]
   },
+
+  // ── IP SERVICES DOMAIN (10% of exam) ──
+  {
+    id: 'nat',
+    name: 'NAT (Network Address Translation)',
+    icon: '🔄',
+    color: '#00ff88',
+    lesson: [
+      {
+        title: 'What is NAT?',
+        body: `<p><strong>NAT (Network Address Translation)</strong> allows a device or network to hide behind a single IP address. It translates private IP addresses into public IP addresses and vice versa.</p><p>Think of NAT like an embassy — employees inside have internal IDs, but the embassy presents one official address to the outside world. Return mail comes to the embassy, which forwards it to the right person inside.</p>`
+      },
+      {
+        title: 'Why Use NAT?',
+        type: 'table',
+        headers: ['Benefit', 'Description'],
+        rows: [
+          ['IP Conservation', 'Allows thousands of devices to share one public IP'],
+          ['Security', 'Hides internal network structure from the internet'],
+          ['Flexibility', 'Change internal addresses without changing external ones'],
+          ['Scalability', 'Organizations can grow without running out of public IPs'],
+        ]
+      },
+      {
+        title: 'Types of NAT',
+        type: 'table',
+        headers: ['Type', 'Description', 'When Used'],
+        rows: [
+          ['Static NAT', '1 private IP ↔ 1 public IP', 'Servers that need consistent external IP (web servers, mail)'],
+          ['Dynamic NAT', 'Multiple privates ↔ Pool of publics', 'Multiple internal devices share rotating public IPs'],
+          ['PAT (Overloading)', 'Many privates ↔ 1 public (via ports)', 'Most common: home routers, small networks'],
+        ]
+      },
+      {
+        title: 'Inside vs Outside Terminology',
+        body: `<p><strong>Inside Local:</strong> The private IP address on your internal network (e.g., 192.168.1.10)</p><p><strong>Inside Global:</strong> The public IP the inside device appears as to the world (e.g., 203.0.113.5)</p><p><strong>Outside Local:</strong> The private IP of an external server as seen internally (rare)</p><p><strong>Outside Global:</strong> The public IP of an external server (e.g., 8.8.8.8)</p>`
+      },
+      {
+        title: 'PAT (Port Address Translation)',
+        body: `<p><strong>PAT</strong> is NAT with port overloading — the most common type. It maps multiple internal IPs to ONE public IP by changing source port numbers.</p><p><strong>Example:</strong></p><ul><li>Your laptop (192.168.1.10:54823) → Internet sees (203.0.113.5:54823)</li><li>Your phone (192.168.1.11:54824) → Internet sees (203.0.113.5:54824)</li><li>Your printer (192.168.1.12:54825) → Internet sees (203.0.113.5:54825)</li></ul><p>When responses come back, the router uses the port numbers to route them back to the correct device.</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the primary purpose of NAT?',
+        a: ['Increase network speed','Translate private IPs to public IPs and vice versa','Encrypt all traffic','Prevent DNS resolution'],
+        correct: 1,
+        explain: '<strong>NAT</strong> translates between private and public IP addresses, allowing internal networks to share public addresses.'
+      },
+      {
+        q: 'Which NAT type uses one public IP for many private IPs with different port numbers?',
+        a: ['Static NAT','Dynamic NAT','PAT (Port Address Translation)','Reverse NAT'],
+        correct: 2,
+        explain: '<strong>PAT (Overloading)</strong> is the most common type. It maps multiple internal IPs to one public IP by modifying port numbers.'
+      },
+      {
+        q: 'In NAT terminology, what is an "Inside Local" address?',
+        a: ['A private IP on your internal network','A public IP assigned to your organization','An internal server\'s view of an external IP','A temporary IP used during translation'],
+        correct: 0,
+        explain: '<strong>Inside Local</strong> = the private IP address (192.168.x.x) on your internal network.'
+      },
+      {
+        q: 'Which scenario BEST uses Static NAT?',
+        a: ['A home router sharing internet with multiple devices','A web server that needs a consistent public IP','A laptop connecting to public Wi-Fi','A printer using temporary IPs'],
+        correct: 1,
+        explain: '<strong>Static NAT</strong> (1 private → 1 public) is ideal for servers that need consistent external addresses.'
+      },
+      {
+        q: 'How does PAT handle multiple devices connecting with the same public IP?',
+        a: ['It uses different protocol numbers','It uses different source port numbers','It uses MAC addresses','It queues requests sequentially'],
+        correct: 1,
+        explain: '<strong>PAT</strong> distinguishes devices by changing source port numbers, allowing the router to track which responses go to which internal device.'
+      },
+      {
+        q: 'What security benefit does NAT provide?',
+        a: ['Encrypts all traffic','Hides the internal network structure from the internet','Prevents all hacking attempts','Blocks malware automatically'],
+        correct: 1,
+        explain: '<strong>NAT provides security through obscurity</strong> — external hosts only see the public IP, not the internal private IPs.'
+      },
+      {
+        q: 'A company uses dynamic NAT with a pool of 5 public IPs for 50 internal devices. What happens when all 5 public IPs are in use?',
+        a: ['The 6th device is assigned a PAT entry','The connections are queued until an IP is free','The traffic is encrypted','All traffic is blocked'],
+        correct: 1,
+        explain: '<strong>Dynamic NAT</strong> with limited public IPs will queue connections until a public IP becomes available.'
+      },
+      {
+        q: 'Which term describes the public IP address that an internal device appears as to the internet?',
+        a: ['Inside Local','Inside Global','Outside Local','Outside Global'],
+        correct: 1,
+        explain: '<strong>Inside Global</strong> = the public IP that your internal device is translated to when communicating outside.'
+      },
+    ]
+  },
+
+  {
+    id: 'dhcp',
+    name: 'DHCP (Dynamic Host Configuration Protocol)',
+    icon: '🔌',
+    color: '#00ff88',
+    lesson: [
+      {
+        title: 'What is DHCP?',
+        body: `<p><strong>DHCP (Dynamic Host Configuration Protocol)</strong> automatically assigns IP addresses and network configuration to devices when they connect to a network.</p><p>Without DHCP, you'd manually type IP address, gateway, and DNS settings on every device. DHCP automates this.</p>`
+      },
+      {
+        title: 'DHCP Discovery Process (DORA)',
+        type: 'table',
+        headers: ['Step', 'Action', 'Details'],
+        rows: [
+          ['1. Discover','Client broadcasts DHCP Discover','Asking "Is there a DHCP server out there?"'],
+          ['2. Offer','Server sends DHCP Offer','"I have IP 192.168.1.100 available for you"'],
+          ['3. Request','Client sends DHCP Request','"I want that IP 192.168.1.100"'],
+          ['4. Acknowledge','Server sends DHCP Ack','"Done! IP 192.168.1.100 is yours. Lease = 24 hours"'],
+        ]
+      },
+      {
+        title: 'DHCP Configuration Options',
+        body: `<p>A DHCP server can assign:</p><ul><li><strong>IP Address</strong> — the device\'s IP (required)</li><li><strong>Subnet Mask</strong> — which IPs are local</li><li><strong>Default Gateway</strong> — the router\'s IP</li><li><strong>DNS Servers</strong> — for hostname resolution</li><li><strong>NTP Servers</strong> — for time sync</li><li><strong>WINS Servers</strong> — for NetBIOS name resolution (legacy)</li></ul>`
+      },
+      {
+        title: 'DHCP Lease Renewal',
+        body: `<p>A DHCP lease is <strong>temporary</strong> — typically 24 hours or configurable.</p><p><strong>At 50% of lease time:</strong> Client sends DHCP Request to renew from same server</p><p><strong>At 87.5% of lease time:</strong> Client broadcasts to ANY DHCP server</p><p><strong>At 100% (expiration):</strong> IP revoked; device can\'t communicate</p><p>If server is down during renewal, device can keep the IP for a short grace period, but won\'t renew.</p>`
+      },
+      {
+        title: 'DHCP Pools and Reservations',
+        body: `<p><strong>DHCP Pool:</strong> Range of IPs available for assignment (e.g., 192.168.1.10 – 192.168.1.254)</p><p><strong>DHCP Reservation:</strong> A specific IP reserved for a specific device (by MAC address). The device always gets the same IP, but still uses DHCP (not static).</p><p><strong>Excluded IPs:</strong> IPs removed from the pool for servers, printers, routers (e.g., 192.168.1.1 – 192.168.1.9)</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What does DHCP stand for?',
+        a: ['Dynamic Host Configuration Protocol','Direct Hosting Connection Protocol','Distributed Host Communication Protocol','Data Host Control Process'],
+        correct: 0,
+        explain: '<strong>DHCP = Dynamic Host Configuration Protocol</strong> — automatically assigns IPs to devices.'
+      },
+      {
+        q: 'What is the first step in DHCP address assignment?',
+        a: ['Client sends DHCP Request','Server sends DHCP Offer','Client broadcasts DHCP Discover','Server sends DHCP Acknowledge'],
+        correct: 2,
+        explain: '<strong>DHCP Discover</strong> is the first step — the client broadcasts asking if any DHCP server is available.'
+      },
+      {
+        q: 'A DHCP lease is 24 hours. When does the client attempt to renew it?',
+        a: ['At 12 hours (50%)','At 18 hours (75%)','At 23 hours (95%)','Immediately after assignment'],
+        correct: 0,
+        explain: 'At <strong>50% of the lease time (12 hours)</strong>, the client proactively renews the lease from the same DHCP server.'
+      },
+      {
+        q: 'What is the advantage of a DHCP reservation?',
+        a: ['Faster lease renewal','Device always gets the same IP but through DHCP','Prevents IP conflicts','Allows multiple devices per IP'],
+        correct: 1,
+        explain: '<strong>DHCP Reservation</strong> maps a MAC address to a specific IP, so the device always gets the same address via DHCP (not static).'
+      },
+      {
+        q: 'Which IPs should be excluded from a DHCP pool?',
+        a: ['All public IPs','All private IPs below 100','IPs used by routers, servers, printers','IPs above the subnet mask'],
+        correct: 2,
+        explain: '<strong>Excluded IPs</strong> are those assigned to infrastructure (router, servers, printers, etc.) to avoid DHCP conflicts.'
+      },
+      {
+        q: 'What happens to a device when its DHCP lease expires?',
+        a: ['It automatically extends for another 24 hours','It keeps the IP with reduced priority','It loses IP connectivity','It must be manually reconfigured'],
+        correct: 2,
+        explain: 'Without lease renewal, the device <strong>loses its IP</strong> and cannot communicate on the network.'
+      },
+      {
+        q: 'What is a DHCP Offer?',
+        a: ['A promotion to extend the lease free','The server\'s response proposing an IP address','The client\'s request for an IP','A broadcast to all servers'],
+        correct: 1,
+        explain: '<strong>DHCP Offer</strong> is the server\'s response to Discover, proposing an available IP address.'
+      },
+      {
+        q: 'What port does DHCP use?',
+        a: ['TCP 67','UDP 67 and 68','TCP 68','UDP 53'],
+        correct: 1,
+        explain: '<strong>DHCP uses UDP ports 67 (server) and 68 (client)</strong> for communication.'
+      },
+    ]
+  },
+
+  {
+    id: 'dns',
+    name: 'DNS (Domain Name System)',
+    icon: '🌐',
+    color: '#00ff88',
+    lesson: [
+      {
+        title: 'What is DNS?',
+        body: `<p><strong>DNS (Domain Name System)</strong> translates human-readable domain names into IP addresses.</p><p>Instead of typing 142.250.80.46, you type <strong>google.com</strong> and DNS figures out the IP.</p><p>DNS is the "phonebook of the internet" — it maps domain names ↔ IP addresses.</p>`
+      },
+      {
+        title: 'DNS Hierarchy',
+        body: `<p><strong>Root Nameservers (.):</strong> Top of the hierarchy. Know where TLDs are.</p><p><strong>TLD Nameservers (.com, .org, .edu):</strong> Know where domain registrars are.</p><p><strong>Authoritative Nameservers (google.com):</strong> Hold the actual A records (IP addresses) for the domain.</p><p><strong>Recursive Resolvers (8.8.8.8):</strong> Client-facing DNS servers that ask other servers on your behalf.</p>`
+      },
+      {
+        title: 'DNS Query Process',
+        body: `<p><strong>1. User types google.com into browser</strong></p><p><strong>2. Recursive Resolver (ISP DNS) receives query:</strong> "What's the IP for google.com?"</p><p><strong>3. Resolver asks Root Nameserver:</strong> "Where's the .com server?"</p><p><strong>4. Root replies:</strong> "Ask TLD server 192.0.34.191"</p><p><strong>5. Resolver asks TLD Nameserver:</strong> "Where's google.com?"</p><p><strong>6. TLD replies:</strong> "Ask authoritative server 216.239.36.10"</p><p><strong>7. Resolver asks Authoritative Nameserver:</strong> "What's the IP for google.com?"</p><p><strong>8. Authoritative replies:</strong> "142.250.80.46" (the A record)</p><p><strong>9. Resolver sends back to browser:</strong> Browser now knows IP 142.250.80.46</p><p><strong>10. Browser connects to 142.250.80.46 and loads google.com</strong></p>`
+      },
+      {
+        title: 'DNS Record Types',
+        type: 'table',
+        headers: ['Record Type', 'Purpose', 'Example'],
+        rows: [
+          ['A Record','IPv4 → IP address','google.com → 142.250.80.46'],
+          ['AAAA Record','IPv6 → IP address','google.com → 2607:f8b0:4004:80a::200e'],
+          ['CNAME','Alias for another domain','www.google.com → google.com'],
+          ['MX Record','Mail exchange (email server)','@google.com → mail.google.com'],
+          ['NS Record','Nameserver for the domain','google.com nameserver → ns1.google.com'],
+          ['TXT Record','Text info (SPF, DKIM, domain verification)','v=spf1 include:google.com ~all'],
+          ['SOA Record','Start of Authority (serial, refresh, retry)','Master record for the zone'],
+        ]
+      },
+      {
+        title: 'DNS Caching',
+        body: `<p>DNS results are <strong>cached at multiple levels</strong> to reduce queries:</p><p><strong>Recursive Resolver Cache:</strong> Caches results for hours/days</p><p><strong>OS Cache:</strong> Your computer caches DNS lookups</p><p><strong>Browser Cache:</strong> Chrome/Firefox caches recent lookups</p><p>This is why newly-changed DNS can take time to propagate — old caches must expire (TTL = Time To Live).</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What does DNS stand for?',
+        a: ['Dynamic Name Server','Domain Name System','Direct Network Search','Distributed Naming Service'],
+        correct: 1,
+        explain: '<strong>DNS = Domain Name System</strong> — translates domain names to IP addresses.'
+      },
+      {
+        q: 'What does a DNS A record contain?',
+        a: ['Mail server address','Domain alias','IPv4 address of a domain','Text information'],
+        correct: 2,
+        explain: '<strong>A records</strong> map a domain name to an IPv4 address (e.g., google.com → 142.250.80.46).'
+      },
+      {
+        q: 'In the DNS hierarchy, which servers hold the actual IP addresses for a domain?',
+        a: ['Root Nameservers','TLD Nameservers','Recursive Resolvers','Authoritative Nameservers'],
+        correct: 3,
+        explain: '<strong>Authoritative Nameservers</strong> hold the actual DNS records (A, CNAME, MX, etc.) for a domain.'
+      },
+      {
+        q: 'What is the purpose of DNS caching?',
+        a: ['Store deleted records','Improve speed and reduce unnecessary queries','Prevent DNS spoofing','Encrypt DNS traffic'],
+        correct: 1,
+        explain: '<strong>DNS caching</strong> stores recent lookups at the resolver, OS, and browser level to reduce redundant queries.'
+      },
+      {
+        q: 'What DNS record is used for email delivery?',
+        a: ['A Record','CNAME Record','MX Record','TXT Record'],
+        correct: 2,
+        explain: '<strong>MX (Mail Exchange) records</strong> specify which server handles email for a domain.'
+      },
+      {
+        q: 'Which type of server responds directly to user DNS queries?',
+        a: ['Root Nameserver','TLD Nameserver','Authoritative Nameserver','Recursive Resolver'],
+        correct: 3,
+        explain: '<strong>Recursive Resolvers</strong> (like 8.8.8.8) are the DNS servers your device queries — they do the lookup legwork on your behalf.'
+      },
+      {
+        q: 'What is a CNAME record used for?',
+        a: ['Creating domain aliases','Storing IPv6 addresses','Email routing','Directory lookups'],
+        correct: 0,
+        explain: '<strong>CNAME (Canonical Name)</strong> creates aliases — e.g., www.google.com is a CNAME pointing to google.com.'
+      },
+      {
+        q: 'Why does it take time for DNS changes to propagate globally?',
+        a: ['Root servers are slow','Multiple levels of caching with expiration times (TTL)','ISPs block DNS changes','DNS is encrypted and needs decryption'],
+        correct: 1,
+        explain: '<strong>DNS caching</strong> at recursive resolvers, ISPs, and browsers means old records stay cached until TTL (Time To Live) expires.'
+      },
+    ]
+  },
+
+  {
+    id: 'ntp',
+    name: 'NTP (Network Time Protocol)',
+    icon: '🕐',
+    color: '#00ff88',
+    lesson: [
+      {
+        title: 'What is NTP?',
+        body: `<p><strong>NTP (Network Time Protocol)</strong> synchronizes clocks across network devices.</p><p>Why does this matter? Accurate time is critical for:</p><ul><li><strong>Syslog timestamps</strong> — logs must match across devices to troubleshoot issues</li><li><strong>Kerberos authentication</strong> — time-based tickets expire</li><li><strong>SSL/TLS certificates</strong> — validity depends on time</li><li><strong>Event correlation</strong> — "Device A failed at 10:00:01, then B at 10:00:03" requires accurate time</li></ul>`
+      },
+      {
+        title: 'NTP Hierarchy (Stratum)',
+        body: `<p><strong>Stratum 0:</strong> Atomic clocks (not networked) — the absolute time reference</p><p><strong>Stratum 1:</strong> Servers with atomic clock hardware (GPS receivers, cesium clocks)</p><p><strong>Stratum 2:</strong> Syncs to Stratum 1 servers (typical enterprise NTP servers)</p><p><strong>Stratum 3+:</strong> Syncs to lower stratum servers (your devices)</p><p>Each level adds slight inaccuracy. Stratum 1 ≈ nanosecond accuracy. Stratum 15 = unusable. Stratum 16 = out of sync.</p>`
+      },
+      {
+        title: 'Configuring NTP on a Cisco Router',
+        body: `<p><strong>Configure NTP server:</strong></p><p><code>ntp server 216.239.35.0 prefer</code></p><p><strong>View NTP status:</strong></p><p><code>show ntp status</code><br><code>show ntp associations</code></p><p><strong>Sync sources:</strong></p><ul><li>Public NTP servers (ntp.ubuntu.com, pool.ntp.org)</li><li>ISP-provided NTP</li><li>Internal NTP server</li><li>GPS receiver</li></ul>`
+      },
+      {
+        title: 'NTP Best Practices',
+        body: `<p><strong>Use multiple NTP sources:</strong> Configure 3-5 servers for redundancy</p><p><strong>Use "prefer" keyword:</strong> Marks the most reliable server as preferred</p><p><strong>Control access:</strong> Restrict who can query your NTP server</p><p><strong>Monitor synchronization:</strong> Alert if clock drift exceeds threshold (±1 second typically)</p><p><strong>Consider GPS receivers:</strong> For Stratum 1 accuracy in mission-critical networks</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the primary purpose of NTP?',
+        a: ['Encrypt network traffic','Synchronize clocks across network devices','Manage IP addresses','Route packets efficiently'],
+        correct: 1,
+        explain: '<strong>NTP (Network Time Protocol)</strong> keeps network device clocks synchronized — critical for accurate logging and authentication.'
+      },
+      {
+        q: 'In NTP Stratum hierarchy, which has the most accurate time?',
+        a: ['Stratum 1','Stratum 5','Stratum 15','Stratum 16'],
+        correct: 0,
+        explain: '<strong>Stratum 1 servers</strong> have atomic clocks or GPS receivers — the most accurate. Higher numbers = less accurate.'
+      },
+      {
+        q: 'What does Stratum 16 mean in NTP?',
+        a: ['Excellent synchronization','Good time source','Out of sync / unusable','Not connected'],
+        correct: 2,
+        explain: '<strong>Stratum 16</strong> means the device is completely unsynchronized and cannot be used as a time source.'
+      },
+      {
+        q: 'Why is accurate time important in networking?',
+        a: ['Increases bandwidth','Required for NTP to work','Enables accurate logging, authentication (Kerberos), and certificate validation','Makes routers faster'],
+        correct: 2,
+        explain: '<strong>Time accuracy</strong> is essential for syslog timestamps, Kerberos tickets, and SSL/TLS certificate validation.'
+      },
+      {
+        q: 'What Cisco command configures an NTP server?',
+        a: ['ntp source','ntp server 216.239.35.0','time server 216.239.35.0','clock server 216.239.35.0'],
+        correct: 1,
+        explain: '<code><strong>ntp server &lt;IP&gt;</strong></code> configures an NTP time source on a Cisco device.'
+      },
+      {
+        q: 'In NTP, what does the "prefer" keyword do?',
+        a: ['Encrypts NTP traffic','Marks a server as the preferred time source','Speeds up synchronization','Restricts NTP access'],
+        correct: 1,
+        explain: 'The <strong>"prefer" keyword</strong> marks a particular NTP server as most reliable and preferred over others.'
+      },
+      {
+        q: 'Which command shows if an NTP server is successfully synchronized?',
+        a: ['show ntp server','show ntp status','show ntp time','show clock detail'],
+        correct: 1,
+        explain: '<code><strong>show ntp status</strong></code> displays NTP synchronization details and shows the synchronized time source.'
+      },
+      {
+        q: 'What is a practical issue if network devices have different times?',
+        a: ['Slower packet delivery','Syslog timestamps don\'t correlate; troubleshooting fails','Passwords expire faster','Bandwidth is wasted'],
+        correct: 1,
+        explain: 'Without synchronized time, <strong>syslog events can\'t be correlated</strong> across devices — making troubleshooting nearly impossible.'
+      },
+    ]
+  },
+
+  {
+    id: 'snmp',
+    name: 'SNMP (Simple Network Management Protocol)',
+    icon: '📊',
+    color: '#00ff88',
+    lesson: [
+      {
+        title: 'What is SNMP?',
+        body: `<p><strong>SNMP (Simple Network Management Protocol)</strong> allows a Network Management System (NMS) to monitor and manage network devices.</p><p>An NMS is like a "control center" that checks the health of your routers, switches, servers, and printers.</p><p>Common NMS platforms: Nagios, Zabbix, Cisco Prime, Splunk</p>`
+      },
+      {
+        title: 'SNMP Agents and Managers',
+        body: `<p><strong>SNMP Agent:</strong> Runs on network devices (routers, switches, servers). Collects metrics and sends alerts.</p><p><strong>SNMP Manager (NMS):</strong> Central system that queries agents and displays results.</p><p><strong>Data Exchange:</strong></p><ul><li>Manager sends SNMP GET requests → Agent responds with data</li><li>Agent sends SNMP TRAP (alert) → Manager receives unsolicited notifications</li></ul>`
+      },
+      {
+        title: 'SNMP Operations',
+        type: 'table',
+        headers: ['Operation', 'Direction', 'Purpose'],
+        rows: [
+          ['GET','Manager → Agent','Retrieve a single MIB value (e.g., "What\'s the CPU?")'],
+          ['GET-NEXT','Manager → Agent','Retrieve next MIB value in sequence'],
+          ['GET-BULK','Manager → Agent','Retrieve multiple MIB values (v3 only)'],
+          ['SET','Manager → Agent','Change a MIB value (e.g., restart device)'],
+          ['TRAP','Agent → Manager','Unsolicited alert when something happens (link down, high CPU)'],
+          ['INFORM','Agent → Manager','TRAP with acknowledgment (v2/v3)'],
+        ]
+      },
+      {
+        title: 'SNMP Versions',
+        type: 'table',
+        headers: ['Version', 'Security', 'Features'],
+        rows: [
+          ['SNMPv1','Community string (plaintext)','Basic; obsolete; no encryption'],
+          ['SNMPv2c','Community string (plaintext)','GET-BULK, INFORM; slightly better'],
+          ['SNMPv3','Username/password + encryption','Most secure; authentication + encryption; industry standard'],
+        ]
+      },
+      {
+        title: 'MIB (Management Information Base)',
+        body: `<p><strong>MIB:</strong> A database of information a device exposes via SNMP.</p><p><strong>OID (Object Identifier):</strong> Unique address of a MIB object (e.g., 1.3.6.1.4.1.9.2.1.58 = Cisco CPU utilization)</p><p><strong>Common MIBs:</strong></p><ul><li>sysUptime — How long device has been up</li><li>ifInOctets/ifOutOctets — Interface traffic</li><li>sysDescr — Device description</li><li>snmpTrapEnterprise — Trap origin</li></ul>`
+      },
+      {
+        title: 'Configuring SNMP on Cisco IOS',
+        body: `<p><strong>Enable SNMPv3 (best practice):</strong></p><p><code>snmp-server group NetOps v3 auth read ViewAll write ViewAll</code><br><code>snmp-server user admin NetOps v3 auth sha SecurePass123 priv aes SecurePass123</code></p><p><strong>Or SNMPv2c (simpler but less secure):</strong></p><p><code>snmp-server community public ro</code><br><code>snmp-server trap-source Fa0/0</code><br><code>snmp-server host 192.168.1.100 traps version 2c NetOps</code></p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What does SNMP stand for?',
+        a: ['Simple Network Monitoring Protocol','Simplified Network Management Platform','Simple Network Management Protocol','Switched Network Media Protocol'],
+        correct: 2,
+        explain: '<strong>SNMP = Simple Network Management Protocol</strong> — used by Network Management Systems (NMS) to monitor and manage devices.'
+      },
+      {
+        q: 'What is an SNMP Agent?',
+        a: ['The central monitoring system','Software running on network devices that collects metrics','A person managing the network','A backup server'],
+        correct: 1,
+        explain: '<strong>SNMP Agent</strong> is software on routers, switches, servers — it collects data and sends alerts to the NMS.'
+      },
+      {
+        q: 'What is an SNMP TRAP?',
+        a: ['A security vulnerability','An unsolicited alert sent by an agent to the manager','A GET request from manager to agent','A connection that\'s been hijacked'],
+        correct: 1,
+        explain: '<strong>SNMP TRAP</strong> is an unsolicited notification — agent sends it to alert the manager of an event (link down, high temperature).'
+      },
+      {
+        q: 'Which SNMP version is most secure?',
+        a: ['SNMPv1','SNMPv2c','SNMPv3','SNMPv4'],
+        correct: 2,
+        explain: '<strong>SNMPv3</strong> includes authentication and encryption — the only version recommended for production use.'
+      },
+      {
+        q: 'What is an OID in SNMP?',
+        a: ['A username','A unique address identifying an object in the MIB','A community string','A network interface'],
+        correct: 1,
+        explain: '<strong>OID (Object Identifier)</strong> is a numerical path (e.g., 1.3.6.1.4.1.9.2.1.58) pointing to specific device data.'
+      },
+      {
+        q: 'What does an SNMP GET request do?',
+        a: ['Sends an alert to the NMS','Retrieves a value from an agent','Changes device configuration','Establishes a secure connection'],
+        correct: 1,
+        explain: '<strong>SNMP GET</strong> is a query from manager to agent: "What\'s the value of this OID?"'
+      },
+      {
+        q: 'In SNMP terms, what does a "community string" do?',
+        a: ['Identifies a group of agents','Acts as a password for SNMP access (SNMPv1/v2c)','Encrypts SNMP traffic','Forwards traps between managers'],
+        correct: 1,
+        explain: '<strong>Community string</strong> is the password for SNMPv1/v2c (but transmitted in plaintext — use SNMPv3 instead).'
+      },
+      {
+        q: 'What is a common use case for SNMP SET?',
+        a: ['Retrieve CPU information','Change device configuration or reboot a router','Monitor bandwidth usage','Create backup copies'],
+        correct: 1,
+        explain: '<strong>SNMP SET</strong> allows the NMS to change device settings (e.g., sysContact, system name) or trigger actions.'
+      },
+    ]
+  },
+
+  {
+    id: 'syslog',
+    name: 'Syslog (System Logging)',
+    icon: '📝',
+    color: '#00ff88',
+    lesson: [
+      {
+        title: 'What is Syslog?',
+        body: `<p><strong>Syslog</strong> is a protocol for sending system log messages to a centralized server.</p><p>Instead of logs living only on the device, Syslog sends them to a central repository where you can:</p><ul><li>Search across all devices</li><li>Set alerts on critical events</li><li>Analyze patterns over time</li><li>Preserve logs if the device fails</li></ul>`
+      },
+      {
+        title: 'Syslog Severity Levels',
+        type: 'table',
+        headers: ['Level', 'Number', 'Description', 'Example'],
+        rows: [
+          ['Emergency','0','System unusable','System shutting down'],
+          ['Alert','1','Action must be taken immediately','RAID array failed'],
+          ['Critical','2','Critical condition','Hard disk error'],
+          ['Error','3','Error condition','Interface down, authentication failed'],
+          ['Warning','4','Warning condition','Configuration changed, memory low'],
+          ['Notice','5','Normal but significant condition','System restarted'],
+          ['Informational','6','Informational message','BGP session up, OSPF neighbor up'],
+          ['Debug','7','Debug-level message','Detailed troubleshooting info'],
+        ]
+      },
+      {
+        title: 'Syslog Message Format',
+        body: `<p><code>Timestamp Hostname Program[PID]: Message</code></p><p><strong>Example:</strong></p><p><code>Mar 23 14:35:22 Router1 %OSPF-5-ADJCHG: Process 1, Nbr 192.168.1.2 on GigabitEthernet0/0 from LOADING to FULL, Loading Done</code></p><p><strong>Breaking it down:</strong></p><ul><li><strong>Mar 23 14:35:22</strong> — Timestamp</li><li><strong>Router1</strong> — Hostname</li><li><strong>%OSPF-5</strong> — Facility (OSPF) and Severity (5 = Notice)</li><li><strong>ADJCHG</strong> — Message type</li><li><strong>Rest</strong> — Actual event details</li></ul>`
+      },
+      {
+        title: 'Configuring Syslog on Cisco IOS',
+        body: `<p><strong>Send logs to a syslog server:</strong></p><p><code>logging 192.168.1.100</code> (send to server at 192.168.1.100)</p><p><strong>Set minimum severity to log:</strong></p><p><code>logging level informational</code> (only log Notice level and above)</p><p><strong>Add timestamps to logs:</strong></p><p><code>service timestamps log datetime msec</code></p><p><strong>View logs on the device:</strong></p><p><code>show logging</code></p><p><strong>Syslog uses UDP port 514</strong></p>`
+      },
+      {
+        title: 'Syslog Facilities (Source Type)',
+        body: `<p><strong>Local0 – Local7:</strong> User-defined facilities for custom applications</p><p><strong>Facility codes (examples):</strong></p><ul><li><strong>kernel messages = 0</strong></li><li><strong>user-level messages = 1</strong></li><li><strong>mail system = 2</strong></li><li><strong>system daemons = 3</strong></li><li><strong>auth/security messages = 4</strong></li></ul><p>Cisco devices typically use local0 or local7 for flexibility.</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the primary purpose of Syslog?',
+        a: ['Speed up routing','Centralize logging from multiple devices','Encrypt network traffic','Manage IP addresses'],
+        correct: 1,
+        explain: '<strong>Syslog</strong> sends system logs from devices (routers, switches) to a centralized server for analysis and archiving.'
+      },
+      {
+        q: 'Which severity level is used for critical system failures?',
+        a: ['Notice (5)','Warning (4)','Error (3)','Emergency (0)'],
+        correct: 3,
+        explain: '<strong>Emergency (0)</strong> is the highest severity — used for system shutdowns. <strong>Critical (2)</strong> and <strong>Error (3)</strong> are for serious issues.'
+      },
+      {
+        q: 'What does Syslog severity level 6 mean?',
+        a: ['Error condition','Informational message','Debug message','Warning condition'],
+        correct: 1,
+        explain: '<strong>Level 6 = Informational</strong> — normal but notable events (neighbor up, interface recovered).'
+      },
+      {
+        q: 'In a Syslog message, what does "%OSPF-5-ADJCHG" indicate?',
+        a: ['A debug message','An OSPF facility message with Notice severity','An error in the OSPF process','A critical alert'],
+        correct: 1,
+        explain: '<strong>%OSPF-5</strong> means: Facility = OSPF, Severity = 5 (Notice). <strong>ADJCHG</strong> = message type (adjacency change).'
+      },
+      {
+        q: 'Which Cisco command sends syslog messages to a central server?',
+        a: ['syslog server 192.168.1.100','logging 192.168.1.100','send logs 192.168.1.100','event-log 192.168.1.100'],
+        correct: 1,
+        explain: '<code><strong>logging &lt;IP address&gt;</strong></code> configures the syslog server address on Cisco IOS.'
+      },
+      {
+        q: 'What port does Syslog use?',
+        a: ['TCP 514','UDP 514','TCP 67','UDP 53'],
+        correct: 1,
+        explain: '<strong>Syslog uses UDP port 514</strong> for sending logs to the syslog server.'
+      },
+      {
+        q: 'Why is centralized Syslog important?',
+        a: ['Speeds up device boot','Preserves logs if the device fails; enables cross-device searching','Reduces bandwidth','Improves routing efficiency'],
+        correct: 1,
+        explain: '<strong>Centralized Syslog</strong> preserves logs even if a device crashes, and allows you to search/correlate events across all devices.'
+      },
+      {
+        q: 'What does "logging level informational" do?',
+        a: ['Only log informational messages','Log Informational (6) and above','Log Informational (6) and below','Disable all logging'],
+        correct: 1,
+        explain: '<code><strong>logging level informational</strong></code> logs Severity 6 (Informational) and higher (lower numbers = more critical).'
+      },
+    ]
+  },
+
+  {
+    id: 'qos',
+    name: 'QoS (Quality of Service)',
+    icon: '⚡',
+    color: '#00ff88',
+    lesson: [
+      {
+        title: 'What is QoS?',
+        body: `<p><strong>QoS (Quality of Service)</strong> prioritizes network traffic so critical applications get bandwidth and get delivered on time.</p><p>Without QoS, all packets are treated equally — a video download could starve VoIP calls.</p><p><strong>QoS enables:</strong></p><ul><li>VoIP and video conferencing to work smoothly</li><li>Business traffic priority over personal traffic</li><li>Guaranteed bandwidth for critical apps</li><li>Controlled packet loss and latency</li></ul>`
+      },
+      {
+        title: 'QoS Traffic Classes',
+        body: `<p><strong>Business-Critical (99.9% reliability):</strong> ERP, databases, mission-critical apps → Highest priority</p><p><strong>Interactive Video (low latency):</strong> Video conferencing, live streaming → High priority</p><p><strong>Streaming Video (bandwidth guarantee):</strong> YouTube, Netflix → Medium-high priority</p><p><strong>Voice (VoIP):</strong> Phone calls → Medium-high priority (low latency critical)</p><p><strong>Transactional Data:</strong> Web browsing, email → Medium priority</p><p><strong>Best-Effort (default):</strong> Everything else → Low priority</p>`
+      },
+      {
+        title: 'QoS Mechanisms',
+        type: 'table',
+        headers: ['Mechanism', 'Description', 'When Used'],
+        rows: [
+          ['Classification','Identify traffic type (by IP, port, protocol)','First step: tag traffic before applying QoS'],
+          ['Marking','Mark packets with priority (DSCP, CoS)','Pass priority info through the network'],
+          ['Queuing','Separate traffic into priority queues','High priority queue gets processed first'],
+          ['Policing','Drop/rate-limit traffic exceeding a limit','Prevent one app from hogging bandwidth'],
+          ['Shaping','Buffer excess traffic instead of dropping it','Smooth traffic flow'],
+        ]
+      },
+      {
+        title: 'QoS on Cisco Devices',
+        body: `<p><strong>Step 1: Classify traffic using an ACL:</strong></p><p><code>ip access-list extended VoIP</code><br><code>permit udp any any eq 5060</code><br><code>permit udp any any range 16384 32767</code></p><p><strong>Step 2: Mark traffic with DSCP:</strong></p><p><code>class-map match-any VoIP-Class</code><br><code>match access-group name VoIP</code></p><p><strong>Step 3: Define policy:</strong></p><p><code>policy-map QoS-Policy</code><br><code>class VoIP-Class</code><br><code>set dscp ef</code><br><code>priority percent 20</code></p><p><strong>Step 4: Apply to interface:</strong></p><p><code>int Fa0/0</code><br><code>service-policy output QoS-Policy</code></p>`
+      },
+      {
+        title: 'DSCP and CoS',
+        body: `<p><strong>CoS (Class of Service):</strong> Layer 2 (Ethernet) priority (0-7). Used on switches.</p><p><strong>DSCP (Differentiated Services Code Point):</strong> Layer 3 (IP) priority (0-63). Used on routers.</p><p><strong>Common DSCP values:</strong></p><ul><li><strong>EF (46)</strong> = Expedited Forwarding (VoIP, critical traffic)</li><li><strong>AF (32-40)</strong> = Assured Forwarding (video, important data)</li><li><strong>BE (0)</strong> = Best Effort (default, non-critical)</li></ul>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the primary purpose of QoS?',
+        a: ['Increase total bandwidth','Prioritize critical traffic and guarantee service levels','Encrypt all packets','Route packets more efficiently'],
+        correct: 1,
+        explain: '<strong>QoS</strong> ensures critical applications (VoIP, video) get priority, so they work smoothly even when network is congested.'
+      },
+      {
+        q: 'Without QoS, what might happen to VoIP calls during a large file download?',
+        a: ['Download speeds increase','VoIP quality degrades; calls drop or have poor quality','Packets are encrypted','Bandwidth doubles'],
+        correct: 1,
+        explain: 'Without <strong>QoS</strong>, the file download consumes available bandwidth, leaving little for VoIP packets.'
+      },
+      {
+        q: 'Which layer uses CoS (Class of Service)?',
+        a: ['Layer 1 (Physical)','Layer 2 (Data Link)','Layer 3 (Network)','Layer 4 (Transport)'],
+        correct: 1,
+        explain: '<strong>CoS</strong> is a Layer 2 (Ethernet) priority field (0-7) used by switches.'
+      },
+      {
+        q: 'What does DSCP stand for?',
+        a: ['Data Service Classification Priority','Differentiated Services Code Point','Distributed System Control Protocol','Direct Service Channel Packet'],
+        correct: 1,
+        explain: '<strong>DSCP (Differentiated Services Code Point)</strong> — Layer 3 priority marking (0-63) in the IP header.'
+      },
+      {
+        q: 'Which DSCP value is used for VoIP (Expedited Forwarding)?',
+        a: ['0 (BE)','32 (AF)','46 (EF)','63'],
+        correct: 2,
+        explain: '<strong>EF (46)</strong> = Expedited Forwarding — the highest priority for time-sensitive traffic like VoIP.'
+      },
+      {
+        q: 'What is the first step in implementing QoS?',
+        a: ['Set interface bandwidth','Classify traffic into categories','Drop low-priority packets','Enable encryption'],
+        correct: 1,
+        explain: '<strong>Classification</strong> is step 1: identify which traffic is which before applying QoS policies.'
+      },
+      {
+        q: 'What is the difference between Policing and Shaping in QoS?',
+        a: ['Policing drops excess traffic; Shaping buffers it','Both do the same thing','Policing buffers; Shaping drops','Neither is used in modern QoS'],
+        correct: 0,
+        explain: '<strong>Policing</strong> drops traffic exceeding the rate limit. <strong>Shaping</strong> buffers it and delays transmission (gentler).'
+      },
+      {
+        q: 'What QoS feature ensures that critical business traffic always gets a percentage of bandwidth?',
+        a: ['Classification','Marking','Priority queuing','Policing'],
+        correct: 2,
+        explain: '<strong>Priority queuing</strong> ensures that high-priority packets are processed before low-priority ones, guaranteeing their share of bandwidth.'
+      },
+    ]
+  },
+
+  // ── HSRP (First-Hop Redundancy Protocol) ──────────────────────────────────
+  {
+    id: 'hsrp',
+    name: 'HSRP (First-Hop Redundancy)',
+    icon: '🔁',
+    color: '#00d4ff',
+    lesson: [
+      {
+        title: 'What is HSRP?',
+        body: `<p><strong>HSRP (Hot Standby Router Protocol)</strong> is a Cisco proprietary protocol that allows two or more routers to act as a single virtual router, providing redundancy at the first hop.</p><p>The problem it solves: If your default gateway router goes down, all hosts lose internet access. HSRP ensures that if the primary router fails, a backup router automatically takes over <strong>without any manual intervention or host reconfiguration</strong>.</p><p>Think of HSRP like having two shift supervisors — one is active and running things, but if they call in sick, the backup immediately steps in without missing a beat. All employees (hosts) still report to the same office (virtual IP).</p>`
+      },
+      {
+        title: 'The Problem HSRP Solves',
+        type: 'table',
+        headers: ['Without HSRP', 'With HSRP'],
+        rows: [
+          ['Host points to single router (gateway)','Host points to virtual IP managed by HSRP'],
+          ['Router goes down → hosts lose gateway','Router goes down → HSRP moves virtual IP to backup'],
+          ['Admin must manually reconfigure hosts','No host configuration changes needed'],
+          ['Single point of failure','Redundancy built in'],
+          ['Downtime measured in hours','Failover in seconds'],
+        ]
+      },
+      {
+        title: 'HSRP Roles',
+        type: 'table',
+        headers: ['Role', 'Description', 'Status'],
+        rows: [
+          ['Active Router','Owns the virtual IP and forwards traffic','Primary responsibility'],
+          ['Standby Router','Monitors active; ready to take over if it fails','Waiting (not forwarding)'],
+          ['Listening Routers','Other routers in the group (if more than 2)','Observing only'],
+          ['Virtual Router','The logical router with the shared IP address','Represents the group'],
+        ]
+      },
+      {
+        title: 'Priority and Preemption',
+        body: `<p><strong>HSRP Priority</strong> determines which router becomes active:</p><ul><li><strong>Default priority: 100</strong></li><li><strong>Higher priority = Active</strong> (0-255)</li><li><strong>If priorities are equal</strong>, the router with the highest IP address becomes active</li></ul><p><strong>Preemption:</strong> If enabled, when a higher-priority router comes back online after being down, it can <strong>preempt</strong> (take back) the active role from the current active router.</p><p><strong>Example:</strong> Router A (priority 150, currently down) and Router B (priority 100, currently active). When A comes back online and preemption is enabled, A becomes active again.</p>`
+      },
+      {
+        title: 'HSRP Versions',
+        type: 'table',
+        headers: ['Feature', 'HSRPv1', 'HSRPv2'],
+        rows: [
+          ['Multicast Address','224.0.0.2','224.0.0.102'],
+          ['Protocol Number','51','51'],
+          ['Max Groups','0-255 (256 total)','0-4095 (4096 total)'],
+          ['Virtual MAC','0000.0cxx.xxxx (limited)','0000.0fff.xxxx (more flexibility)'],
+          ['IPv6 Support','No','Yes'],
+          ['VLAN Support','Limited to max 256 groups per VLAN','More scalable'],
+        ]
+      },
+      {
+        title: 'How HSRP Failover Works',
+        body: `<p><strong>Step 1: Steady State</strong></p><ul><li>Active router owns virtual IP 192.168.1.1 and virtual MAC 0000.0c07.ac01</li><li>Hosts use 192.168.1.1 as their gateway</li><li>Active router forwards all traffic</li><li>Standby router monitors active via hello messages (default every 3 seconds)</li></ul><p><strong>Step 2: Active Router Fails</strong></p><ul><li>Standby stops receiving hello messages</li><li>After 10 seconds of no hellos (dead interval), standby declares active dead</li></ul><p><strong>Step 3: Failover</strong></p><ul><li>Standby router becomes active</li><li>Sends <strong>Gratuitous ARP</strong> announcing it now owns virtual MAC</li><li>Switches learn new MAC on this port and update forwarding tables</li><li>Traffic seamlessly redirects to new active router</li></ul><p><strong>Step 4: Recovery</strong></p><ul><li>Original active router comes back online</li><li>If preemption is enabled, it takes back active role</li><li>If preemption is disabled, it stays standby</li></ul>`
+      },
+      {
+        title: 'HSRP Configuration Basics',
+        body: `<p><strong>Basic HSRP Configuration (Cisco IOS):</strong></p><pre>R1(config)# interface GigabitEthernet 0/0
+R1(config-if)# ip address 192.168.1.10 255.255.255.0
+R1(config-if)# standby 1 ip 192.168.1.1
+R1(config-if)# standby 1 priority 150
+R1(config-if)# standby 1 preempt
+R1(config-if)# exit</pre><p><strong>Explanation:</strong></p><ul><li><code>standby 1 ip 192.168.1.1</code> — Creates HSRP group 1 with virtual IP 192.168.1.1</li><li><code>standby 1 priority 150</code> — Sets this router's priority (higher = more likely to be active)</li><li><code>standby 1 preempt</code> — Allows this router to reclaim active role if it comes back online</li></ul><p><strong>On Router 2 (Standby):</strong></p><pre>R2(config)# interface GigabitEthernet 0/0
+R2(config-if)# ip address 192.168.1.11 255.255.255.0
+R2(config-if)# standby 1 ip 192.168.1.1
+R2(config-if)# standby 1 priority 100
+R2(config-if)# exit</pre><p>Both routers must be in the same group (1) and same subnet (192.168.1.0/24).</p>`
+      },
+      {
+        title: 'Monitoring and Verification',
+        body: `<p><strong>Verify HSRP Status:</strong></p><pre>R1# show standby
+R1# show standby brief
+R1# show standby neighbor
+R1# debug standby</pre><p><strong>Output Example:</strong></p><pre>Group 1
+  State is Active (was Standby)
+  Virtual IP address is 192.168.1.1
+  Active router is local (priority 150)
+  Standby router is 192.168.1.11 (priority 100)
+  Hello time 3 sec, Hold time 10 sec</pre><p><strong>Key Metrics to Monitor:</strong></p><ul><li><strong>State:</strong> Active or Standby</li><li><strong>Priority:</strong> Current router's priority</li><li><strong>Active Router:</strong> Which router is active and its priority</li><li><strong>Standby Router:</strong> Backup router and its priority</li><li><strong>Hello/Hold Intervals:</strong> Detect failures (default: 3 sec hello, 10 sec hold)</li><li><strong>Virtual IP Ownership:</strong> Which router owns the virtual IP</li></ul>`
+      },
+      {
+        title: 'Common Scenarios & Best Practices',
+        body: `<p><strong>Scenario 1: Unequal Link Capacity</strong></p><p>Router A has a 10Gbps link, Router B has 1Gbps. Solution: Set Router A's priority higher so it stays active and uses the better link.</p><p><strong>Scenario 2: Maintenance Window</strong></p><p>Need to update Router A (currently active). Lower its priority below the standby, forcing failover, then update it safely.</p><p><strong>Scenario 3: Load Balancing</strong></p><p>Create multiple HSRP groups on the same interfaces. Group 1: A is active. Group 2: B is active. Spreads traffic across both routers.</p><p><strong>Best Practices:</strong></p><ul><li><strong>Use static priorities</strong> — Makes failover predictable (don't rely on IP address tiebreakers)</li><li><strong>Enable preemption</strong> — Ensures preferred router stays active (unless maintenance needed)</li><li><strong>Tune hello/hold timers</strong> — Default 3/10 is fine for most networks. Reduce for faster failover if needed (but increases CPU on routers)</li><li><strong>Configure tracking</strong> — If an upstream link fails, lower the router's priority automatically, triggering failover</li><li><strong>Use authentication</strong> — Prevent rogue routers from joining the group and disrupting failover</li><li><strong>Monitor actively</strong> — Use SNMP traps to alert on HSRP state changes</li></ul>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the primary purpose of HSRP?',
+        a: ['Encrypt router communications','Provide redundancy for the default gateway by allowing two routers to share a virtual IP','Load-balance traffic equally','Replace static routing with dynamic routing'],
+        correct: 1,
+        explain: '<strong>HSRP</strong> ensures that if the primary gateway router fails, a backup router automatically takes over, so hosts never lose their default gateway.'
+      },
+      {
+        q: 'Which router actively forwards traffic in an HSRP pair?',
+        a: ['The Standby router','The Active router','Both routers equally','The router with the lowest IP address'],
+        correct: 1,
+        explain: 'The <strong>Active router</strong> forwards all traffic. The <strong>Standby router</strong> waits and watches. If active fails, standby takes over.'
+      },
+      {
+        q: 'What determines which router becomes the Active router in HSRP?',
+        a: ['The router with the lowest MAC address','The router with the highest HSRP priority; ties broken by highest IP address','The router that boots up first','Random selection'],
+        correct: 1,
+        explain: '<strong>HSRP priority</strong> (0-255, default 100) determines the active router. Higher priority = active. If equal, highest IP wins.'
+      },
+      {
+        q: 'What is a virtual IP address in HSRP?',
+        a: ['An IP address that exists only in RAM','The real IP address of the active router','A shared IP address that both routers respond to (hosts use this as their gateway)','An IP address used only for internal communication between HSRP routers'],
+        correct: 2,
+        explain: 'The <strong>virtual IP</strong> is the gateway IP that hosts are configured to use. Both active and standby routers respond to it, but only active forwards traffic. On failover, standby takes over sending/receiving on this IP.'
+      },
+      {
+        q: 'What is preemption in HSRP?',
+        a: ['Checking network routes before sending packets','Allowing a higher-priority router to take back the active role if it comes back online','Encrypting HSRP hello messages','The time it takes for a router to join an HSRP group'],
+        correct: 1,
+        explain: '<strong>Preemption</strong> enables a higher-priority router to <strong>reclaim</strong> the active role after coming back online. Without preemption, it would stay standby until the current active fails.'
+      },
+      {
+        q: 'What is the default hello interval in HSRP?',
+        a: ['1 second','3 seconds','10 seconds','30 seconds'],
+        correct: 1,
+        explain: 'The default <strong>hello interval is 3 seconds</strong> — active router sends a "I\'m alive" message to standby. <strong>Hold time is 10 seconds</strong> — if standby hears nothing for 10 seconds, active is dead.'
+      },
+      {
+        q: 'What happens when the active HSRP router fails?',
+        a: ['Hosts manually reconfigure their gateway','Standby router takes over and sends Gratuitous ARP to claim the virtual IP','Network goes down until admin intervention','All routers become standby'],
+        correct: 1,
+        explain: 'When active fails, standby becomes active and sends <strong>Gratuitous ARP</strong> (unsolicited ARP reply) to claim the virtual MAC/IP. Switches update their MAC tables and traffic redirects to new active.'
+      },
+      {
+        q: 'Which HSRP version supports IPv6?',
+        a: ['HSRPv1 only','HSRPv2 only','Both versions equally','Neither version supports IPv6'],
+        correct: 1,
+        explain: '<strong>HSRPv2</strong> added support for IPv6 (virtual IPv6 addresses). HSRPv1 does not support IPv6.'
+      },
+      {
+        q: 'What multicast address does HSRPv1 use?',
+        a: ['224.0.0.1','224.0.0.2','224.0.0.102','239.255.255.255'],
+        correct: 1,
+        explain: '<strong>HSRPv1</strong> uses multicast address <strong>224.0.0.2</strong> for hello messages. <strong>HSRPv2</strong> uses <strong>224.0.0.102</strong>.'
+      },
+      {
+        q: 'Why would you configure different HSRP groups on different VLANs?',
+        a: ['To encrypt traffic between VLANs','To provide redundancy at the default gateway for each VLAN','To prevent hosts from pinging the virtual IP','To reduce router CPU usage'],
+        correct: 1,
+        explain: 'Each VLAN needs its own default gateway. By creating separate HSRP groups per VLAN, you ensure <strong>each VLAN has redundancy</strong> with its own virtual gateway IP.'
+      },
+      {
+        q: 'What is Gratuitous ARP used for in HSRP failover?',
+        a: ['To discover new hosts on the network','To announce that standby router now owns the virtual IP/MAC','To bypass DHCP and assign IPs','To block traffic from the failed router'],
+        correct: 1,
+        explain: '<strong>Gratuitous ARP</strong> is an unsolicited ARP reply where standby says: "I am [virtual-mac-address] at [virtual-ip]". This forces switches to update their MAC address tables immediately.'
+      },
+      {
+        q: 'If two HSRP routers have the same priority, which becomes active?',
+        a: ['The one configured first','The one with the lowest IP address','The one with the highest IP address','It results in a tie and both become standby'],
+        correct: 2,
+        explain: 'When priorities are equal (a tie), <strong>the router with the highest IP address becomes active</strong>. This is why setting explicit priorities is a best practice.'
+      },
+      {
+        q: 'What is a HSRP tracking and when would you use it?',
+        a: ['Monitoring HSRP state changes in syslog','Automatically lowering priority if a tracked link or condition fails (like upstream connectivity)','Limiting the number of HSRP groups per router','Recording HSRP messages for debugging'],
+        correct: 1,
+        explain: '<strong>Tracking</strong> monitors conditions (like an upstream link). If tracked condition fails, the router\'s priority is lowered, forcing failover. Example: if upstream ISP link goes down, lower priority to trigger failover to backup router.'
+      },
+      {
+        q: 'What is the maximum number of HSRP groups supported in HSRPv2?',
+        a: ['256 (0-255)','512','4096 (0-4095)','Unlimited'],
+        correct: 2,
+        explain: '<strong>HSRPv1</strong> supports groups 0-255 (256 total). <strong>HSRPv2</strong> supports groups 0-4095 (4096 total), making it much more scalable in large networks.'
+      },
+      {
+        q: 'In an HSRP configuration, what command enables preemption?',
+        a: ['standby preempt enable','preempt on','standby X preempt','enable preemption'],
+        correct: 2,
+        explain: 'The command is <strong>standby X preempt</strong> (where X is the group number). Example: <code>standby 1 preempt</code>'
+      },
+      {
+        q: 'What is the virtual MAC address format in HSRPv1?',
+        a: ['0000.00xx.xxxx','0000.0cxx.xxxx','0000.ffxx.xxxx','0000.1axx.xxxx'],
+        correct: 1,
+        explain: '<strong>HSRPv1</strong> uses virtual MAC <strong>0000.0cxx.xxxx</strong> where xx is the HSRP group number (limited). <strong>HSRPv2</strong> uses <strong>0000.0fff.xxxx</strong> for more flexibility.'
+      },
+    ]
+  },
+
+  // ── STP (Spanning Tree Protocol) ────────────────────────────────────────────
+  {
+    id: 'stp',
+    name: 'STP (Spanning Tree Protocol)',
+    icon: '🌳',
+    color: '#ff9900',
+    lesson: [
+      {
+        title: 'The Problem: Switching Loops',
+        body: `<p><strong>In Layer 2 switching, loops are dangerous.</strong> If you connect switches in a redundant topology (for fault tolerance), you create forwarding loops. Here's what happens:</p><ul><li><strong>Broadcast frame enters a loop:</strong> Switch A broadcasts → Switch B repeats it → Switch C repeats it → back to Switch A (loop!)</li><li><strong>Frame multiplication:</strong> Frame copies exponentially: 1 → 2 → 4 → 8 → 16... (broadcast storm)</li><li><strong>MAC address table thrashing:</strong> Switches see the same source MAC on different ports constantly, making the table unstable</li><li><strong>Network collapse:</strong> Within seconds, bandwidth is consumed by loop traffic; legitimate traffic dies</li></ul><p><strong>Redundancy is good for availability, but loops are bad for stability.</strong> Enter STP...</p>`
+      },
+      {
+        title: 'What is Spanning Tree Protocol?',
+        body: `<p><strong>STP (Spanning Tree Protocol)</strong> is an IEEE standard (802.1D) that automatically detects and blocks redundant links to prevent loops while maintaining redundancy.</p><p>Think of STP as a network traffic controller: It allows you to build a redundant network but intelligently <strong>blocks certain ports</strong> to eliminate loops. If a link fails, STP automatically <strong>unblocks</strong> those blocked ports so traffic can reroute.</p><p><strong>Key goal:</strong> Create a loop-free tree topology while keeping backup links alive but inactive.</p>`
+      },
+      {
+        title: 'STP Mechanisms',
+        type: 'table',
+        headers: ['Mechanism', 'Purpose'],
+        rows: [
+          ['BPDUs (Bridge Protocol Data Units)','Switches exchange hello messages to detect topology and elect a root bridge'],
+          ['Root Bridge Election','One switch is chosen as the center of the tree based on Bridge Priority and MAC'],
+          ['Port Roles','Each port is assigned a role (Root, Designated, Blocking) determining if it forwards or blocks'],
+          ['Path Cost','Links are assigned costs; lower cost = preferred path to root'],
+          ['Convergence','When topology changes, STP recalculates and unblocks/blocks ports (30-50 seconds for STP)'],
+        ]
+      },
+      {
+        title: 'Bridge Priority and Bridge ID',
+        body: `<p><strong>Bridge Priority (Bridge ID):</strong></p><p>Each switch has a 8-byte Bridge ID:</p><ul><li><strong>Priority (2 bytes):</strong> Default 32768 (default priority in Cisco is 32768 for all VLANs)</li><li><strong>MAC Address (6 bytes):</strong> The switch's MAC address</li></ul><p><strong>Root Bridge Selection:</strong> The switch with the <strong>lowest Bridge ID becomes the root</strong>. In ties, lowest MAC wins.</p><p><strong>Changing Priority:</strong></p><pre>Switch(config)# spanning-tree vlan 1 priority 4096</pre><p><strong>Example Bridge IDs:</strong></p><ul><li>SW1: Priority 32768 + MAC 0000.1111.1111</li><li>SW2: Priority 32768 + MAC 0000.2222.2222</li><li><strong>Root:</strong> SW1 (lowest MAC when priority is equal)</li></ul><p>To make a specific switch the root, set its priority lower (e.g., 4096, 8192, 16384).</p>`
+      },
+      {
+        title: 'STP Port Roles',
+        type: 'table',
+        headers: ['Role', 'Description', 'Forwards Frames?', 'Learns MACs?'],
+        rows: [
+          ['Root Port','One port per switch (except root) with best path to root bridge','Yes','Yes'],
+          ['Designated Port','One per link segment with best path to root','Yes','Yes'],
+          ['Blocking Port','Not root port, not designated port — blocks traffic','No','No (listens only)'],
+          ['Disabled Port','Admin down or no VLAN configured','No','No'],
+        ]
+      },
+      {
+        title: 'How STP Elects Roles',
+        body: `<p><strong>Step 1: Root Bridge Election</strong></p><ul><li>All switches start as root (bridge priority 32768 by default)</li><li>Switches exchange BPDUs (hello messages) every 2 seconds</li><li>Switch with lowest Bridge ID becomes root, others become non-root</li></ul><p><strong>Step 2: Non-Root Switches Select Root Port</strong></p><ul><li>Each non-root switch calculates cost to reach root via each port</li><li>Port with <strong>lowest cost to root = Root Port</strong></li><li>Only this port forwards toward the root</li></ul><p><strong>Step 3: Designated Port Selection Per Link</strong></p><ul><li>On each link segment, the switch with <strong>best path to root</strong> sends the designated BPDU</li><li>That switch's port = Designated Port (forwards)</li><li>Other switch's port = Blocking Port (blocks)</li></ul><p><strong>Step 4: Remaining Ports Block</strong></p><ul><li>Any port that's not Root or Designated = <strong>Blocking Port</strong></li><li>Blocking ports receive BPDUs but don't forward data frames</li></ul>`
+      },
+      {
+        title: 'Path Cost Values',
+        type: 'table',
+        headers: ['Link Speed', 'Default STP Cost', 'RSTP Cost'],
+        rows: [
+          ['10 Mbps','100','2,000,000'],
+          ['100 Mbps','19','200,000'],
+          ['1 Gbps','4','20,000'],
+          ['10 Gbps','2','2,000'],
+          ['100 Gbps','1','200'],
+        ]
+      },
+      {
+        title: 'STP Port States and Convergence',
+        body: `<p><strong>STP Port States (5 states):</strong></p><ul><li><strong>Disabled:</strong> Port is administratively down or has a failure</li><li><strong>Blocking:</strong> Port is up but blocked (not root/designated); can't forward but hears BPDUs</li><li><strong>Listening:</strong> Port is transitioning; hears BPDUs but doesn't forward or learn MACs (15 seconds)</li><li><strong>Learning:</strong> Port begins learning MAC addresses but doesn't forward frames (15 seconds)</li><li><strong>Forwarding:</strong> Port forwards frames and learns MACs (stable state)</li></ul><p><strong>Convergence Time:</strong> Default STP takes <strong>30-50 seconds</strong> to fully converge after topology change:</p><ul><li>Blocking → Listening (15 sec) → Learning (15 sec) → Forwarding</li><li>This is a major weakness (too slow for modern networks)</li></ul>`
+      },
+      {
+        title: 'RSTP (Rapid Spanning Tree Protocol)',
+        body: `<p><strong>RSTP (IEEE 802.1w)</strong> is an improvement over STP that converges in <strong>seconds instead of 30-50 seconds</strong>.</p><p><strong>RSTP Improvements:</strong></p><ul><li><strong>Faster convergence:</strong> ~1 second vs. 30-50 seconds for STP</li><li><strong>Active topology:</strong> Non-designated ports become <strong>Alternate</strong> (backup root port) or <strong>Backup</strong> (backup designated port) — ready to activate immediately</li><li><strong>Port types:</strong> Edge Ports, Point-to-Point Ports, and Shared Ports (detects link type automatically)</li><li><strong>Backward compatible:</strong> RSTP switches detect STP switches and fall back to STP mode</li></ul><p><strong>RSTP Port States (3 states):</strong></p><ul><li><strong>Discarding:</strong> Combines Disabled, Blocking, and Listening (doesn't learn MACs)</li><li><strong>Learning:</strong> Learning MACs but not forwarding frames</li><li><strong>Forwarding:</strong> Forwarding frames and learning MACs</li></ul>`
+      },
+      {
+        title: 'STP Variations',
+        type: 'table',
+        headers: ['Version', 'Standard', 'Description', 'VLAN Support'],
+        rows: [
+          ['CST','802.1D','One tree per bridge (old Cisco legacy)','All VLANs share one tree'],
+          ['PVST+','Cisco','Per-VLAN Spanning Tree — one tree per VLAN','Each VLAN has its own root and tree'],
+          ['RPVST+','Cisco','Rapid PVST+ — RSTP + Per-VLAN','Combines RSTP speed with per-VLAN flexibility'],
+          ['MSTP','802.1s','Multiple Spanning Trees — multiple regions','Scales to thousands of VLANs'],
+        ]
+      },
+      {
+        title: 'Configuration and Monitoring',
+        body: `<p><strong>Enable RSTP (Rapid Spanning Tree):</strong></p><pre>Switch(config)# spanning-tree mode rapid-pvst</pre><p><strong>Set Switch as Root Bridge:</strong></p><pre>Switch(config)# spanning-tree vlan 1 root primary</pre><p><strong>Adjust Priority Manually:</strong></p><pre>Switch(config)# spanning-tree vlan 1 priority 4096</pre><p><strong>Set Port Cost:</strong></p><pre>Switch(config-if)# spanning-tree cost 1</pre><p><strong>Make a Port an Edge Port (won't cause topology changes):</strong></p><pre>Switch(config-if)# spanning-tree portfast</pre><p><strong>Monitor STP Status:</strong></p><pre>Switch# show spanning-tree
+Switch# show spanning-tree vlan 1
+Switch# show spanning-tree interface Gi0/0 detail
+Switch# show spanning-tree root</pre>`
+      },
+      {
+        title: 'Best Practices',
+        body: `<p><strong>1. Choose Root Bridge Intentionally</strong></p><p>Don't rely on default priorities. Explicitly set a core/distribution switch as root: <code>spanning-tree vlan X root primary</code></p><p><strong>2. Use RSTP (Rapid PVST+), Not Legacy STP</strong></p><p>RSTP converges in ~1 second vs. 30-50 for STP. Enable it on all modern switches.</p><p><strong>3. Enable PortFast on Access Ports</strong></p><p>Edge ports (connected to end devices) skip the listening/learning states and go straight to forwarding. This speeds up device connection times.</p><pre>Switch(config-if)# spanning-tree portfast</pre><p><strong>4. Use BPDU Guard with PortFast</strong></p><p>If a PortFast port receives a BPDU (unexpected topology change), disable it automatically to prevent rogue devices.</p><pre>Switch(config-if)# spanning-tree bpduguard enable</pre><p><strong>5. Monitor STP Health</strong></p><p>Regularly check root bridge stability, port roles, and convergence events. Watch for topology flaps (frequent changes = unstable network).</p><p><strong>6. Adjust Priority for VLAN Load Balancing</strong></p><p>Create multiple VLAN spanning trees. SW1 is root for VLANs 1-100, SW2 is root for VLANs 101-200. Spreads traffic across both switches.</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What problem does Spanning Tree Protocol solve?',
+        a: ['Prevents routing loops','Prevents switching loops by blocking redundant links','Replaces VLAN tagging','Encrypts switch traffic'],
+        correct: 1,
+        explain: '<strong>STP</strong> prevents <strong>broadcast storms and MAC thrashing</strong> caused by switching loops. It blocks redundant ports to create a loop-free tree while keeping backup links alive.'
+      },
+      {
+        q: 'Which switch becomes the root bridge?',
+        a: ['The switch with the lowest MAC address','The switch with the highest IP address','The switch with the lowest Bridge Priority (Bridge ID)','The first switch to boot up'],
+        correct: 2,
+        explain: 'The <strong>root bridge</strong> has the lowest <strong>Bridge ID</strong> (8-byte value: 2-byte priority + 6-byte MAC). If priorities are tied, lowest MAC wins.'
+      },
+      {
+        q: 'What are the three primary STP port roles?',
+        a: ['Active, Passive, Standby','Root, Designated, Blocking','Forward, Block, Listen','Access, Trunk, Hybrid'],
+        correct: 1,
+        explain: '<strong>Root Port:</strong> Best path to root (per switch). <strong>Designated Port:</strong> Best path to root on a link segment. <strong>Blocking Port:</strong> Redundant port that prevents loops.'
+      },
+      {
+        q: 'Which port role forwards frames and learns MAC addresses?',
+        a: ['Blocking port','Listening port','Designated port','Disabled port'],
+        correct: 2,
+        explain: '<strong>Designated ports</strong> (and root ports) forward frames and learn MACs. <strong>Blocking ports</strong> receive BPDUs but don\'t forward data or learn MACs.'
+      },
+      {
+        q: 'How long does it take standard STP to converge after a topology change?',
+        a: ['2-5 seconds','10-15 seconds','30-50 seconds','2-3 minutes'],
+        correct: 2,
+        explain: 'Standard <strong>STP takes 30-50 seconds</strong> to converge (Blocking → Listening 15s → Learning 15s → Forwarding). <strong>RSTP converges in ~1 second</strong>.'
+      },
+      {
+        q: 'What is the default STP bridge priority value in Cisco switches?',
+        a: ['0','16384','32768','65535'],
+        correct: 2,
+        explain: 'Default Cisco bridge priority is <strong>32768</strong>. To make a switch root, set priority lower (e.g., 4096, 8192, 16384).'
+      },
+      {
+        q: 'What does a BPDU (Bridge Protocol Data Unit) do?',
+        a: ['Encrypts bridge configuration','Sends spanning tree information between switches to elect root and determine port roles','Routes IP packets between subnets','Broadcasts DHCP offers'],
+        correct: 1,
+        explain: '<strong>BPDUs</strong> are control messages switches send every 2 seconds to exchange STP info, elect root, and calculate path costs.'
+      },
+      {
+        q: 'What is path cost in STP?',
+        a: ['The monetary cost to maintain the link','The number of hops to destination','A value assigned to a link representing bandwidth; lower cost = preferred path to root','The latency of the link in milliseconds'],
+        correct: 2,
+        explain: '<strong>Path cost</strong> represents link speed. 1Gbps = 4, 100Mbps = 19, 10Mbps = 100. Switches choose ports with lowest total cost to root.'
+      },
+      {
+        q: 'Which STP improvement allows per-VLAN spanning trees?',
+        a: ['RSTP (Rapid STP)','PVST+ (Per-VLAN STP+)','MSTP (Multiple STP)','CST (Common STP)'],
+        correct: 1,
+        explain: '<strong>PVST+ (Cisco proprietary)</strong> creates one spanning tree per VLAN, allowing each VLAN to have its own root and topology.'
+      },
+      {
+        q: 'What are the five STP port states?',
+        a: ['Active, Passive, Standby, Blocked, Disabled','Enabled, Listening, Learning, Forwarding, Disabled','Disabled, Blocking, Listening, Learning, Forwarding','Open, Closed, Half-Open, Established, Terminated'],
+        correct: 2,
+        explain: 'STP port states: <strong>Disabled</strong> (admin down), <strong>Blocking</strong> (up but blocked), <strong>Listening</strong> (hears BPDUs, 15s), <strong>Learning</strong> (learns MACs, 15s), <strong>Forwarding</strong> (active).'
+      },
+      {
+        q: 'How does RSTP (Rapid STP) achieve faster convergence than STP?',
+        a: ['Faster hello intervals','Shorter timers in each state','Active alternate and backup ports ready to forward immediately on failure','More efficient BPDU processing'],
+        correct: 2,
+        explain: '<strong>RSTP</strong> pre-computes <strong>alternate ports</strong> (backup root port) and <strong>backup ports</strong> (backup designated port) so they can activate instantly, achieving ~1 second convergence.'
+      },
+      {
+        q: 'What is PortFast in Cisco STP?',
+        a: ['A protocol that speeds up port negotiation','A feature that skips listening/learning states on edge ports connected to end devices','A method to increase port throughput','A backup mechanism for root bridge failure'],
+        correct: 1,
+        explain: '<strong>PortFast</strong> skips the 30-second STP listening/learning process on access ports (connected to PCs). Port goes directly to forwarding. Use only on edge ports, never on switch-to-switch links.'
+      },
+      {
+        q: 'What is BPDU Guard?',
+        a: ['A way to prevent spanning tree loops','A security feature that shuts down a PortFast port if it receives a BPDU (unexpected topology change)','A protocol that guards bridge configuration','A backup guard for the root bridge'],
+        correct: 1,
+        explain: '<strong>BPDU Guard</strong> detects if a PortFast port receives a BPDU (meaning a switch/loop is connected where a PC should be) and disables the port to prevent topology problems.'
+      },
+      {
+        q: 'What is the difference between STP and RSTP?',
+        a: ['STP uses IPv4 only; RSTP uses both IPv4 and IPv6','STP has 5 port states; RSTP has 3 port states (Discarding, Learning, Forwarding)','STP supports VLANs; RSTP does not','Both are identical; RSTP is just a marketing name'],
+        correct: 1,
+        explain: '<strong>STP:</strong> 5 states, 30-50 second convergence. <strong>RSTP:</strong> 3 states (Discarding replaces Disabled/Blocking/Listening), ~1 second convergence, pre-computed alternate/backup ports.'
+      },
+      {
+        q: 'What is the cost value for a 100 Mbps link in standard STP?',
+        a: ['2','4','19','100'],
+        correct: 2,
+        explain: '100 Mbps = <strong>cost 19</strong> (default STP). 1Gbps = 4, 10Mbps = 100. These costs are used to calculate best path to root.'
+      },
+      {
+        q: 'When should you use PVST+ instead of CST?',
+        a: ['Always; CST is obsolete','When you have only one VLAN','When you want per-VLAN spanning trees (each VLAN can have different root and topology)','PVST+ and CST are the same thing'],
+        correct: 2,
+        explain: '<strong>CST</strong> = one tree for all VLANs. <strong>PVST+</strong> = one tree per VLAN. PVST+ allows load balancing: SW1 root for VLAN 1-100, SW2 root for VLAN 101-200.'
+      },
+    ]
+  },
+
+  // ── EtherChannel ──────────────────────────────────────────────────────────
+  {
+    id: 'etherchannel',
+    name: 'EtherChannel (Link Aggregation)',
+    icon: '🔗',
+    color: '#ff9900',
+    lesson: [
+      {
+        title: 'What is EtherChannel?',
+        body: `<p><strong>EtherChannel</strong> (also called Link Aggregation) is a technology that combines multiple physical Ethernet links into a single logical link for increased bandwidth and redundancy.</p><p><strong>Why use it?</strong></p><ul><li><strong>Bandwidth:</strong> Multiple links provide combined throughput (2x 1Gbps = 2Gbps logical link)</li><li><strong>Redundancy:</strong> If one physical link fails, traffic shifts to remaining active links automatically</li><li><strong>Load balancing:</strong> Traffic is distributed across all links using a hashing algorithm</li><li><strong>No spanning tree blocking:</strong> Normally, switch-to-switch links must be blocked by STP to prevent loops. EtherChannel bundles them as ONE logical link, so STP doesn't need to block redundant links.</li></ul><p>Think of EtherChannel like a 4-lane highway: Instead of blocking 3 lanes and using only 1, all 4 lanes are open and traffic flows across all of them.</p>`
+      },
+      {
+        title: 'EtherChannel vs. Without',
+        type: 'table',
+        headers: ['Aspect', 'Without EtherChannel', 'With EtherChannel'],
+        rows: [
+          ['Bandwidth between SW1-SW2','1 Gbps (one link)','4 Gbps (4 links aggregated)'],
+          ['Redundancy','Link fails → downtime until STP reconverges','Link fails → traffic shifts to other links immediately'],
+          ['STP impact','3 of 4 links must be blocked by STP','All 4 links are active (STP sees one logical link)'],
+          ['Convergence','Slow (STP recalculates ~30-50s)','Fast (EtherChannel automatic failover in seconds)'],
+          ['Configuration','Just connect switches','Configure channel-group on both switches'],
+        ]
+      },
+      {
+        title: 'EtherChannel Negotiation Protocols',
+        type: 'table',
+        headers: ['Protocol', 'Type', 'Vendor', 'Purpose'],
+        rows: [
+          ['PAgP','Cisco Proprietary','Cisco only','Port Aggregation Protocol — switches negotiate which ports form a channel; active/desirable modes'],
+          ['LACP','IEEE Standard (802.3ad)','All vendors','Link Aggregation Control Protocol — standardized; active/passive modes; preferred method'],
+          ['Static','Manual','All vendors','No negotiation; admin manually groups ports (no protocol)'],
+        ]
+      },
+      {
+        title: 'PAgP Modes',
+        body: `<p><strong>PAgP (Port Aggregation Protocol)</strong> is Cisco proprietary. Two modes on each end:</p><ul><li><strong>On:</strong> No negotiation; forces port into channel (not recommended)</li><li><strong>Auto:</strong> Waits for <strong>Desirable</strong> from peer; passive mode</li><li><strong>Desirable:</strong> Actively negotiates channel formation; initiates PAgP messages</li></ul><p><strong>Combinations that form a channel:</strong></p><ul><li>Desirable ↔ Desirable ✅</li><li>Desirable ↔ Auto ✅</li><li>Auto ↔ Auto ❌ (both wait, no one initiates)</li><li>On ↔ On ✅ (but no negotiation, risky)</li></ul><p><strong>Best practice:</strong> Use LACP instead (IEEE standard).</p>`
+      },
+      {
+        title: 'LACP Modes',
+        body: `<p><strong>LACP (Link Aggregation Control Protocol)</strong> is the IEEE standard (802.3ad). Two modes on each end:</p><ul><li><strong>On:</strong> No negotiation; forces port into channel</li><li><strong>Active:</strong> Actively sends LACP messages; initiates channel formation</li><li><strong>Passive:</strong> Waits for LACP messages from peer</li></ul><p><strong>Combinations that form a channel:</strong></p><ul><li>Active ↔ Active ✅</li><li>Active ↔ Passive ✅</li><li>Passive ↔ Passive ❌ (both wait, no one initiates)</li><li>On ↔ On ✅ (but no negotiation)</li></ul><p><strong>Best practice:</strong> Use <strong>Active ↔ Active</strong> or <strong>Active ↔ Passive</strong>. Avoid <strong>Passive ↔ Passive</strong>.</p>`
+      },
+      {
+        title: 'EtherChannel Load Balancing',
+        body: `<p><strong>How does EtherChannel distribute traffic across links?</strong></p><p>EtherChannel uses a <strong>hashing algorithm</strong> that examines packet headers (source/destination IP, MAC, port numbers) and distributes flows across links.</p><p><strong>Load Balancing Methods (Cisco switches):</strong></p><ul><li><strong>Source MAC Hash:</strong> Uses source MAC address</li><li><strong>Destination MAC Hash:</strong> Uses destination MAC address</li><li><strong>Source-Destination MAC Hash:</strong> Combines both (default for most switches)</li><li><strong>Source IP Hash:</strong> Uses source IP address</li><li><strong>Destination IP Hash:</strong> Uses destination IP address</li><li><strong>Source-Destination IP Hash:</strong> Combines both</li><li><strong>Source-Destination Port Hash:</strong> Uses TCP/UDP port numbers (best for Layer 4)</li></ul><p><strong>Important:</strong> The algorithm ensures that each <strong>flow</strong> (conversation between two devices) uses the same link consistently. You can't guarantee equal distribution—it depends on traffic patterns.</p>`
+      },
+      {
+        title: 'EtherChannel Configuration',
+        body: `<p><strong>Create an EtherChannel on Cisco Switch:</strong></p><pre>Switch(config)# interface range GigabitEthernet 0/0 - 3
+Switch(config-if-range)# channel-group 1 mode active
+Switch(config-if-range)# exit
+
+! Interface Port-Channel 1 is created automatically
+Switch(config)# interface Port-Channel 1
+Switch(config-if)# switchport mode trunk
+Switch(config-if)# exit</pre><p><strong>Explanation:</strong></p><ul><li><code>channel-group 1 mode active</code> — Creates EtherChannel group 1 in LACP active mode</li><li><code>mode options: on | auto | desirable | active | passive</code></li><li>All 4 ports are now part of a logical <strong>Port-Channel 1</strong> interface</li></ul><p><strong>On Router (for IP routing):</strong></p><pre>Router(config)# interface Port-Channel 1
+Router(config-if)# ip address 10.0.0.1 255.255.255.0
+Router(config-if)# exit</pre>`
+      },
+      {
+        title: 'EtherChannel Monitoring',
+        body: `<p><strong>Verify EtherChannel Status:</strong></p><pre>Switch# show etherchannel summary
+Switch# show etherchannel 1 detail
+Switch# show interfaces Port-Channel 1
+Switch# show etherchannel protocol
+Switch# debug etherchannel</pre><p><strong>Sample Output:</strong></p><pre>Group  Port-Channel  Protocol  Ports
+1      Po1(SU)       LACP      Gi0/0(P)  Gi0/1(P)  Gi0/2(P)  Gi0/3(P)
+
+(P) = Participating, (D) = Down, (SU) = Sum-Up (channel up)</pre><p><strong>Key Points to Check:</strong></p><ul><li><strong>Status:</strong> SU (Sum-Up/channel up) is good; D (Down) means channel failed</li><li><strong>Ports:</strong> All ports should show (P) = Participating. Misconfigurations show (I) = Inactive</li><li><strong>Protocol:</strong> Verify LACP is negotiating correctly (shows state as P, not I)</li><li><strong>Port-Channel IP:</strong> Verify IP is configured on Port-Channel interface, not individual physical interfaces</li></ul>`
+      },
+      {
+        title: 'Common EtherChannel Issues',
+        body: `<p><strong>Issue 1: Ports stay Inactive (I) or Down (D)</strong></p><p><strong>Causes:</strong></p><ul><li>Mismatched mode (Active ↔ Passive is OK; Passive ↔ Passive is NOT)</li><li>Mismatched VLAN configurations</li><li>Mismatched spanning tree path cost settings</li><li>Link failure on one or more physical ports</li></ul><p><strong>Solution:</strong> Check <code>show etherchannel detailed</code> for reasons ports are inactive.</p><p><strong>Issue 2: Unequal Load Distribution</strong></p><p><strong>Cause:</strong> Traffic patterns don't evenly distribute across links (depends on src/dst pairs).</p><p><strong>Solution:</strong> This is normal. If very imbalanced, adjust load balancing algorithm or redesign traffic flow.</p><p><strong>Issue 3: IP Configuration on Physical Ports Instead of Port-Channel</strong></p><p><strong>Wrong:</strong></p><pre>Switch(config-if)# ip address 10.0.0.1 255.255.255.0  ! On Gi0/0</pre><p><strong>Right:</strong></p><pre>Switch(config-if)# interface Port-Channel 1
+Switch(config-if)# ip address 10.0.0.1 255.255.255.0</pre>`
+      },
+      {
+        title: 'Best Practices',
+        body: `<p><strong>1. Use LACP, Not PAgP</strong></p><p>LACP is the IEEE standard; PAgP is proprietary. Choose <strong>Active ↔ Active</strong> or <strong>Active ↔ Passive</strong> for LACP.</p><p><strong>2. Ensure Matching Configuration</strong></p><ul><li>Same physical ports on both sides</li><li>Same VLAN configuration</li><li>Same spanning tree settings</li><li>Same speed/duplex (all 1Gbps or all 10Gbps, etc.)</li></ul><p><strong>3. Configure IP on Port-Channel, Not Physical Interfaces</strong></p><p>Physical interfaces should have NO IP. All configuration goes on the Port-Channel logical interface.</p><p><strong>4. Plan for Maximum Links</strong></p><p>EtherChannel groups typically have 4-8 links (Cisco limit varies by platform). Check your switch specs.</p><p><strong>5. Monitor Regularly</strong></p><p>Watch for inactive ports, traffic imbalance, and convergence after link failures. Alert on EtherChannel state changes.</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the primary benefit of EtherChannel?',
+        a: ['Encrypts switch traffic','Combines multiple links into one logical link for increased bandwidth and redundancy','Replaces STP completely','Improves port security'],
+        correct: 1,
+        explain: '<strong>EtherChannel</strong> aggregates multiple physical links into a logical channel, providing combined bandwidth and automatic failover. It also allows STP to treat all bundled links as one logical link.'
+      },
+      {
+        q: 'How does EtherChannel help with spanning tree?',
+        a: ['Disables STP entirely','Treats multiple links as one logical link so STP doesn\'t need to block redundant links','Slows down STP convergence','Encrypts BPDU messages'],
+        correct: 1,
+        explain: 'Normally STP blocks redundant links between switches. EtherChannel bundles them as one logical link, so all links can be active without STP blocking them.'
+      },
+      {
+        q: 'What is the difference between PAgP and LACP?',
+        a: ['PAgP is faster','LACP is proprietary; PAgP is standard','PAgP is Cisco proprietary; LACP is IEEE standard (802.3ad)','Both are identical'],
+        correct: 2,
+        explain: '<strong>PAgP:</strong> Cisco proprietary. <strong>LACP:</strong> IEEE standard (better choice for multi-vendor networks).'
+      },
+      {
+        q: 'Which LACP mode combinations form a channel?',
+        a: ['Passive + Passive','Active + Active or Active + Passive','On + Auto','Desirable + Auto'],
+        correct: 1,
+        explain: '<strong>LACP:</strong> Active ↔ Active ✅, Active ↔ Passive ✅, Passive ↔ Passive ❌. Never pair two passive ports; no one initiates negotiation.'
+      },
+      {
+        q: 'In PAgP, which mode actively sends PAgP packets to negotiate?',
+        a: ['Auto','On','Desirable','Passive'],
+        correct: 2,
+        explain: '<strong>Desirable</strong> actively sends PAgP messages (initiates negotiation). <strong>Auto</strong> waits for Desirable from peer.'
+      },
+      {
+        q: 'What does EtherChannel use to distribute traffic across links?',
+        a: ['Random selection','Round-robin (fair distribution)','Hashing algorithm on src/dst MAC, IP, or port numbers','Source IP only'],
+        correct: 2,
+        explain: '<strong>EtherChannel</strong> uses a <strong>hashing algorithm</strong> to determine which link a flow uses. The algorithm ensures each conversation (flow) stays on the same link consistently.'
+      },
+      {
+        q: 'What command creates an EtherChannel on a Cisco switch?',
+        a: ['aggregate-group 1','link-aggregation 1','channel-group 1 mode active','bundle-interface 1'],
+        correct: 2,
+        explain: '<strong><code>channel-group 1 mode active</code></strong> creates EtherChannel group 1. Options: on, auto, desirable (PAgP) or active, passive (LACP).'
+      },
+      {
+        q: 'What is the logical interface created when you configure EtherChannel?',
+        a: ['EtherChannel0','Logical0','Port-Channel 1','Aggregate0'],
+        correct: 2,
+        explain: 'When you create <strong>channel-group 1</strong>, the system automatically creates <strong>Port-Channel 1</strong> interface. Use this for IP/VLAN configuration.'
+      },
+      {
+        q: 'Where should you configure the IP address for an EtherChannel?',
+        a: ['On the first physical interface (Gi0/0)','On all physical interfaces equally','On the Port-Channel logical interface only','On the switch VLAN interface'],
+        correct: 2,
+        explain: 'Configure IP on <strong>Port-Channel 1</strong>, NOT on physical interfaces. Physical interfaces in a channel should have no IP.'
+      },
+      {
+        q: 'What does the (P) status mean in EtherChannel output?',
+        a: ['Passive mode','Port is participating in the channel','Protected port','Disabled port'],
+        correct: 1,
+        explain: '<strong>(P) = Participating</strong> — Port is active in the EtherChannel. (I) = Inactive (misconfiguration). (D) = Down (link failure).'
+      },
+      {
+        q: 'What is the status (SU) in EtherChannel summary output?',
+        a: ['Status Unknown','Sum-Up (channel is up and active)','Startup','Standby Up'],
+        correct: 1,
+        explain: '<strong>(SU) = Sum-Up</strong> — The EtherChannel is up and active. All or most physical links are participating.'
+      },
+      {
+        q: 'Why might EtherChannel ports show as Inactive (I)?',
+        a: ['Normal operation','Mismatched mode, VLAN, or spanning tree configuration; or physical link failure','Ports are disabled by admin','EtherChannel doesn\'t use that status'],
+        correct: 1,
+        explain: 'Ports show (I) = Inactive when configuration doesn\'t match between switches (mode, VLAN, spanning tree) or physical links are down.'
+      },
+      {
+        q: 'Can you configure an IP address on a physical port that\'s part of an EtherChannel?',
+        a: ['Yes, assign IP to individual ports','Yes, but it\'s not recommended','No, all IP configuration must be on Port-Channel','Only in Layer 3 mode'],
+        correct: 2,
+        explain: 'Physical interfaces in an EtherChannel should have <strong>NO IP address</strong>. All L3 configuration goes on the <strong>Port-Channel logical interface</strong>.'
+      },
+      {
+        q: 'Which load balancing method is best for distributing flows in EtherChannel?',
+        a: ['Source MAC only','Destination MAC only','Source-Destination IP or Port Hash (examines more fields for better distribution)','Random distribution'],
+        correct: 2,
+        explain: '<strong>Source-Destination IP Hash</strong> or <strong>Source-Destination Port Hash</strong> (Layer 4) provide better distribution than single-field hashing.'
+      },
+      {
+        q: 'What happens if one physical link in an EtherChannel fails?',
+        a: ['Entire EtherChannel goes down','Other links automatically take over; traffic shifts to remaining active links','User must manually disable the failed port','Traffic is dropped until admin reconfigures EtherChannel'],
+        correct: 1,
+        explain: '<strong>EtherChannel automatically handles link failure.</strong> If one link fails, other links stay up and carry the traffic. The logical channel remains active.'
+      },
+      {
+        q: 'What is the maximum typical number of links in an EtherChannel group?',
+        a: ['2','4','8','16 or more'],
+        correct: 2,
+        explain: 'Most Cisco switches support up to <strong>8 links</strong> per EtherChannel group, though exact limits vary by platform. Check documentation for your specific switch.'
+      },
+    ]
+  },
+
+  // ── Layer 2 Security (Port Security, DHCP Snooping, DAI) ───────────────────
+  {
+    id: 'layer2security',
+    name: 'Layer 2 Security',
+    icon: '🔐',
+    color: '#ff4466',
+    lesson: [
+      {
+        title: 'Layer 2 Security Overview',
+        body: `<p><strong>Layer 2 security</strong> protects switches from three main attacks:</p><ul><li><strong>MAC address spoofing:</strong> Attacker claims a legitimate MAC address to hijack traffic</li><li><strong>VLAN hopping:</strong> Attacker tricks switch into sending traffic to wrong VLAN</li><li><strong>DHCP exploitation:</strong> Rogue DHCP server assigns wrong gateway/DNS to poison hosts</li><li><strong>ARP spoofing:</strong> Attacker sends fake ARP replies to intercept traffic (Man-in-the-Middle)</li></ul><p>Cisco provides three main Layer 2 security features:</p><ul><li><strong>Port Security:</strong> Limits which MAC addresses can use a port</li><li><strong>DHCP Snooping:</strong> Validates DHCP messages and prevents rogue DHCP servers</li><li><strong>DAI (Dynamic ARP Inspection):</strong> Validates ARP messages and prevents ARP spoofing</li></ul>`
+      },
+      {
+        title: 'Port Security Overview',
+        body: `<p><strong>Port Security</strong> is a feature that limits which MAC addresses are allowed to use a switch port. If an unauthorized MAC tries to use the port, the switch takes an action (typically disables the port).</p><p><strong>Use Case:</strong> Prevent unauthorized devices from connecting to a secure network port. Example: An employee tries to plug in a personal laptop on a conference room switch port—Port Security blocks it.</p><p><strong>Core Concepts:</strong></p><ul><li><strong>Secure MAC addresses:</strong> Whitelisted MAC addresses allowed on a port</li><li><strong>Maximum secure addresses:</strong> Default is 1; can increase to allow multiple devices</li><li><strong>Sticky MAC learning:</strong> Port can learn and remember MAC addresses dynamically</li><li><strong>Violation actions:</strong> What happens when unauthorized MAC is detected (shutdown, restrict, protect)</li></ul>`
+      },
+      {
+        title: 'Port Security Violation Actions',
+        type: 'table',
+        headers: ['Action', 'Description', 'Use Case'],
+        rows: [
+          ['Shutdown (default)','Disables the port (err-disabled state); admin must reset','Highest security; used for secure areas'],
+          ['Restrict','Drops traffic from offending MAC; port stays up; sends syslog alert','Moderate security; logs violations but keeps port active'],
+          ['Protect','Silently drops traffic from offending MAC; no syslog alert','Least restrictive; doesn\'t log'],
+        ]
+      },
+      {
+        title: 'Port Security Configuration',
+        body: `<p><strong>Enable Port Security on an Access Port:</strong></p><pre>Switch(config)# interface GigabitEthernet 0/1
+Switch(config-if)# switchport mode access
+Switch(config-if)# switchport access vlan 10
+Switch(config-if)# switchport port-security
+Switch(config-if)# switchport port-security maximum 1
+Switch(config-if)# switchport port-security violation shutdown
+Switch(config-if)# exit</pre><p><strong>Manually Set Secure MAC Address:</strong></p><pre>Switch(config)# interface GigabitEthernet 0/1
+Switch(config-if)# switchport port-security mac-address 0000.1111.1111
+Switch(config-if)# exit</pre><p><strong>Enable Sticky MAC Learning (Dynamic):</strong></p><pre>Switch(config-if)# switchport port-security mac-address sticky
+! Now port automatically learns and remembers the first MAC that connects</pre><p><strong>Verify Port Security:</strong></p><pre>Switch# show port-security
+Switch# show port-security interface Gi0/1
+Switch# show port-security address</pre>`
+      },
+      {
+        title: 'DHCP Snooping Overview',
+        body: `<p><strong>DHCP Snooping</strong> is a Layer 2 security feature that validates DHCP messages and prevents rogue DHCP servers from operating on your network.</p><p><strong>The Problem:</strong> An attacker sets up a rogue DHCP server on your network and responds to DHCP requests with:</p><ul><li><strong>Wrong gateway:</strong> Points hosts to attacker's IP (Man-in-the-Middle)</li><li><strong>Wrong DNS:</strong> Points hosts to malicious DNS server for phishing</li><li><strong>Wrong router:</strong> Redirects all traffic through attacker's device</li></ul><p><strong>DHCP Snooping Solution:</strong> The switch <strong>trusts only certain ports</strong> (uplink to legitimate DHCP server). All other ports can <strong>send DHCP requests</strong> (client) but NOT <strong>send DHCP responses</strong> (server). If a rogue server tries to respond on an untrusted port, the response is dropped.</p>`
+      },
+      {
+        title: 'DHCP Snooping Trust Ports',
+        body: `<p><strong>Two types of DHCP Snooping ports:</strong></p><ul><li><strong>Trusted Port:</strong> Connected to legitimate DHCP server or uplink. Can send and receive DHCP messages. Usually the port going to your core/distribution switches.</li><li><strong>Untrusted Port:</strong> Connected to end devices. Can SEND DHCP requests (client) but NOT receive/forward DHCP responses (server). Default for all ports.</li></ul><p><strong>Example Setup:</strong></p><ul><li><strong>Gi0/1 (uplink to distribution switch):</strong> TRUSTED — legitimate DHCP server is here</li><li><strong>Gi0/2-0/24 (access ports):</strong> UNTRUSTED — end devices connect here</li></ul><p>When rogue DHCP server responds on Gi0/5 (untrusted), the switch drops the response before it reaches clients.</p>`
+      },
+      {
+        title: 'DHCP Snooping Configuration',
+        body: `<p><strong>Enable DHCP Snooping on a VLAN:</strong></p><pre>Switch(config)# ip dhcp snooping
+Switch(config)# ip dhcp snooping vlan 10
+Switch(config)# exit
+
+! Now configure trust on uplink port
+Switch(config)# interface GigabitEthernet 0/1
+Switch(config-if)# ip dhcp snooping trust
+Switch(config-if)# exit
+
+! Other ports remain untrusted (default)</pre><p><strong>Optional: Limit rate of DHCP messages (prevent DoS):</strong></p><pre>Switch(config)# interface GigabitEthernet 0/2
+Switch(config-if)# ip dhcp snooping limit rate 10
+! Allows max 10 DHCP packets per second
+Switch(config-if)# exit</pre><p><strong>Verify DHCP Snooping:</strong></p><pre>Switch# show ip dhcp snooping
+Switch# show ip dhcp snooping binding
+Switch# debug ip dhcp snooping</pre>`
+      },
+      {
+        title: 'DAI (Dynamic ARP Inspection) Overview',
+        body: `<p><strong>DAI (Dynamic ARP Inspection)</strong> validates ARP messages to prevent ARP spoofing attacks.</p><p><strong>What is ARP Spoofing?</strong></p><p>ARP spoofing is when an attacker sends fake ARP replies claiming they own a legitimate IP/MAC address. Example:</p><ul><li><strong>Legitimate:</strong> Router (10.0.0.1) has MAC aaa.aaa.aaaa</li><li><strong>Spoofed:</strong> Attacker's PC has MAC bbb.bbb.bbbb but sends ARP reply: "I am 10.0.0.1 at bbb.bbb.bbbb"</li><li><strong>Result:</strong> Hosts update their ARP table and send traffic meant for router to attacker instead (Man-in-the-Middle)</li></ul><p><strong>DAI Solution:</strong> The switch validates ARP messages by checking them against the <strong>DHCP Snooping binding table</strong> (which tracks IP-to-MAC mappings). If an ARP message doesn't match, it's dropped.</p>`
+      },
+      {
+        title: 'DAI Configuration',
+        body: `<p><strong>Enable DAI on a VLAN:</strong></p><pre>Switch(config)# ip arp inspection vlan 10
+Switch(config)# exit
+
+! Configure trust on ports going to other routers/switches
+Switch(config)# interface GigabitEthernet 0/1
+Switch(config-if)# ip arp inspection trust
+Switch(config-if)# exit
+
+! Other ports remain untrusted (default) and have ARP inspected</pre><p><strong>Optional: Limit ARP message rate (prevent DoS):</strong></p><pre>Switch(config)# interface GigabitEthernet 0/2
+Switch(config-if)# ip arp inspection limit rate 15
+! Max 15 ARP packets per second
+Switch(config-if)# exit</pre><p><strong>Configure ARP Access Lists for Static IPs (optional):</strong></p><pre>! For servers with static IPs (not assigned by DHCP)
+Switch(config)# arp access-list STATIC_IPS
+Switch(config-arp-acl)# permit ip host 10.0.0.100 mac host aaa.aaa.aaaa
+Switch(config-arp-acl)# exit
+
+Switch(config)# ip arp inspection filter STATIC_IPS vlan 10</pre><p><strong>Verify DAI:</strong></p><pre>Switch# show ip arp inspection
+Switch# show ip arp inspection vlan 10
+Switch# show ip arp inspection statistics vlan 10</pre>`
+      },
+      {
+        title: 'Layer 2 Security Best Practices',
+        body: `<p><strong>1. Combine All Three Security Features</strong></p><p>Port Security + DHCP Snooping + DAI together provide defense-in-depth:</p><ul><li><strong>Port Security:</strong> Stops unauthorized device from using port</li><li><strong>DHCP Snooping:</strong> Stops rogue DHCP server</li><li><strong>DAI:</strong> Stops ARP spoofing</li></ul><p><strong>2. Design Trust Model Carefully</strong></p><p>Identify:</p><ul><li>Which ports connect to legitimate servers/routers (TRUST)</li><li>Which ports connect to end devices (UNTRUST)</li><li>Document the trust topology</li></ul><p><strong>3. Monitor Security Events</strong></p><ul><li>Enable syslog for Port Security violations</li><li>Monitor DHCP Snooping binding table for rogue DHCP activity</li><li>Check DAI statistics for ARP spoofing attempts</li></ul><p><strong>4. Handle Static IPs Properly</strong></p><p>Devices with static IPs (not DHCP):</p><ul><li><strong>Port Security:</strong> Manually configure their MAC addresses</li><li><strong>DHCP Snooping:</strong> Add to ARP access list</li><li><strong>DAI:</strong> Create ARP ACL entries for their IP-to-MAC mapping</li></ul><p><strong>5. Plan for Management Access</strong></p><p>Ensure management ports/VLANs are properly exempted or trusted so admin access isn't blocked.</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What does Port Security do?',
+        a: ['Encrypts all switch traffic','Limits which MAC addresses can use a port','Prevents routing loops','Blocks all unauthorized VLANs'],
+        correct: 1,
+        explain: '<strong>Port Security</strong> allows only whitelisted MAC addresses on a port. Unauthorized MACs trigger a violation action (shutdown, restrict, or protect).'
+      },
+      {
+        q: 'What is the default maximum number of secure MAC addresses per port?',
+        a: ['1','2','4','8'],
+        correct: 0,
+        explain: 'Default is <strong>1</strong> — only one device per port. You can increase this with <code>switchport port-security maximum X</code>'
+      },
+      {
+        q: 'What is the default Port Security violation action?',
+        a: ['Restrict','Protect','Shutdown','Drop'],
+        correct: 2,
+        explain: '<strong>Shutdown (default):</strong> Port goes err-disabled. <strong>Restrict:</strong> Drops offending traffic but port stays up. <strong>Protect:</strong> Silently drops traffic.'
+      },
+      {
+        q: 'What does Sticky MAC in Port Security mean?',
+        a: ['MAC address learned once and never changes','MAC address is statically assigned','Port dynamically learns and remembers the first MAC address that connects','Multiple MACs can use the same port'],
+        correct: 2,
+        explain: '<strong>Sticky MAC:</strong> Port automatically learns the first MAC address that connects and locks it in. If that device disconnects, the MAC stays secure.'
+      },
+      {
+        q: 'What is the primary goal of DHCP Snooping?',
+        a: ['Speeds up DHCP lease renewal','Prevents rogue DHCP servers from assigning bad gateway/DNS','Encrypts DHCP traffic','Assigns static IPs to devices'],
+        correct: 1,
+        explain: '<strong>DHCP Snooping</strong> blocks unauthorized DHCP responses by trusting only specific ports (connected to legitimate DHCP servers) and dropping responses on untrusted ports.'
+      },
+      {
+        q: 'In DHCP Snooping, which port type can send DHCP responses?',
+        a: ['Untrusted ports only','Trusted ports only','Both equally','Neither'],
+        correct: 1,
+        explain: '<strong>Trusted ports</strong> (usually uplinks to core) can send DHCP responses. <strong>Untrusted ports</strong> (access ports) can only send DHCP requests (client mode).'
+      },
+      {
+        q: 'What does DHCP Snooping binding table track?',
+        a: ['All DHCP server IP addresses','IP address to MAC address mappings learned from DHCP interactions','All VLAN information','Router interface configurations'],
+        correct: 1,
+        explain: '<strong>Binding table</strong> records <code>IP ↔ MAC ↔ Port</code> mappings from DHCP Discover/Request/Ack. DAI uses this to validate ARP messages.'
+      },
+      {
+        q: 'What is ARP spoofing?',
+        a: ['Sending fake DHCP offers','Sending fake ARP replies claiming to own an IP/MAC address (Man-in-the-Middle)','Blocking legitimate ARP traffic','Encrypting ARP messages'],
+        correct: 1,
+        explain: '<strong>ARP spoofing:</strong> Attacker sends ARP reply "I am 10.0.0.1 at [attacker-MAC]" to intercept traffic meant for the real gateway.'
+      },
+      {
+        q: 'What does DAI (Dynamic ARP Inspection) prevent?',
+        a: ['DHCP attacks','ARP spoofing and Man-in-the-Middle attacks','Port Security violations','Unauthorized VLANs'],
+        correct: 1,
+        explain: '<strong>DAI</strong> validates ARP messages against the DHCP Snooping binding table. Invalid ARP replies are dropped before reaching hosts.'
+      },
+      {
+        q: 'How does DAI validate ARP messages?',
+        a: ['By checking the source MAC address','By comparing against DHCP Snooping binding table IP-to-MAC mappings','By monitoring TTL values','By checking TCP checksums'],
+        correct: 1,
+        explain: '<strong>DAI</strong> looks up the ARP reply\'s sender IP in the DHCP binding table. If the MAC doesn\'t match, ARP is dropped as suspicious.'
+      },
+      {
+        q: 'Which configuration enables Port Security with shutdown violation?',
+        a: ['switchport port-security disable','switchport port-security violation shutdown','switchport security mode shutdown','port-security on shutdown'],
+        correct: 1,
+        explain: '<strong><code>switchport port-security violation shutdown</code></strong> is the command. Default is already shutdown, but explicitly configuring it is good practice.'
+      },
+      {
+        q: 'What command enables DHCP Snooping on a VLAN?',
+        a: ['ip dhcp snooping enable 10','ip dhcp snooping vlan 10','dhcp snooping vlan 10','enable dhcp-snooping']
+        correct: 1,
+        explain: '<strong><code>ip dhcp snooping vlan 10</code></strong> enables snooping for VLAN 10 (after <code>ip dhcp snooping</code> globally).'
+      },
+      {
+        q: 'Which ports should be trusted in DHCP Snooping?',
+        a: ['All access ports','Only uplink ports connected to legitimate DHCP server or distribution switches','Ports with static IPs','Ports connecting to workstations'],
+        correct: 1,
+        explain: '<strong>Trusted ports:</strong> Uplinks to core/distribution where your legitimate DHCP server is. <strong>Untrusted ports:</strong> Access ports with end devices.'
+      },
+      {
+        q: 'What command enables DAI on a VLAN?',
+        a: ['ip arp inspection enable 10','ip arp inspection vlan 10','arp inspection vlan 10','enable arp-inspection']
+        correct: 1,
+        explain: '<strong><code>ip arp inspection vlan 10</code></strong> enables DAI for VLAN 10.'
+      },
+      {
+        q: 'For a server with a static IP (not DHCP), how do you protect it with DAI?',
+        a: ['DAI automatically protects all static IPs','Create an ARP ACL entry manually mapping IP to MAC','Use Port Security instead of DAI','Static IPs don\'t need protection'],
+        correct: 1,
+        explain: '<strong>DAI uses DHCP bindings by default.</strong> Static IPs need <strong>ARP ACL entries</strong> manually created: <code>permit ip host 10.0.0.100 mac host aaa.aaa.aaaa</code>'
+      },
+      {
+        q: 'Why should you enable DHCP Snooping before enabling DAI?',
+        a: ['DAI requires the DHCP binding table to validate ARP messages','DHCP Snooping is faster than DAI','They are unrelated; order doesn\'t matter','DAI is deprecated; DHCP Snooping is preferred'],
+        correct: 0,
+        explain: '<strong>DAI depends on DHCP Snooping</strong> because it validates ARP messages using the DHCP binding table. Enable snooping first, then DAI.'
+      },
+    ]
+  },
+
+  // ── Network Devices and Topologies ────────────────────────────────────────
+  {
+    id: 'network_devices_topologies',
+    name: 'Network Devices & Topologies',
+    icon: '🌐',
+    color: '#7b4fff',
+    lesson: [
+      {
+        title: 'Core Network Devices',
+        type: 'table',
+        headers: ['Device', 'Layer', 'Function', 'Example Use'],
+        rows: [
+          ['Router','Layer 3','Routes packets between different IP networks/subnets','Connects office to ISP; connects departments'],
+          ['Switch','Layer 2','Forwards frames within same network (VLAN)','Connects PCs, servers within office'],
+          ['Firewall','Layer 3-7','Filters packets based on rules (ACLs, inspection)','Controls what traffic in/out of network'],
+          ['Load Balancer','Layer 4-7','Distributes traffic across servers','Balances web requests to 5 servers'],
+          ['Access Point (AP)','Layer 1-2','Wireless bridge to wired network','Provides WiFi in office'],
+          ['Modem','Layer 1-2','Converts ISP signal to usable network signal','Connects home/office to ISP'],
+          ['Repeater/Extender','Layer 1','Amplifies signal over distance','Extends WiFi to distant room'],
+        ]
+      },
+      {
+        title: 'Network Topologies',
+        body: `<p><strong>A topology describes how devices are physically/logically connected.</strong></p><p><strong>1. Star Topology</strong></p><ul><li><strong>Structure:</strong> All devices connect to one central hub/switch</li><li><strong>Advantages:</strong> Easy to manage, one device down doesn't affect others, easy to add/remove devices</li><li><strong>Disadvantages:</strong> Central device is single point of failure, more cabling to center</li><li><strong>Use:</strong> Most common in modern networks (switches at center)</li></ul><p><strong>2. Mesh Topology</strong></p><ul><li><strong>Structure:</strong> Devices connect to multiple other devices; fully redundant</li><li><strong>Advantages:</strong> Highly redundant, any link can fail without disconnecting network</li><li><strong>Disadvantages:</strong> Expensive (lots of cabling), complex routing</li><li><strong>Use:</strong> Core networks, critical infrastructure, WAN links</li></ul><p><strong>3. Hybrid Topology</strong></p><ul><li><strong>Structure:</strong> Combination of star and mesh (some devices have redundancy, others don't)</li><li><strong>Advantages:</strong> Balances cost and redundancy</li><li><strong>Disadvantages:</strong> More complex design</li><li><strong>Use:</strong> Most enterprise networks</li></ul>`
+      },
+      {
+        title: 'Hierarchical Network Design',
+        body: `<p><strong>Most enterprise networks use a three-layer hierarchical design:</strong></p><p><strong>Layer 1: Core Layer</strong></p><ul><li><strong>Purpose:</strong> High-speed backbone; connects distribution switches together</li><li><strong>Devices:</strong> High-end switches, routers</li><li><strong>Characteristics:</strong> Redundant links, fast protocols (10Gbps+), few devices</li><li><strong>Design:</strong> Full mesh (all connected to all) or partial mesh</li></ul><p><strong>Layer 2: Distribution Layer</strong></p><ul><li><strong>Purpose:</strong> Aggregates access layer; provides routing, security policies, QoS</li><li><strong>Devices:</strong> Mid-range switches, routers, firewalls</li><li><strong>Characteristics:</strong> Connects to core and access layers; applies policies</li><li><strong>Design:</strong> Redundant uplinks to core; star to access</li></ul><p><strong>Layer 3: Access Layer</strong></p><ul><li><strong>Purpose:</strong> End devices connect here</li><li><strong>Devices:</strong> Access switches</li><li><strong>Characteristics:</strong> Edge of network; where PCs, printers, wireless APs connect</li><li><strong>Design:</strong> Simple star topology; connects upward to distribution</li></ul><p><strong>Benefits:</strong> Scalability, redundancy, policy enforcement, easy troubleshooting.</p>`
+      },
+      {
+        title: 'LAN (Local Area Network)',
+        body: `<p><strong>LAN (Local Area Network)</strong> is a network in a small geographic area (office, building, campus).</p><p><strong>Characteristics:</strong></p><ul><li><strong>Distance:</strong> Usually under 100 meters (limited by UTP cable)</li><li><strong>Speed:</strong> Fast (100 Mbps to 10+ Gbps)</li><li><strong>Ownership:</strong> Single organization</li><li><strong>Technology:</strong> Ethernet (most common)</li><li><strong>Devices:</strong> Switches, access points, local routers</li></ul><p><strong>Example:</strong> Your office network — all PCs/printers connected via switches in the same building.</p>`
+      },
+      {
+        title: 'WAN (Wide Area Network)',
+        body: `<p><strong>WAN (Wide Area Network)</strong> is a network spanning large geographic areas (cities, continents).</p><p><strong>Characteristics:</strong></p><ul><li><strong>Distance:</strong> Miles to thousands of miles</li><li><strong>Speed:</strong> Slower than LAN (1-100 Mbps typical, shared links)</li><li><strong>Ownership:</strong> Often uses carrier/ISP services</li><li><strong>Technology:</strong> Leased lines, MPLS, Internet-based VPN</li><li><strong>Devices:</strong> Routers, firewalls, VPN appliances</li></ul><p><strong>Examples:</strong></p><ul><li>Company HQ connecting to branch offices via leased line or VPN</li><li>Cloud service connecting to on-prem data center over Internet</li></ul>`
+      },
+      {
+        title: 'Metropolitan Area Network (MAN)',
+        body: `<p><strong>MAN (Metropolitan Area Network)</strong> is in between LAN and WAN.</p><ul><li><strong>Distance:</strong> City or campus (up to ~100 km)</li><li><strong>Speed:</strong> Faster than WAN, slower than LAN</li><li><strong>Technology:</strong> Metro Ethernet, wireless mesh</li><li><strong>Example:</strong> University connecting multiple campuses across a city</li></ul>`
+      },
+      {
+        title: 'Redundancy and High Availability',
+        body: `<p><strong>Single point of failure = bad.</strong> Enterprise networks use redundancy:</p><p><strong>Link Redundancy:</strong></p><ul><li>Multiple paths between devices (mesh topology, EtherChannel)</li><li>If one link fails, traffic uses backup link</li><li><strong>Protocol:</strong> STP/RSTP blocks redundant links but activates them on failure</li></ul><p><strong>Device Redundancy:</strong></p><ul><li>Hot standby devices (like HSRP for routers)</li><li>If primary device fails, backup takes over automatically</li></ul><p><strong>Data Center Redundancy:</strong></p><ul><li>Replicate data to secondary data center</li><li>Automatic failover if primary goes down</li></ul><p><strong>Measuring Availability (uptime):</strong></p><ul><li>99% uptime = 3.6 days downtime/year</li><li>99.9% uptime = 8.6 hours downtime/year</li><li>99.99% uptime = 52 minutes downtime/year (enterprise standard)</li></ul>`
+      },
+      {
+        title: 'Convergence and Network Optimization',
+        body: `<p><strong>Convergence</strong> means integrating voice, video, and data on the same network infrastructure.</p><p><strong>Why?</strong> Traditionally, voice (phone), video, and data used separate networks. Now, all traffic runs over Ethernet.</p><p><strong>Requirements:</strong></p><ul><li><strong>Quality of Service (QoS):</strong> Voice/video priority over best-effort data</li><li><strong>Bandwidth:</strong> Enough capacity for peak demand</li><li><strong>Latency/Jitter:</strong> Voice needs low delay (<150ms) and consistent timing</li><li><strong>Redundancy:</strong> Calls can't drop if link fails</li></ul><p><strong>Cisco CallManager / VoIP Example:</strong> Phones connect via Ethernet (PoE powered). Phone calls run over IP. Routers QoS ensures call quality.</p>`
+      },
+      {
+        title: 'Network Design Best Practices',
+        body: `<p><strong>1. Use Hierarchical Design</strong></p><p>Core-Distribution-Access layers separate concerns: Core optimized for speed, Distribution for policies, Access for simplicity.</p><p><strong>2. Redundancy at Every Layer</strong></p><ul><li>Core: Full/partial mesh</li><li>Distribution: Multiple uplinks to core</li><li>Access: Uplinks to multiple distribution switches</li></ul><p><strong>3. Separate Traffic Domains with VLANs</strong></p><p>Don't mix marketing, engineering, guest WiFi on same L2 broadcast domain.</p><p><strong>4. Use Protocols Appropriately</strong></p><ul><li>STP/RSTP for Layer 2 redundancy</li><li>OSPF/EIGRP/BGP for Layer 3 routing redundancy</li><li>HSRP for gateway redundancy</li></ul><p><strong>5. Plan for Growth</strong></p><p>Design for 3-5 year capacity. Don't overprovision (expensive) or underprovision (limits growth).</p><p><strong>6. Document Everything</strong></p><p>Topology diagrams, IP addressing plan, VLAN assignments, device roles. Critical for troubleshooting.</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'Which device operates at Layer 3?',
+        a: ['Switch','Router','Hub','Repeater'],
+        correct: 1,
+        explain: '<strong>Router</strong> operates at Layer 3 (Network Layer) and forwards packets between different IP networks.'
+      },
+      {
+        q: 'In a star topology, what is the central device called?',
+        a: ['Hub','Router','Central node','All of the above'],
+        correct: 3,
+        explain: 'In a star topology, all devices connect to a central point. This can be a switch, router, or hub (depending on the layer).'
+      },
+      {
+        q: 'What are the three layers of hierarchical network design?',
+        a: ['Local, Regional, Global','Access, Distribution, Core','Primary, Secondary, Tertiary','Copper, Fiber, Wireless'],
+        correct: 1,
+        explain: '<strong>Core Layer:</strong> High-speed backbone. <strong>Distribution Layer:</strong> Policies and aggregation. <strong>Access Layer:</strong> Where end devices connect.'
+      },
+      {
+        q: 'Which topology provides the most redundancy?',
+        a: ['Star','Mesh','Linear','Bus'],
+        correct: 1,
+        explain: '<strong>Mesh topology</strong> connects devices to multiple others, so if one link fails, alternate paths exist. Fully redundant but expensive.'
+      },
+      {
+        q: 'What is the primary purpose of the distribution layer?',
+        a: ['Connect end devices','Connect core to access; apply policies, QoS, routing','Terminate Internet connection','Provide wireless access'],
+        correct: 1,
+        explain: '<strong>Distribution layer</strong> aggregates access layer traffic, applies security policies, QoS, and routing before sending to core.'
+      },
+      {
+        q: 'What distance limitation applies to standard UTP Ethernet cable?',
+        a: ['10 meters','50 meters','100 meters','1000 meters'],
+        correct: 2,
+        explain: '<strong>UTP cable maximum length is 100 meters</strong> (~330 feet) before signal degradation. Fiber optic extends to kilometers.'
+      },
+      {
+        q: 'What is the difference between LAN and WAN?',
+        a: ['LAN uses switches; WAN uses routers','LAN covers small areas (office); WAN covers large areas (cities/continents)','LAN is faster than WAN','LAN is more expensive'],
+        correct: 1,
+        explain: '<strong>LAN (Local Area Network):</strong> Small area, fast, single organization. <strong>WAN (Wide Area Network):</strong> Large area, slower, often uses ISP services.'
+      },
+      {
+        q: 'Which device is responsible for connecting a LAN to the Internet?',
+        a: ['Switch','Firewall','Router','Access Point'],
+        correct: 2,
+        explain: '<strong>Router</strong> connects networks at Layer 3. The border router connects internal LAN to ISP WAN.'
+      },
+      {
+        q: 'What protocol is used for gateway redundancy (two routers share one virtual IP)?',
+        a: ['VRRP','HSRP','GLBP','All of the above'],
+        correct: 1,
+        explain: '<strong>HSRP (Hot Standby Router Protocol)</strong> is Cisco\'s gateway redundancy protocol. VRRP and GLBP are alternatives (VRRP is standard).'
+      },
+      {
+        q: 'What does PoE (Power over Ethernet) enable?',
+        a: ['Faster network speeds','Powering devices over Ethernet cable (phones, APs)','Wireless power transmission','Fiber optic connectivity'],
+        correct: 1,
+        explain: '<strong>PoE</strong> allows Ethernet cables to carry both data and power. Used for IP phones, wireless access points, cameras.'
+      },
+      {
+        q: 'What is the main advantage of a mesh WAN topology?',
+        a: ['Lower cost','All sites connect to central hub','High redundancy; multiple paths between sites','Simpler to manage'],
+        correct: 2,
+        explain: '<strong>Mesh topology:</strong> Every site connects to every other site directly. If one link fails, alternate paths exist. Expensive but highly redundant.'
+      },
+      {
+        q: 'Which layer of the network is where end-user devices (PCs, printers) connect?',
+        a: ['Core','Distribution','Access','Internet'],
+        correct: 2,
+        explain: '<strong>Access layer</strong> is where PCs, printers, wireless APs, cameras — end-user devices — connect to the network.'
+      },
+      {
+        q: 'What is QoS (Quality of Service) used for?',
+        a: ['Encrypting traffic','Prioritizing critical traffic (voice/video) over best-effort data','Blocking bandwidth hogs','Replacing routers'],
+        correct: 1,
+        explain: '<strong>QoS</strong> prioritizes certain traffic (voice, video) so they get low latency and jitter, while bulk data gets leftover bandwidth.'
+      },
+      {
+        q: 'What does convergence mean in networking?',
+        a: ['Routing protocol stability','All routers agreeing on topology','Voice, video, and data running on same infrastructure','Devices negotiating a connection'],
+        correct: 2,
+        explain: '<strong>Convergence</strong> refers to consolidating separate voice, video, and data networks into one unified IP network infrastructure.'
+      },
+      {
+        q: 'Which topology connects all core switches to every other core switch?',
+        a: ['Star','Linear','Full Mesh','Bus'],
+        correct: 2,
+        explain: '<strong>Full Mesh:</strong> Every device connects to every other. In core, provides maximum redundancy and low latency between all switches.'
+      },
+      {
+        q: 'What is an uplink in network terminology?',
+        a: ['A wireless connection','A connection from access switch to distribution switch (toward core)','A link to the Internet','A backup circuit'],
+        correct: 1,
+        explain: '<strong>Uplink:</strong> A connection going toward the core of the network (hierarchical perspective). Access switch uplinks to distribution, distribution uplinks to core.'
+      },
+    ]
+  },
+
+  // ── Automation and Programmability (APIs, Python, Ansible, DNA Center) ────
+  {
+    id: 'automation_programmability',
+    name: 'Automation & Programmability',
+    icon: '⚙️',
+    color: '#00ff88',
+    lesson: [
+      {
+        title: 'Why Network Automation?',
+        body: `<p><strong>Manual networking is slow, error-prone, and doesn't scale.</strong> Automation enables:</p><ul><li><strong>Speed:</strong> Deploy 100 switches in minutes, not weeks</li><li><strong>Consistency:</strong> Every device configured identically (no typos)</li><li><strong>Scalability:</strong> Same scripts work on 10 or 10,000 devices</li><li><strong>Agility:</strong> Quickly respond to business needs</li><li><strong>Reduced costs:</strong> Less manual labor, fewer errors</li></ul><p><strong>Modern networking is programmable:</strong> Devices expose APIs (Application Programming Interfaces) that let you read/write configuration programmatically.</p>`
+      },
+      {
+        title: 'REST API Basics',
+        body: `<p><strong>REST (Representational State Transfer)</strong> is a web-based API standard. Devices expose REST APIs so you can control them via HTTP.</p><p><strong>HTTP Methods:</strong></p><ul><li><strong>GET:</strong> Read/retrieve data (no changes)</li><li><strong>POST:</strong> Create new resource or take action</li><li><strong>PUT:</strong> Replace entire resource</li><li><strong>PATCH:</strong> Partially modify resource</li><li><strong>DELETE:</strong> Delete resource</li></ul><p><strong>Example REST API Call:</strong></p><pre>GET /api/v1/interfaces
+Host: 192.168.1.1
+Authorization: Bearer token123
+
+Response:
+{
+  "interfaces": [
+    {"name": "Gi0/0", "ip": "10.0.0.1", "status": "up"},
+    {"name": "Gi0/1", "ip": "10.0.0.2", "status": "up"}
+  ]
+}</pre>`
+      },
+      {
+        title: 'Data Formats: JSON vs XML',
+        body: `<p><strong>JSON (JavaScript Object Notation):</strong> Lightweight, human-readable, preferred in modern APIs</p><pre>{
+  "name": "Router1",
+  "ip": "192.168.1.1",
+  "interfaces": [
+    {"port": "Gi0/0", "status": "up"},
+    {"port": "Gi0/1", "status": "down"}
+  ]
+}</pre><p><strong>XML (eXtensible Markup Language):</strong> More verbose, hierarchical, older APIs (still used)</p><pre>&lt;router&gt;
+  &lt;name&gt;Router1&lt;/name&gt;
+  &lt;ip&gt;192.168.1.1&lt;/ip&gt;
+  &lt;interfaces&gt;
+    &lt;interface&gt;
+      &lt;port&gt;Gi0/0&lt;/port&gt;
+      &lt;status&gt;up&lt;/status&gt;
+    &lt;/interface&gt;
+  &lt;/interfaces&gt;
+&lt;/router&gt;</pre><p><strong>JSON is preferred</strong> for new Cisco APIs (REST, NETCONF on modern devices).</p>`
+      },
+      {
+        title: 'Python for Network Automation',
+        body: `<p><strong>Python</strong> is the de facto language for network automation.</p><p><strong>Why Python?</strong></p><ul><li>Easy to learn syntax (readable code)</li><li>Huge ecosystem: libraries for networking (paramiko, netmiko, requests)</li><li>Used by Cisco, Arista, Juniper in their APIs</li><li>Cross-platform (Windows, Mac, Linux)</li></ul><p><strong>Common Python Libraries for Networking:</strong></p><ul><li><strong>requests:</strong> HTTP calls to REST APIs</li><li><strong>netmiko:</strong> SSH into network devices and send commands</li><li><strong>paramiko:</strong> SSH client library</li><li><strong>jinja2:</strong> Template engine for config generation</li><li><strong>nxapi:</strong> Nexus API library</li><li><strong>dnac:</strong> DNA Center API library</li></ul><p><strong>Example Python Script:</strong></p><pre>import requests
+response = requests.get(
+  'https://192.168.1.1/api/v1/interfaces',
+  auth=('admin', 'password'),
+  verify=False
+)
+interfaces = response.json()
+for iface in interfaces['interfaces']:
+  print(f"{iface['name']}: {iface['status']}")
+</pre>`
+      },
+      {
+        title: 'Ansible for Configuration Management',
+        body: `<p><strong>Ansible</strong> is a popular open-source automation platform for deploying/managing infrastructure.</p><p><strong>Key Concepts:</strong></p><ul><li><strong>Agentless:</strong> No software to install on devices (uses SSH)</li><li><strong>Playbook:</strong> YAML file defining tasks to execute</li><li><strong>Inventory:</strong> List of devices to manage</li><li><strong>Module:</strong> Plugin that performs a specific task (e.g., ios_config, napalm)</li></ul><p><strong>Example Ansible Playbook:</strong></p><pre>---
+- hosts: routers
+  tasks:
+    - name: Configure OSPF on all routers
+      ios_config:
+        host: "{{ inventory_hostname }}"
+        username: admin
+        password: cisco
+        commands:
+          - router ospf 1
+          - network 10.0.0.0 0.0.0.255 area 0
+    - name: Save config
+      ios_command:
+        commands: write memory
+</pre><p><strong>Advantages:</strong> Push configs to 50 devices in seconds, version control, error checking.</p>`
+      },
+      {
+        title: 'Cisco DNA Center',
+        body: `<p><strong>Cisco DNA Center</strong> is a management platform that automates network operations.</p><p><strong>Features:</strong></p><ul><li><strong>Intent-based:</strong> Define desired state; DNA Center makes changes automatically</li><li><strong>Assurance:</strong> Monitor network health in real-time</li><li><strong>Provisioning:</strong> Auto-deploy switches, routers, wireless</li><li><strong>Image management:</strong> Auto-update device firmware</li><li><strong>Insights:</strong> AI-driven anomaly detection</li><li><strong>APIs:</strong> REST APIs for programmatic control</li></ul><p><strong>Workflow:</strong></p><ol><li>Define network design (sites, devices, VLANs)</li><li>DNA Center discovers existing network</li><li>Admin reviews and approves changes</li><li>DNA Center applies config to all devices automatically</li><li>Continually monitor and optimize</li></ol>`
+      },
+      {
+        title: 'SD-WAN (Software-Defined WAN)',
+        body: `<p><strong>SD-WAN</strong> is a modern approach to WAN that uses software to manage traffic instead of relying on physical circuit types.</p><p><strong>Traditional WAN:</strong> Expensive MPLS circuits from ISP, slow failover, difficult to manage.</p><p><strong>SD-WAN:</strong> Use any WAN link (broadband, 4G, MPLS). Software dynamically routes traffic based on performance, cost, or application priority.</p><p><strong>Benefits:</strong></p><ul><li><strong>Cost reduction:</strong> Replace expensive MPLS with cheap broadband</li><li><strong>Agility:</strong> Add/change locations instantly</li><li><strong>Performance:</strong> Intelligent traffic steering based on app needs</li><li><strong>Simplicity:</strong> Centralized management vs. per-site config</li></ul><p><strong>Cisco SD-WAN (Viptela acquired):</strong> Centralized controller, edge devices, security appliances.</p>`
+      },
+      {
+        title: 'Infrastructure as Code (IaC)',
+        body: `<p><strong>Infrastructure as Code</strong> treats network/server config like software code:</p><ul><li><strong>Version control:</strong> Track all changes in Git</li><li><strong>Reproducible:</strong> Same code = identical infrastructure</li><li><strong>Testable:</strong> Test config before deploying</li><li><strong>Auditable:</strong> Clear history of who changed what</li></ul><p><strong>Tools:</strong></p><ul><li><strong>Terraform:</strong> Declarative IaC for cloud/network resources</li><li><strong>Ansible:</strong> Imperative automation (step-by-step)</li><li><strong>CloudFormation:</strong> AWS-specific IaC</li></ul><p><strong>Example Terraform (Cisco ACI):</strong></p><pre>resource "aci_tenant" "production" {
+  name = "prod_tenant"
+  description = "Production workloads"
+}
+
+resource "aci_application_profile" "web" {
+  tenant_dn = aci_tenant.production.id
+  name = "web_apps"
+}</pre>`
+      },
+      {
+        title: 'AI/ML in Networking',
+        body: `<p><strong>Artificial Intelligence and Machine Learning</strong> are transforming network operations:</p><p><strong>Use Cases:</strong></p><ul><li><strong>Anomaly Detection:</strong> ML models learn normal traffic patterns; alert on outliers (intrusions, attacks)</li><li><strong>Predictive Maintenance:</strong> Predict device failures before they happen</li><li><strong>Network Optimization:</strong> Auto-tune QoS, routing based on patterns</li><li><strong>Cyber Threat Detection:</strong> Identify compromised devices based on behavior</li><li><strong>Traffic Classification:</strong> Identify application types without deep packet inspection</li></ul><p><strong>Cisco Examples:</strong></p><ul><li><strong>Cisco Threat Defense:</strong> ML-based threat detection</li><li><strong>Cisco DNA Center Insights:</strong> AI-driven network health and anomaly detection</li><li><strong>Cisco Stealthwatch:</strong> ML-powered network monitoring</li></ul><p><strong>Challenge:</strong> AI needs training data. Initial setup requires baseline collection, but once trained, very effective.</p>`
+      },
+      {
+        title: 'Modern Network Skills Required',
+        body: `<p><strong>Network engineers today must know:</strong></p><ul><li><strong>Core Networking:</strong> Routing, switching, protocols (still essential)</li><li><strong>Programming:</strong> Python, scripting, basic coding concepts</li><li><strong>APIs:</strong> How to consume REST APIs, read API documentation</li><li><strong>Linux/Unix:</strong> Command line, basic shell scripting</li><li><strong>Version Control:</strong> Git, GitHub for managing code/configs</li><li><strong>Cloud Concepts:</strong> Public cloud (AWS, Azure), hybrid models</li><li><strong>Containers:</strong> Docker, Kubernetes basics</li><li><strong>DevOps Mindset:</strong> CI/CD pipelines, automation-first approach</li></ul><p><strong>CCNA + Automation Skills = High Demand!</strong> Employers increasingly seek engineers who can both configure networks AND automate them.</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the primary benefit of network automation?',
+        a: ['Faster manual work','Deploy configs to many devices quickly and consistently','Replace physical network devices','Encrypt network traffic'],
+        correct: 1,
+        explain: 'Automation enables <strong>speed and consistency:</strong> Deploy 100 devices in minutes, ensure identical config, fewer human errors.'
+      },
+      {
+        q: 'What does REST stand for?',
+        a: ['Resource Efficiency Security Tool','Representational State Transfer','Remote Execution System Terminal','Routing Equipment Status Tracker'],
+        correct: 1,
+        explain: '<strong>REST (Representational State Transfer)</strong> is an API architecture style using HTTP methods to interact with resources.'
+      },
+      {
+        q: 'Which HTTP method is used to read/retrieve data without making changes?',
+        a: ['POST','PUT','GET','DELETE'],
+        correct: 2,
+        explain: '<strong>GET:</strong> Retrieve/read data. <strong>POST/PUT:</strong> Create/modify. <strong>DELETE:</strong> Remove.'
+      },
+      {
+        q: 'Which data format is more human-readable and preferred in modern APIs?',
+        a: ['XML','YAML','JSON','CSV'],
+        correct: 2,
+        explain: '<strong>JSON (JavaScript Object Notation)</strong> is lightweight, readable, and standard for modern REST APIs. XML is older/verbose.'
+      },
+      {
+        q: 'Why is Python popular for network automation?',
+        a: ['Fastest execution speed','Easy to learn, large networking library ecosystem, cross-platform','Only language that works with APIs','Required by all vendors'],
+        correct: 1,
+        explain: '<strong>Python</strong> is beginner-friendly with libraries like netmiko, requests, paramiko built for networking tasks.'
+      },
+      {
+        q: 'What is Ansible?',
+        a: ['A Python library','An agentless automation platform using SSH and playbooks','A routing protocol','A cloud computing service'],
+        correct: 1,
+        explain: '<strong>Ansible</strong> is open-source automation: no agents, YAML playbooks, idempotent tasks. Deploy configs via SSH.'
+      },
+      {
+        q: 'What does an Ansible playbook contain?',
+        a: ['Network topology diagrams','YAML file with tasks to execute on hosts','Device firmware updates','Backup configuration files'],
+        correct: 1,
+        explain: '<strong>Playbook:</strong> YAML file defining <strong>hosts</strong> (target devices) and <strong>tasks</strong> (what to do on each).'
+      },
+      {
+        q: 'What is Cisco DNA Center used for?',
+        a: ['Routing protocol','Intent-based network automation and management','Wireless access point management','Firewall rules configuration'],
+        correct: 1,
+        explain: '<strong>DNA Center:</strong> Centralized platform for automating provisioning, assurance, and optimization of Cisco networks.'
+      },
+      {
+        q: 'What is the main advantage of SD-WAN over traditional MPLS WAN?',
+        a: ['Faster routing protocols','Uses any WAN link (broadband, 4G); software-driven routing; cheaper than MPLS','Requires proprietary hardware','Uses IPv6 exclusively'],
+        correct: 1,
+        explain: '<strong>SD-WAN</strong> replaces expensive MPLS with software that intelligently routes traffic across any link type (broadband, 4G, MPLS).'
+      },
+      {
+        q: 'What is Infrastructure as Code (IaC)?',
+        a: ['Encrypting infrastructure data','Treating network/server config like software (version controlled, reproducible, testable)','Using cloud APIs only','Manual configuration documentation'],
+        correct: 1,
+        explain: '<strong>IaC:</strong> Config stored in code, version-controlled, reproducible. Tools: Terraform, Ansible, CloudFormation.'
+      },
+      {
+        q: 'Which tool is declarative and describes desired end state?',
+        a: ['Ansible (only)','Terraform (primarily)','Both equally','Neither (both imperative)'],
+        correct: 1,
+        explain: '<strong>Terraform:</strong> Declarative — you specify desired state. <strong>Ansible:</strong> Imperative — you specify steps. (Terraform is more "what", Ansible is more "how".)'
+      },
+      {
+        q: 'What is an example AI/ML use in networking?',
+        a: ['Faster Ethernet speeds','Anomaly detection to identify intrusions/abnormal traffic patterns','Replacing routers','Preventing VLANs'],
+        correct: 1,
+        explain: '<strong>AI/ML:</strong> Learns normal traffic patterns; alerts on outliers. Also: predictive maintenance, threat detection, traffic classification.'
+      },
+      {
+        q: 'Which Python library is used to make HTTP requests to REST APIs?',
+        a: ['netmiko','paramiko','requests','jinja2'],
+        correct: 2,
+        explain: '<strong>requests:</strong> HTTP library. <strong>netmiko:</strong> SSH to devices. <strong>paramiko:</strong> Low-level SSH. <strong>jinja2:</strong> Template engine.'
+      },
+      {
+        q: 'What is idempotency in automation?',
+        a: ['Running code multiple times','Running same task multiple times produces same result; safe to rerun without side effects','Using encryption','Version control']
+        correct: 1,
+        explain: '<strong>Idempotent tasks:</strong> Can run 1x or 10x with same outcome. Critical in automation — safe to rerun without breaking things.'
+      },
+      {
+        q: 'Why does Cisco recommend learning automation alongside traditional networking?',
+        a: ['Automation replaces networking','Modern networks require both protocols knowledge AND automation skills for career advancement','Automation is optional','Only for large companies'],
+        correct: 1,
+        explain: '<strong>Modern networking is hybrid:</strong> Need traditional knowledge (CCNA) + automation (Python, APIs, Ansible) for high-value roles.'
+      },
+    ]
+  },
+
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
