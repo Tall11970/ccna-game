@@ -9887,14 +9887,32 @@ async function authOnLogin(user) {
   profileUserId = user.id;
   let { data: profile, error: profileError } = await sb.from('profiles').select('*').eq('id', user.id).single();
 
-  // If profile doesn't exist, create one (in case it was deleted or user is logging in for first time)
+  // If profile doesn't exist, show error and prevent login
   if (!profile || profileError) {
-    console.log('[AUTH] Profile not found, creating new profile for user:', user.id);
-    const username = user.user_metadata?.username || user.email?.split('@')[0] || 'user';
-    await authCreateProfile(user, username, true); // Create with EULA already accepted
-    // Fetch the newly created profile
-    const { data: newProfile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-    profile = newProfile;
+    console.log('[AUTH] Profile not found for user:', user.id);
+    console.log('[AUTH] User must create a new account');
+
+    // Show error and sign out
+    const errorMsg = 'This account has been deleted. Please create a new account to continue.';
+    authShowMsg('si-err', errorMsg, 'error');
+
+    // Sign out to prevent access
+    await sb.auth.signOut();
+
+    // Show signup tab
+    authSwitchTab('signup');
+
+    // Clear any cached user data
+    profileUserId = null;
+    profileUsername = '';
+    profileCurrentAvatar = '👤';
+    state.xp = 0;
+    state.level = 1;
+    state.streak = 0;
+    state.topicScores = {};
+    saveState();
+
+    return;
   }
 
   // Set up logout button and profile data first
