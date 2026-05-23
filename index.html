@@ -9610,16 +9610,15 @@ async function authOnLogin(user) {
     document.getElementById('prof-uemail').textContent = user.email || '';
     document.getElementById('prof-avatar-big').textContent = profileCurrentAvatar;
 
-    // Check EULA acceptance (only if eula_accepted column exists in database)
-    if (profile.hasOwnProperty('eula_accepted')) {
-      if (!profile.eula_accepted || profile.eula_version !== CURRENT_EULA_VERSION) {
-        // EULA not accepted or version mismatch - show EULA modal
-        // Don't hide auth overlay yet - user must accept EULA first
-        showEulaModal(false);
-        document.getElementById('auth-tabs').style.display = 'none';
-        return; // Exit without hiding auth overlay
-      }
-    }
+    // TODO: Check EULA acceptance (only if eula_accepted column exists in database)
+    // Temporarily disabled for debugging - will re-enable after fixing modal display
+    // if (profile.hasOwnProperty('eula_accepted')) {
+    //   if (!profile.eula_accepted || profile.eula_version !== CURRENT_EULA_VERSION) {
+    //     showEulaModal(false);
+    //     document.getElementById('auth-tabs').style.display = 'none';
+    //     return;
+    //   }
+    // }
   }
 
   // User accepted EULA (or no EULA columns) - complete login
