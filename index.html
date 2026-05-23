@@ -9916,11 +9916,11 @@ async function authOnLogin(user) {
     saveState();
 
     // Show signup tab after a delay so user can read the error message
-    console.log('[AUTH] Switching to signup tab in 3 seconds');
+    console.log('[AUTH] Switching to signup tab in 5 seconds');
     setTimeout(() => {
       authSwitchTab('signup');
       console.log('[AUTH] Switched to signup tab');
-    }, 3000);
+    }, 5000);
 
     console.log('[AUTH] Login blocked - profile missing');
     return;
