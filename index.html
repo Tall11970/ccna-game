@@ -9500,8 +9500,17 @@ function showEulaModal(isNewSignup = false) {
 }
 
 function hideEulaModal() {
-  document.getElementById('eula-modal').classList.add('hidden');
+  const modal = document.getElementById('eula-modal');
+  modal.classList.add('hidden');
+
+  // Reset inline styles
+  modal.style.display = '';
+  modal.style.visibility = '';
+  modal.style.opacity = '';
+  modal.style.pointerEvents = '';
+
   eulaAcceptanceRequired = false;
+  console.log('[EULA] Modal hidden - inline styles reset');
 }
 
 async function acceptEula() {
@@ -9659,9 +9668,32 @@ function openEulaForReading(event) {
   const checkbox = document.getElementById('eula-checkbox');
   if (checkbox) checkbox.checked = false;
 
-  // Show modal
+  // Show modal - explicitly force visibility
   modal.classList.remove('hidden');
+
+  // Force modal to be visible with inline CSS (override any CSS conflicts)
+  modal.style.display = 'flex !important';
+  modal.style.display = 'flex';
+  modal.style.visibility = 'visible';
+  modal.style.opacity = '1';
+  modal.style.pointerEvents = 'auto';
+
+  // Ensure the container is also visible
+  const container = document.querySelector('.eula-container');
+  if (container) {
+    container.style.visibility = 'visible';
+    container.style.opacity = '1';
+    container.style.pointerEvents = 'auto';
+    console.log('[EULA-READ] Container visibility forced');
+  }
+
   console.log('[EULA-READ] Modal hidden class removed, modal should be visible now');
+  console.log('[EULA-READ] Modal inline styles applied:', {
+    display: modal.style.display,
+    visibility: modal.style.visibility,
+    opacity: modal.style.opacity,
+    zIndex: modal.style.zIndex
+  });
   console.log('[EULA-READ] EULA modal opened for reading');
 }
 
