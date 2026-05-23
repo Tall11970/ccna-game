@@ -10153,13 +10153,13 @@ function profileRequestDeleteAccount() {
 
 async function profileExecuteDeleteAccount() {
   const msg = document.getElementById('privacy-msg');
-  msg.textContent = 'Deleting account... please wait...';
+  msg.textContent = 'Deleting account data... please wait...';
   msg.className = 'profile-msg show';
 
   try {
     console.log('[PROFILE] Executing account deletion for user:', profileUserId);
 
-    // Delete profile from database first
+    // Delete profile from database
     const { error: deleteProfileError } = await sb
       .from('profiles')
       .delete()
@@ -10170,25 +10170,7 @@ async function profileExecuteDeleteAccount() {
       throw deleteProfileError;
     }
 
-    console.log('[PROFILE] Profile deleted from database');
-
-    // Delete the currently authenticated user's auth account
-    // This uses the client-side method that works for deleting your own account
-    const { error: deleteAuthError } = await sb.auth.deleteUser();
-
-    if (deleteAuthError) {
-      console.error('[PROFILE] Error deleting auth account:', deleteAuthError);
-      // Profile is already deleted, but log the error
-      msg.textContent = '⚠️ Account data deleted, but auth account deletion failed. Contact support.';
-      msg.className = 'profile-msg err show';
-      return;
-    }
-
-    console.log('[PROFILE] Auth account deleted successfully');
-
-    // Manually clear auth state and log out
-    msg.textContent = '✅ Account deleted successfully. Logging out...';
-    msg.className = 'profile-msg ok show';
+    console.log('[PROFILE] Profile and all associated data deleted from database');
 
     // Clear user state
     profileUserId = null;
@@ -10200,14 +10182,18 @@ async function profileExecuteDeleteAccount() {
     state.topicScores = {};
     saveState();
 
+    // Sign out and return to login
+    msg.textContent = '✅ Your account data has been permanently deleted. Signing you out...';
+    msg.className = 'profile-msg ok show';
+
     setTimeout(() => {
       // Sign out to clear session
       authHandleSignOut();
-    }, 1500);
+    }, 2000);
 
   } catch (error) {
     console.error('[PROFILE] Error deleting account:', error);
-    msg.textContent = 'Error deleting account: ' + error.message;
+    msg.textContent = 'Error: ' + error.message + '. Please contact support.';
     msg.className = 'profile-msg err show';
   }
 }
