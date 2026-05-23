@@ -10149,7 +10149,7 @@ async function profileExecuteDeleteAccount() {
   try {
     console.log('[PROFILE] Executing account deletion for user:', profileUserId);
 
-    // Delete profile from database
+    // Delete profile from database first
     const { error: deleteProfileError } = await sb
       .from('profiles')
       .delete()
@@ -10162,8 +10162,9 @@ async function profileExecuteDeleteAccount() {
 
     console.log('[PROFILE] Profile deleted from database');
 
-    // Delete auth account
-    const { error: deleteAuthError } = await sb.auth.admin.deleteUser(profileUserId);
+    // Delete the currently authenticated user's auth account
+    // This uses the client-side method that works for deleting your own account
+    const { error: deleteAuthError } = await sb.auth.deleteUser();
 
     if (deleteAuthError) {
       console.error('[PROFILE] Error deleting auth account:', deleteAuthError);
@@ -10173,13 +10174,24 @@ async function profileExecuteDeleteAccount() {
       return;
     }
 
-    console.log('[PROFILE] Account completely deleted');
+    console.log('[PROFILE] Auth account deleted successfully');
 
-    // Log out
+    // Manually clear auth state and log out
     msg.textContent = '✅ Account deleted successfully. Logging out...';
     msg.className = 'profile-msg ok show';
 
+    // Clear user state
+    profileUserId = null;
+    profileUsername = '';
+    profileCurrentAvatar = '👤';
+    state.xp = 0;
+    state.level = 1;
+    state.streak = 0;
+    state.topicScores = {};
+    saveState();
+
     setTimeout(() => {
+      // Sign out to clear session
       authHandleSignOut();
     }, 1500);
 
