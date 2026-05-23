@@ -9601,6 +9601,13 @@ function openEulaForReading(event) {
 
   console.log('[EULA-READ] Elements found:', { modal, declineBtn, acceptBtn });
 
+  // Hide the auth form so modal is visible on top
+  const authForm = document.querySelector('.auth-form');
+  if (authForm) {
+    authForm.style.display = 'none';
+    console.log('[EULA-READ] Auth form hidden to show modal on top');
+  }
+
   // Show modal in read-only mode
   // Hide both buttons and show a close button instead
   if (declineBtn) declineBtn.style.display = 'none';
@@ -9627,6 +9634,12 @@ function openEulaForReading(event) {
       }
       console.log('[EULA-READ] Closing EULA modal (read-only mode)');
       hideEulaModal();
+      // Show the auth form again
+      const form = document.querySelector('.auth-form');
+      if (form) {
+        form.style.display = 'block';
+        console.log('[EULA-READ] Auth form shown again');
+      }
       // Restore the accept/decline buttons for login flow
       const decBtn = document.getElementById('eula-decline-btn');
       const accBtn = document.getElementById('eula-accept-btn');
