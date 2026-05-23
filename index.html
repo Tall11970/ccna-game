@@ -1570,6 +1570,21 @@
   .eula-checkbox-signup label { cursor:pointer; user-select:none; color:#ccc; font-size:0.9rem; flex:1; }
   .eula-link { color:#00d4ff; text-decoration:underline; cursor:pointer; font-weight:600; transition:all 0.2s; }
   .eula-link:hover { color:#00ffff; text-decoration:underline wavy; }
+
+  /* ── Cookie Preferences ── */
+  .cookie-preference { margin:16px 0; padding:12px; background:rgba(0,212,255,0.05); border:1px solid rgba(0,212,255,0.15); border-radius:8px; }
+  .cookie-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .cookie-badge { display:inline-block; padding:4px 8px; background:rgba(0,255,136,0.2); color:#00ff88; border-radius:4px; font-size:0.75rem; font-weight:600; text-transform:uppercase; margin-top:4px; }
+  .cookie-badge.required { background:rgba(255,102,102,0.2); color:#ff6666; }
+  .cookie-checkbox { cursor:pointer; width:18px; height:18px; }
+
+  /* Toggle Switch */
+  .toggle-switch { display:inline-flex; align-items:center; cursor:pointer; user-select:none; }
+  .toggle-switch input { display:none; }
+  .toggle-slider { display:inline-block; width:44px; height:24px; background:#444; border-radius:12px; position:relative; transition:all 0.3s; }
+  .toggle-switch input:checked ~ .toggle-slider { background:#00ff88; }
+  .toggle-slider::before { content:''; position:absolute; width:20px; height:20px; border-radius:50%; background:white; top:2px; left:2px; transition:all 0.3s; }
+  .toggle-switch input:checked ~ .toggle-slider::before { left:22px; }
 </style>
 </head>
 <body>
@@ -9380,6 +9395,48 @@ const EULA_HTML = `
     <p>Suspended accounts cannot be recovered. Use responsibly!</p>
   </div>
 
+  <div class="eula-section" style="border-top: 1px solid rgba(0,212,255,0.2); padding-top: 20px; margin-top: 20px;">
+    <h3>🍪 Cookie Preferences</h3>
+    <p>We use cookies to enhance your experience on NetQuest. Please select your preferences below:</p>
+
+    <div class="cookie-preference">
+      <div class="cookie-header">
+        <div>
+          <h4 style="margin: 0 0 4px 0; color: #00d4ff;">Essential Cookies</h4>
+          <p style="margin: 0; font-size: 0.85rem; color: #888;">Required for the website to function properly. You cannot disable these.</p>
+        </div>
+        <span class="cookie-badge required">Required</span>
+      </div>
+      <input type="checkbox" id="cookie-essential" checked disabled class="cookie-checkbox">
+    </div>
+
+    <div class="cookie-preference">
+      <div class="cookie-header">
+        <div>
+          <h4 style="margin: 0 0 4px 0; color: #00d4ff;">Analytics Cookies</h4>
+          <p style="margin: 0; font-size: 0.85rem; color: #888;">Help us understand how you use NetQuest so we can improve it.</p>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="cookie-analytics" class="cookie-checkbox">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="cookie-preference">
+      <div class="cookie-header">
+        <div>
+          <h4 style="margin: 0 0 4px 0; color: #00d4ff;">Marketing Cookies</h4>
+          <p style="margin: 0; font-size: 0.85rem; color: #888;">Used for personalized content and feature recommendations.</p>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="cookie-marketing" class="cookie-checkbox">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
   <div class="eula-section" style="border-top: 1px solid rgba(0,212,255,0.2); padding-top: 16px; margin-top: 20px;">
     <p style="font-size: 0.9rem; color: #888;">
       <strong>NetQuest Terms of Service & EULA v1.0</strong><br>
@@ -9518,6 +9575,15 @@ async function acceptEula() {
   console.log('[EULA] profileUserId:', profileUserId);
 
   try {
+    // Capture cookie preferences
+    const cookiePreferences = {
+      essential: document.getElementById('cookie-essential')?.checked || true,
+      analytics: document.getElementById('cookie-analytics')?.checked || false,
+      marketing: document.getElementById('cookie-marketing')?.checked || false,
+      timestamp: new Date().toISOString()
+    };
+    console.log('[EULA] Cookie preferences:', cookiePreferences);
+
     // Update profile in Supabase with EULA acceptance
     if (!profileUserId) {
       console.error('[EULA] profileUserId is not set!');
@@ -9529,7 +9595,8 @@ async function acceptEula() {
 
     const { data, error } = await sb.from('profiles').update({
       eula_accepted: true,
-      eula_version: CURRENT_EULA_VERSION
+      eula_version: CURRENT_EULA_VERSION,
+      cookie_preferences: JSON.stringify(cookiePreferences)
     }).eq('id', profileUserId);
 
     console.log('[EULA] Supabase response - error:', error, 'data:', data);
@@ -9773,12 +9840,25 @@ async function authHandleSignUp(e) {
 }
 
 async function authCreateProfile(user, username, eulaAccepted = false) {
+  // Capture cookie preferences at signup
+  let cookiePreferences = null;
+  if (eulaAccepted) {
+    cookiePreferences = {
+      essential: true,
+      analytics: document.getElementById('cookie-analytics')?.checked || false,
+      marketing: document.getElementById('cookie-marketing')?.checked || false,
+      timestamp: new Date().toISOString()
+    };
+    console.log('[EULA] Signup cookie preferences:', cookiePreferences);
+  }
+
   await sb.from('profiles').upsert({
     id: user.id, username,
     xp: state.xp, level: state.level, streak: state.streak,
     topic_scores: state.topicScores,
     eula_accepted: eulaAccepted,
-    eula_version: eulaAccepted ? CURRENT_EULA_VERSION : null
+    eula_version: eulaAccepted ? CURRENT_EULA_VERSION : null,
+    cookie_preferences: eulaAccepted ? JSON.stringify(cookiePreferences) : null
   });
 }
 
