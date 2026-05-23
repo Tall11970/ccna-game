@@ -9885,21 +9885,28 @@ let profileCurrentAvatar = '👤';
 
 async function authOnLogin(user) {
   profileUserId = user.id;
+  console.log('[AUTH] Login attempt for user:', user.id, user.email);
+
   let { data: profile, error: profileError } = await sb.from('profiles').select('*').eq('id', user.id).single();
+
+  console.log('[AUTH] Profile query result:', { profile, profileError, userId: user.id });
 
   // If profile doesn't exist, show error and prevent login
   if (!profile || profileError) {
-    console.log('[AUTH] Profile not found for user:', user.id);
-    console.log('[AUTH] User must create a new account');
+    console.error('[AUTH] Profile not found or error occurred:', profileError);
+    console.log('[AUTH] Preventing login - user must create new account');
 
     // Show error and sign out
     const errorMsg = 'This account has been deleted. Please create a new account to continue.';
+    console.log('[AUTH] Showing error message:', errorMsg);
     authShowMsg('si-err', errorMsg, 'error');
 
     // Sign out to prevent access
+    console.log('[AUTH] Signing out user');
     await sb.auth.signOut();
 
     // Show signup tab
+    console.log('[AUTH] Switching to signup tab');
     authSwitchTab('signup');
 
     // Clear any cached user data
@@ -9912,8 +9919,11 @@ async function authOnLogin(user) {
     state.topicScores = {};
     saveState();
 
+    console.log('[AUTH] Login blocked - profile missing');
     return;
   }
+
+  console.log('[AUTH] Profile found, continuing login');
 
   // Set up logout button and profile data first
   document.getElementById('logout-btn').style.display = 'inline';
