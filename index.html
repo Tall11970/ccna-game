@@ -4170,6 +4170,13 @@ Switch# show port-security interface Gi0/1
 Switch# show port-security address</pre>`
       },
       {
+        type: 'text_content',
+        content: '<h4>Port Security Interactive Animation</h4><p>Click through the animation below to see how Port Security detects and prevents unauthorized MAC addresses from accessing the network:</p>'
+      },
+      {
+        type: 'port_security_anim'
+      },
+      {
         title: 'DHCP Snooping Overview',
         body: `<p><strong>DHCP Snooping</strong> is a Layer 2 security feature that validates DHCP messages and prevents rogue DHCP servers from operating on your network.</p><p><strong>The Problem:</strong> An attacker sets up a rogue DHCP server on your network and responds to DHCP requests with:</p><ul><li><strong>Wrong gateway:</strong> Points hosts to attacker's IP (Man-in-the-Middle)</li><li><strong>Wrong DNS:</strong> Points hosts to malicious DNS server for phishing</li><li><strong>Wrong router:</strong> Redirects all traffic through attacker's device</li></ul><p><strong>DHCP Snooping Solution:</strong> The switch <strong>trusts only certain ports</strong> (uplink to legitimate DHCP server). All other ports can <strong>send DHCP requests</strong> (client) but NOT <strong>send DHCP responses</strong> (server). If a rogue server tries to respond on an untrusted port, the response is dropped.</p>`
       },
@@ -4232,6 +4239,71 @@ Switch# show ip arp inspection statistics vlan 10</pre>`
       {
         title: 'Layer 2 Security Best Practices',
         body: `<p><strong>1. Combine All Three Security Features</strong></p><p>Port Security + DHCP Snooping + DAI together provide defense-in-depth:</p><ul><li><strong>Port Security:</strong> Stops unauthorized device from using port</li><li><strong>DHCP Snooping:</strong> Stops rogue DHCP server</li><li><strong>DAI:</strong> Stops ARP spoofing</li></ul><p><strong>2. Design Trust Model Carefully</strong></p><p>Identify:</p><ul><li>Which ports connect to legitimate servers/routers (TRUST)</li><li>Which ports connect to end devices (UNTRUST)</li><li>Document the trust topology</li></ul><p><strong>3. Monitor Security Events</strong></p><ul><li>Enable syslog for Port Security violations</li><li>Monitor DHCP Snooping binding table for rogue DHCP activity</li><li>Check DAI statistics for ARP spoofing attempts</li></ul><p><strong>4. Handle Static IPs Properly</strong></p><p>Devices with static IPs (not DHCP):</p><ul><li><strong>Port Security:</strong> Manually configure their MAC addresses</li><li><strong>DHCP Snooping:</strong> Add to ARP access list</li><li><strong>DAI:</strong> Create ARP ACL entries for their IP-to-MAC mapping</li></ul><p><strong>5. Plan for Management Access</strong></p><p>Ensure management ports/VLANs are properly exempted or trusted so admin access isn't blocked.</p>`
+      },
+      {
+        title: 'VLAN Hopping Overview',
+        body: `<p><strong>VLAN Hopping</strong> is a Layer 2 attack where an attacker escapes their assigned VLAN and gains access to traffic or devices in a different VLAN.</p><p><strong>The Threat:</strong> VLANs are supposed to isolate network segments, but a skilled attacker can trick the switch into forwarding traffic to the wrong VLAN. This defeats the entire purpose of VLAN segmentation.</p><p><strong>Two Main Attack Methods:</strong></p><ul><li><strong>Double Tagging (802.1Q Spoofing):</strong> Attacker sends frames with two VLAN tags. Switch removes first tag and forwards on the inner tag (attacker's target VLAN).</li><li><strong>Switch Spoofing (DTP Negotiation):</strong> Attacker tricks access port into becoming a trunk port using Dynamic Trunking Protocol (DTP).</li></ul><p><strong>Why It Works:</strong> Switches forward based on VLAN tags in frames. If an attacker can craft frames with tags, they can control which VLAN receives them. And if they can enable trunking on their port, they can send traffic to any VLAN.</p>`
+      },
+      {
+        title: 'VLAN Hopping Attack Methods',
+        body: `<p><strong>Attack Method 1: Double Tagging (Most Common)</strong></p><p>Step 1: Attacker is on VLAN 10 (normal user).<br>Step 2: Attacker sends frame with TWO 802.1Q tags:<br>• Outer tag = VLAN 10 (legitimate, so switch accepts it)<br>• Inner tag = VLAN 20 (target VLAN with confidential data)<br>Step 3: Switch receives frame and strips outer tag (VLAN 10).<br>Step 4: Switch sees inner tag (VLAN 20) and forwards to VLAN 20 ports.<br>Step 5: Attacker can now sniff VLAN 20 traffic or send replies.</p><p><strong>Attack Method 2: Switch Spoofing (DTP Negotiation)</strong></p><p>Step 1: Attacker connects to access port configured for Dynamic Trunking Protocol (DTP).<br>Step 2: Attacker sends DTP frames claiming to be a switch.<br>Step 3: Switch negotiates and converts access port to trunk port.<br>Step 4: Attacker can now send frames tagged with any VLAN ID.<br>Step 5: Attacker gains access to traffic on all VLANs on that trunk.</p>`
+      },
+      {
+        type: 'text_content',
+        content: '<h4>VLAN Hopping Interactive Animation</h4><p>Click through the animation below to see how VLAN hopping attacks work and how to prevent them:</p>'
+      },
+      {
+        type: 'vlan_hopping_anim'
+      },
+      {
+        title: 'VLAN Hopping Mitigation',
+        body: `<p><strong>Defense 1: Disable DTP (Switch Spoofing Prevention)</strong></p><p>DTP is dangerous because it allows automatic trunk negotiation. Disable it:</p><pre>Switch(config)# interface GigabitEthernet 0/2
+Switch(config-if)# switchport mode access
+! This disables DTP and locks port as access (not trunk)
+Switch(config-if)# switchport nonegotiate
+! Explicitly disables DTP negotiation
+Switch(config-if)# exit</pre><p><strong>Defense 2: Set Native VLAN Explicitly (Double Tagging Prevention)</strong></p><p>The native VLAN is the VLAN that receives untagged traffic. By default it's VLAN 1. If attacker uses VLAN 1 as inner tag, they can escape filtering.</p><ul><li>Change native VLAN to an unused VLAN (not 1, not a user VLAN)</li><li>Set it consistently on all trunk ports</li></ul><pre>Switch(config)# interface GigabitEthernet 0/1
+Switch(config-if)# switchport trunk native vlan 999
+! Now untagged traffic goes to VLAN 999 (doesn't exist)
+Switch(config-if)# exit</pre><p><strong>Defense 3: Explicitly Configure All Access Ports</strong></p><p>Don't rely on defaults. Explicitly assign each access port to its VLAN:</p><pre>Switch(config)# interface range GigabitEthernet 0/2-24
+Switch(config-if-range)# switchport mode access
+Switch(config-if-range)# switchport access vlan 10
+! Now port can ONLY use VLAN 10, no negotiation possible
+Switch(config-if-range)# exit</pre><p><strong>Defense 4: Disable Unused Ports</strong></p><p>Attacker must physically connect to a port. If unused ports are shut down, fewer attack vectors:</p><pre>Switch(config)# interface range GigabitEthernet 0/25-48
+Switch(config-if-range)# shutdown
+! No attacker access point
+Switch(config-if-range)# exit</pre><p><strong>Defense 5: VLAN Access Control Lists (VACL)</strong></p><p>Create rules that block inter-VLAN traffic that shouldn't exist:</p><pre>Switch(config)# vlan access-map NO_VLAN_JUMP 10
+Switch(config-vlan-acm)# match ip address 100
+Switch(config-vlan-acm)# action drop
+! Blocks any traffic matching ACL 100
+Switch(config-vlan-acm)# exit</pre><p><strong>Verification:</strong></p><pre>Switch# show vlan
+Switch# show interfaces trunk
+Switch# show dtp statistics</pre>`
+      },
+      {
+        title: 'Best Practice Configuration',
+        body: `<p><strong>Complete Secure Access Port Setup:</strong></p><pre>Switch(config)# interface GigabitEthernet 0/5
+! 1. Set to access mode (not trunk)
+Switch(config-if)# switchport mode access
+! 2. Assign to user VLAN
+Switch(config-if)# switchport access vlan 10
+! 3. Disable DTP (explicit)
+Switch(config-if)# switchport nonegotiate
+! 4. Add Port Security (MAC limiting)
+Switch(config-if)# switchport port-security
+Switch(config-if)# switchport port-security maximum 1
+! 5. Set port to err-disable on violation
+Switch(config-if)# switchport port-security violation shutdown
+Switch(config-if)# exit</pre><p><strong>Complete Secure Trunk Configuration:</strong></p><pre>Switch(config)# interface GigabitEthernet 0/1
+! 1. Set to trunk mode
+Switch(config-if)# switchport mode trunk
+! 2. Set native VLAN to unused VLAN
+Switch(config-if)# switchport trunk native vlan 999
+! 3. Allow only necessary VLANs
+Switch(config-if)# switchport trunk allowed vlan 10,20,30,999
+! 4. Disable DTP (don't negotiate)
+Switch(config-if)# switchport nonegotiate
+Switch(config-if)# exit</pre><p><strong>Key Takeaways:</strong></p><ul><li>Never use default settings (VLAN 1, DTP enabled, etc.)</li><li>Explicitly configure everything — access vs trunk, VLAN assignment, native VLAN</li><li>Disable DTP on all access ports</li><li>Set native VLAN to unused VLAN on all trunks</li><li>Combine with Port Security, DHCP Snooping, and DAI for defense-in-depth</li></ul>`
       },
     ],
     questions: [
@@ -4330,6 +4402,60 @@ Switch# show ip arp inspection statistics vlan 10</pre>`
         a: ['DAI requires the DHCP binding table to validate ARP messages','DHCP Snooping is faster than DAI','They are unrelated; order doesn\'t matter','DAI is deprecated; DHCP Snooping is preferred'],
         correct: 0,
         explain: '<strong>DAI depends on DHCP Snooping</strong> because it validates ARP messages using the DHCP binding table. Enable snooping first, then DAI.'
+      },
+      {
+        q: 'What is VLAN hopping?',
+        a: ['A routing protocol that moves between VLANs','An attack where an attacker escapes their assigned VLAN and accesses traffic in another VLAN','A feature that allows devices to change VLANs automatically','A backup VLAN used for failover'],
+        correct: 1,
+        explain: '<strong>VLAN hopping</strong> is an attack where an attacker tricks the switch into forwarding their traffic to a different VLAN, bypassing VLAN segmentation. Two main methods: double tagging and switch spoofing.'
+      },
+      {
+        q: 'What is double tagging (802.1Q spoofing)?',
+        a: ['Using two switches for redundancy','Sending frames with two VLAN tags so the outer tag is removed and inner tag reaches target VLAN','Connecting two trunk ports together','Assigning a device to two VLANs simultaneously'],
+        correct: 1,
+        explain: '<strong>Double tagging:</strong> Attacker sends frame with two VLAN tags. Switch removes outer tag, forwards on inner tag. If inner tag matches target VLAN, attacker gains access to that VLAN.'
+      },
+      {
+        q: 'What is switch spoofing?',
+        a: ['Pretending to be an authorized switch by sending DTP frames to negotiate a trunk port','Changing a device\'s MAC address to look like another device','Flooding VLAN information across the network','A feature that prevents unauthorized trunks'],
+        correct: 0,
+        explain: '<strong>Switch spoofing:</strong> Attacker sends DTP (Dynamic Trunking Protocol) frames claiming to be a switch. If access port is in dynamic mode, switch negotiates and converts it to trunk, giving attacker access to all VLANs.'
+      },
+      {
+        q: 'Which protocol is exploited for switch spoofing?',
+        a: ['STP','DTP','VTP','LACP'],
+        correct: 1,
+        explain: '<strong>DTP (Dynamic Trunking Protocol)</strong> automatically negotiates trunk status. If enabled on access ports, attacker can abuse it to convert their port to a trunk.'
+      },
+      {
+        q: 'How do you prevent switch spoofing?',
+        a: ['Enable VTP on all ports','Disable DTP and explicitly set all access ports to "switchport mode access" and "switchport nonegotiate"','Use stronger encryption','Increase VLAN numbers'],
+        correct: 1,
+        explain: '<strong>Prevention:</strong> Set all access ports to explicit mode with <code>switchport mode access</code> and <code>switchport nonegotiate</code>. This disables DTP and prevents dynamic negotiation.'
+      },
+      {
+        q: 'What is the purpose of changing the native VLAN?',
+        a: ['To improve network speed','To prevent double tagging attacks by assigning untagged traffic to an unused VLAN','To allow multiple VLANs on the same port','To encrypt trunk traffic'],
+        correct: 1,
+        explain: '<strong>Native VLAN:</strong> Receives untagged traffic and is used if attacker\'s inner tag doesn\'t match. Default is VLAN 1. Change to unused VLAN (e.g., 999) so double-tagged frames with bad inner tags go to a non-existent VLAN.'
+      },
+      {
+        q: 'Which command changes the native VLAN on a trunk port?',
+        a: ['switchport native vlan 999','switchport trunk native vlan 999','switchport vlan native 999','native-vlan 999'],
+        correct: 1,
+        explain: '<strong><code>switchport trunk native vlan 999</code></strong> sets the native VLAN to 999 on a trunk port. Best practice: use unused VLAN (not 1, not user VLANs).'
+      },
+      {
+        q: 'What is the best practice for access port configuration?',
+        a: ['Use default settings; they are secure','Explicitly set mode to access, assign VLAN, and disable DTP with nonegotiate','Only configure trunk ports; access ports configure themselves','Enable all security features on every port'],
+        correct: 1,
+        explain: '<strong>Best practice:</strong> <code>switchport mode access</code> + <code>switchport access vlan 10</code> + <code>switchport nonegotiate</code> + <code>switchport port-security</code>. Never rely on defaults.'
+      },
+      {
+        q: 'Why should unused ports be disabled (shut down)?',
+        a: ['To save power','To reduce the number of attack vectors by eliminating unused connection points','To simplify documentation','To improve VLAN performance'],
+        correct: 1,
+        explain: '<strong>Security hardening:</strong> Attacker must physically connect to a port to launch VLAN hopping or other attacks. Disabling unused ports eliminates unused connection points where attackers could plug in.'
       },
     ]
   },
@@ -8931,10 +9057,16 @@ function renderLesson(topic) {
       buildNATPATAnim(document.getElementById('nat-anim-root'));
       continue;
     } else if (section.type === 'port_security_anim') {
-      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+      card.innerHTML = `${section.title ? `<div class="lesson-section-title">${section.title}</div>` : ''}
         <div id="portsec-root"></div>`;
       container.appendChild(card);
       buildPortSecurityAnim(document.getElementById('portsec-root'));
+      continue;
+    } else if (section.type === 'vlan_hopping_anim') {
+      card.innerHTML = `${section.title ? `<div class="lesson-section-title">${section.title}</div>` : ''}
+        <div id="vlan-hopping-root"></div>`;
+      container.appendChild(card);
+      buildVlanHoppingAnim(document.getElementById('vlan-hopping-root'));
       continue;
     } else if (section.type === 'acl_placement_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
@@ -9015,6 +9147,8 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildSubnetAnim(document.getElementById('subnet-anim-root'));
       continue;
+    } else if (section.type === 'text_content') {
+      card.innerHTML = section.content;
     } else {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div class="lesson-body">${section.body}</div>`;
@@ -10653,6 +10787,274 @@ function buildPortSecurityAnim(root) {
     document.getElementById('ps-btn-allowed').disabled = disabled;
     document.getElementById('ps-btn-rogue').disabled   = disabled;
   }
+}
+
+// ── VLAN Hopping Attack & Mitigation Animation ────────────────────────────────
+function buildVlanHoppingAnim(root) {
+  const steps = [
+    {
+      title: 'Normal VLAN Setup',
+      description: 'The switch has VLANs configured: VLAN 10 (Users), VLAN 20 (Finance), VLAN 99 (Native). Attacker is on VLAN 10.',
+      switchState: 'normal',
+      attackType: null,
+      vlans: [
+        { id: 10, name: 'Users', ports: ['Fa0/1', 'Fa0/2', 'Fa0/3'], color: '#00d4ff', status: 'normal' },
+        { id: 20, name: 'Finance', ports: ['Fa0/4', 'Fa0/5'], color: '#ff9900', status: 'normal' },
+        { id: 99, name: 'Native', ports: ['trunk'], color: '#aaa', status: 'normal' }
+      ],
+      devices: [
+        { name: 'Attacker (VLAN 10)', vlan: 10, port: 'Fa0/1', status: 'connected', color: '#ff4466' },
+        { name: 'Finance PC (VLAN 20)', vlan: 20, port: 'Fa0/4', status: 'connected', color: '#ff9900' }
+      ],
+      trunks: [
+        { name: 'Distribution Switch', port: 'Gi0/1', nativeVlan: 1, dtp: 'enabled', color: '#00ff88' }
+      ],
+      message: '✓ VLANs are isolated. Users cannot reach Finance data.'
+    },
+    {
+      title: 'Attack - Double Tagging Frame Creation',
+      description: 'Attacker crafts a frame with TWO 802.1Q tags: Outer=VLAN 10 (legitimate), Inner=VLAN 20 (target).',
+      switchState: 'attack_double_tag',
+      attackType: 'double-tagging',
+      vlans: [
+        { id: 10, name: 'Users', ports: ['Fa0/1', 'Fa0/2', 'Fa0/3'], color: '#00d4ff', status: 'normal' },
+        { id: 20, name: 'Finance', ports: ['Fa0/4', 'Fa0/5'], color: '#ff9900', status: 'attack' },
+        { id: 99, name: 'Native', ports: ['trunk'], color: '#aaa', status: 'normal' }
+      ],
+      devices: [
+        { name: 'Attacker (VLAN 10)', vlan: 10, port: 'Fa0/1', status: 'attacking', color: '#ff4466' },
+        { name: 'Finance PC (VLAN 20)', vlan: 20, port: 'Fa0/4', status: 'connected', color: '#ff9900' }
+      ],
+      trunks: [
+        { name: 'Distribution Switch', port: 'Gi0/1', nativeVlan: 1, dtp: 'enabled', color: '#00ff88' }
+      ],
+      message: '⚠️ Frame format: [Outer: VLAN 10] → [Inner: VLAN 20] [Data]'
+    },
+    {
+      title: 'Attack - Frame Traverses VLAN 10 to Trunk',
+      description: 'Frame travels through VLAN 10. Switch tags it with VLAN 10 and forwards to trunk port (outer tag).',
+      switchState: 'attack_traversing',
+      attackType: 'double-tagging',
+      vlans: [
+        { id: 10, name: 'Users', ports: ['Fa0/1', 'Fa0/2', 'Fa0/3'], color: '#00d4ff', status: 'attack' },
+        { id: 20, name: 'Finance', ports: ['Fa0/4', 'Fa0/5'], color: '#ff9900', status: 'normal' },
+        { id: 99, name: 'Native', ports: ['trunk'], color: '#aaa', status: 'normal' }
+      ],
+      devices: [
+        { name: 'Attacker (VLAN 10)', vlan: 10, port: 'Fa0/1', status: 'attacking', color: '#ff4466' },
+        { name: 'Finance PC (VLAN 20)', vlan: 20, port: 'Fa0/4', status: 'connected', color: '#ff9900' }
+      ],
+      trunks: [
+        { name: 'Distribution Switch', port: 'Gi0/1', nativeVlan: 1, dtp: 'enabled', color: '#ff6ec7' }
+      ],
+      message: '📡 Frame tagged VLAN 10 travels on trunk. Both tags still present.'
+    },
+    {
+      title: 'Attack - Receiving Switch Strips Outer Tag',
+      description: 'The receiving switch (distribution) removes the outer VLAN 10 tag because it\'s a trunk port. Inner VLAN 20 tag is now visible!',
+      switchState: 'attack_stripped',
+      attackType: 'double-tagging',
+      vlans: [
+        { id: 10, name: 'Users', ports: ['Fa0/1', 'Fa0/2', 'Fa0/3'], color: '#00d4ff', status: 'normal' },
+        { id: 20, name: 'Finance', ports: ['Fa0/4', 'Fa0/5'], color: '#ff9900', status: 'attack' },
+        { id: 99, name: 'Native', ports: ['trunk'], color: '#aaa', status: 'normal' }
+      ],
+      devices: [
+        { name: 'Attacker (VLAN 10)', vlan: 10, port: 'Fa0/1', status: 'attacking', color: '#ff4466' },
+        { name: 'Finance PC (VLAN 20)', vlan: 20, port: 'Fa0/4', status: 'vulnerable', color: '#ff9900' }
+      ],
+      trunks: [
+        { name: 'Distribution Switch', port: 'Gi0/1', nativeVlan: 1, dtp: 'enabled', color: '#00ff88' }
+      ],
+      message: '🔓 VLAN 20 tag now exposed! Frame forwarded to all VLAN 20 ports. Attacker gains access to Finance!'
+    },
+    {
+      title: 'Attack 2 - Switch Spoofing (DTP)',
+      description: 'Attacker sends DTP frames claiming to be a switch. Port is in dynamic mode. Switch negotiates and converts access port to trunk.',
+      switchState: 'attack_dtp',
+      attackType: 'switch-spoofing',
+      vlans: [
+        { id: 10, name: 'Users', ports: ['Fa0/1', 'Fa0/2', 'Fa0/3'], color: '#00d4ff', status: 'normal' },
+        { id: 20, name: 'Finance', ports: ['Fa0/4', 'Fa0/5'], color: '#ff9900', status: 'normal' },
+        { id: 99, name: 'Native', ports: ['trunk'], color: '#aaa', status: 'normal' }
+      ],
+      devices: [
+        { name: 'Attacker (Now Trunk!)', vlan: 'all', port: 'Fa0/1 (TRUNK)', status: 'attacking', color: '#ff4466' },
+        { name: 'Finance PC (VLAN 20)', vlan: 20, port: 'Fa0/4', status: 'connected', color: '#ff9900' }
+      ],
+      trunks: [
+        { name: 'Distribution Switch', port: 'Gi0/1', nativeVlan: 1, dtp: 'enabled', color: '#00ff88' },
+        { name: 'Attacker\'s Port (Now Trunk)', port: 'Fa0/1', nativeVlan: 1, dtp: 'enabled', color: '#ff4466' }
+      ],
+      message: '⚠️ Port Fa0/1 is now a TRUNK! Attacker can send tagged frames for ANY VLAN.'
+    },
+    {
+      title: 'Mitigation 1 - Disable DTP',
+      description: 'Set all access ports to explicit mode and disable DTP with "switchport nonegotiate".',
+      switchState: 'mitigated_dtp',
+      attackType: 'mitigation',
+      vlans: [
+        { id: 10, name: 'Users', ports: ['Fa0/1', 'Fa0/2', 'Fa0/3'], color: '#00d4ff', status: 'secure' },
+        { id: 20, name: 'Finance', ports: ['Fa0/4', 'Fa0/5'], color: '#ff9900', status: 'secure' },
+        { id: 99, name: 'Native', ports: ['trunk'], color: '#aaa', status: 'secure' }
+      ],
+      devices: [
+        { name: 'Attacker (Locked to VLAN 10)', vlan: 10, port: 'Fa0/1 (Access)', status: 'blocked', color: '#ff4466' },
+        { name: 'Finance PC (VLAN 20)', vlan: 20, port: 'Fa0/4 (Access)', status: 'protected', color: '#ff9900' }
+      ],
+      trunks: [
+        { name: 'Distribution Switch', port: 'Gi0/1', nativeVlan: 999, dtp: 'disabled', color: '#00ff88' }
+      ],
+      message: '✓ DTP disabled! Port Fa0/1 stays in access mode. Attacker cannot negotiate trunk.'
+    },
+    {
+      title: 'Mitigation 2 - Set Native VLAN',
+      description: 'Change native VLAN from default 1 to unused VLAN 999. Double-tagging now fails.',
+      switchState: 'mitigated_native',
+      attackType: 'mitigation',
+      vlans: [
+        { id: 10, name: 'Users', ports: ['Fa0/1', 'Fa0/2', 'Fa0/3'], color: '#00d4ff', status: 'secure' },
+        { id: 20, name: 'Finance', ports: ['Fa0/4', 'Fa0/5'], color: '#ff9900', status: 'secure' },
+        { id: 999, name: 'Native (Unused)', ports: ['trunk'], color: '#666', status: 'secure' }
+      ],
+      devices: [
+        { name: 'Attacker (Double Tag Blocked)', vlan: 10, port: 'Fa0/1 (Access)', status: 'blocked', color: '#ff4466' },
+        { name: 'Finance PC (VLAN 20)', vlan: 20, port: 'Fa0/4 (Access)', status: 'protected', color: '#ff9900' }
+      ],
+      trunks: [
+        { name: 'Distribution Switch', port: 'Gi0/1', nativeVlan: 999, dtp: 'disabled', color: '#00ff88' }
+      ],
+      message: '✓ Native VLAN = 999 (unused). If attacker\'s inner tag was VLAN 1, frame now goes to VLAN 999 (doesn\'t exist).'
+    },
+    {
+      title: 'Network Protected',
+      description: 'With DTP disabled and native VLAN changed, both double-tagging and switch spoofing attacks are prevented.',
+      switchState: 'secure',
+      attackType: null,
+      vlans: [
+        { id: 10, name: 'Users', ports: ['Fa0/1', 'Fa0/2', 'Fa0/3'], color: '#00d4ff', status: 'secure' },
+        { id: 20, name: 'Finance', ports: ['Fa0/4', 'Fa0/5'], color: '#ff9900', status: 'secure' },
+        { id: 999, name: 'Native (Unused)', ports: ['trunk'], color: '#666', status: 'secure' }
+      ],
+      devices: [
+        { name: 'Attacker (VLAN 10)', vlan: 10, port: 'Fa0/1 (Access)', status: 'isolated', color: '#ff4466' },
+        { name: 'Finance PC (VLAN 20)', vlan: 20, port: 'Fa0/4 (Access)', status: 'protected', color: '#ff9900' }
+      ],
+      trunks: [
+        { name: 'Distribution Switch', port: 'Gi0/1', nativeVlan: 999, dtp: 'disabled', color: '#00ff88' }
+      ],
+      message: '🔒 All VLAN hopping attacks blocked! VLAN 10 and VLAN 20 are completely isolated.'
+    }
+  ];
+
+  let currentStep = 0;
+
+  function renderStep() {
+    const step = steps[currentStep];
+    let html = `
+      <div style="background:linear-gradient(135deg,#1a1f3a 0%,#0f1420 100%);border:1px solid #00ffff;border-radius:12px;padding:20px;margin:20px 0;font-family:'Courier New',monospace;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+          <div style="font-size:1.3em;font-weight:700;color:#00ffff;">🌐 VLAN Hopping Demo</div>
+          <div style="background:rgba(0,255,255,0.1);padding:8px 16px;border-radius:8px;color:#00ffff;font-size:0.9em;font-weight:600;">Step ${currentStep + 1} of ${steps.length}</div>
+        </div>
+
+        <div style="background:rgba(0,255,136,0.08);border-left:4px solid #00ff88;padding:12px;border-radius:4px;font-size:0.9em;color:#ccc;margin-bottom:20px;line-height:1.5;">
+          ${step.description}
+        </div>
+
+        <!-- Attack Status -->
+        <div style="background:rgba(0,0,0,0.3);border:1px solid #00ffff;border-radius:8px;padding:16px;margin-bottom:16px;">
+          <div style="font-size:0.9em;color:#00ff88;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Attack Status: ${step.attackType ? (step.attackType === 'double-tagging' ? '🔴 DOUBLE TAGGING' : step.attackType === 'switch-spoofing' ? '🔴 SWITCH SPOOFING' : '✅ PROTECTED') : '✅ NORMAL'}</div>
+          <div style="color:#ccc;font-size:0.9em;line-height:1.6;">${step.message}</div>
+        </div>
+
+        <!-- Network Topology -->
+        <div style="background:rgba(0,0,0,0.3);border:1px solid #00ffff;border-radius:8px;padding:16px;">
+          <div style="font-size:0.9em;color:#00ff88;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Network Topology</div>
+
+          <!-- VLANs -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:0.8em;color:#aaa;margin-bottom:8px;font-weight:600;">VLANs Configured:</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+              ${step.vlans.map(vlan => `
+                <div style="background:rgba(${vlan.color === '#00d4ff' ? '0,212,255' : vlan.color === '#ff9900' ? '255,153,0' : vlan.color === '#aaa' ? '170,170,170' : '102,102,102'},0.15);border:2px solid ${vlan.color};border-radius:8px;padding:12px;text-align:center;">
+                  <div style="color:${vlan.color};font-weight:700;margin-bottom:6px;">VLAN ${vlan.id}</div>
+                  <div style="color:#ccc;font-size:0.75em;margin-bottom:6px;">${vlan.name}</div>
+                  <div style="font-size:0.7em;color:${vlan.status === 'attack' ? '#ff4466' : vlan.status === 'secure' ? '#00ff88' : '#aaa'};">${vlan.status === 'attack' ? '⚠️ UNDER ATTACK' : vlan.status === 'secure' ? '✓ SECURE' : 'Normal'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Devices -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:0.8em;color:#aaa;margin-bottom:8px;font-weight:600;">Connected Devices:</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+              ${step.devices.map(device => `
+                <div style="background:rgba(${device.color === '#ff4466' ? '255,68,102' : '255,153,0'},0.15);border:2px solid ${device.color};border-radius:8px;padding:12px;">
+                  <div style="color:${device.color};font-weight:700;margin-bottom:6px;font-size:0.9em;">${device.name}</div>
+                  <div style="color:#ccc;font-size:0.8em;margin-bottom:4px;">Port: <strong>${device.port}</strong></div>
+                  <div style="font-size:0.75em;color:${device.status === 'attacking' ? '#ff4466' : device.status === 'vulnerable' ? '#ff9900' : device.status === 'blocked' ? '#00ff88' : device.status === 'protected' ? '#00ff88' : '#ccc'};">${device.status === 'attacking' ? '🔴 ATTACKING' : device.status === 'vulnerable' ? '⚠️ VULNERABLE' : device.status === 'blocked' ? '✅ BLOCKED' : device.status === 'protected' ? '✅ PROTECTED' : 'Connected'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Trunks -->
+          <div>
+            <div style="font-size:0.8em;color:#aaa;margin-bottom:8px;font-weight:600;">Trunk Ports:</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+              ${step.trunks.map(trunk => `
+                <div style="background:rgba(0,255,136,0.1);border:2px solid ${trunk.color};border-radius:8px;padding:12px;">
+                  <div style="color:${trunk.color};font-weight:700;margin-bottom:6px;font-size:0.9em;">${trunk.name}</div>
+                  <div style="color:#ccc;font-size:0.8em;margin-bottom:4px;">Port: <strong>${trunk.port}</strong></div>
+                  <div style="color:#aaa;font-size:0.75em;margin-bottom:4px;">Native VLAN: <strong>${trunk.nativeVlan}</strong></div>
+                  <div style="font-size:0.75em;color:${trunk.dtp === 'disabled' ? '#00ff88' : '#ff9900'};">DTP: <strong>${trunk.dtp === 'disabled' ? '✓ DISABLED' : '⚠️ ENABLED'}</strong></div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px;">
+        <button id="vh-prev-btn" style="padding:12px 24px;border:none;border-radius:8px;font-weight:700;cursor:pointer;background:rgba(0,255,136,0.2);color:#00ff88;border:2px solid #00ff88;transition:all 0.2s;">← Previous</button>
+        <button id="vh-next-btn" style="padding:12px 24px;border:none;border-radius:8px;font-weight:700;cursor:pointer;background:#00ff88;color:#0a0e1a;border:2px solid #00ff88;transition:all 0.2s;">Next →</button>
+      </div>
+    `;
+
+    root.innerHTML = html;
+
+    const prevBtn = document.getElementById('vh-prev-btn');
+    const nextBtn = document.getElementById('vh-next-btn');
+
+    if (prevBtn) {
+      prevBtn.disabled = currentStep === 0;
+      prevBtn.style.opacity = currentStep === 0 ? '0.3' : '1';
+      prevBtn.style.cursor = currentStep === 0 ? 'not-allowed' : 'pointer';
+      prevBtn.onclick = () => {
+        if (currentStep > 0) {
+          currentStep--;
+          renderStep();
+        }
+      };
+    }
+
+    if (nextBtn) {
+      nextBtn.disabled = currentStep === steps.length - 1;
+      nextBtn.style.opacity = currentStep === steps.length - 1 ? '0.3' : '1';
+      nextBtn.style.cursor = currentStep === steps.length - 1 ? 'not-allowed' : 'pointer';
+      nextBtn.onclick = () => {
+        if (currentStep < steps.length - 1) {
+          currentStep++;
+          renderStep();
+        }
+      };
+    }
+  }
+
+  renderStep();
 }
 
 // ── ACL Placement Animation ───────────────────────────────────────────────────
