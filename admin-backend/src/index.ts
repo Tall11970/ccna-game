@@ -60,7 +60,7 @@ const authenticateAdmin = async (
     // Verify user is admin in database
     const { data: adminUser, error } = await supabase
       .from('profiles')
-      .select('id, email, is_admin')
+      .select('id, is_admin')
       .eq('id', decoded.adminId)
       .single();
 
@@ -108,7 +108,7 @@ app.post('/api/admin/auth/login', async (req: Request, res: Response) => {
     // Verify user is admin
     const { data: adminUser, error: dbError } = await supabase
       .from('profiles')
-      .select('id, email, is_admin')
+      .select('id, is_admin')
       .eq('id', data.user.id)
       .single();
 
@@ -135,7 +135,7 @@ app.post('/api/admin/auth/login', async (req: Request, res: Response) => {
       user: {
         id: data.user.id,
         email: data.user.email,
-        name: adminUser.email,
+        name: data.user.email,
       },
     });
   } catch (error) {
@@ -154,14 +154,14 @@ app.get('/api/admin/users', authenticateAdmin, async (req: AuthRequest, res: Res
 
     let query = supabase
       .from('profiles')
-      .select('id, email, username, level, xp_points, created_at, updated_at, is_admin, exam_type', {
+      .select('*', {
         count: 'exact',
       })
-      .order('created_at', { ascending: false });
+      .order('updated_at', { ascending: false });
 
-    // Search by email or username
+    // Search by username
     if (search) {
-      query = query.or(`email.ilike.%${search}%,username.ilike.%${search}%`);
+      query = query.or(`username.ilike.%${search}%`);
     }
 
     // Filter by status
@@ -174,7 +174,9 @@ app.get('/api/admin/users', authenticateAdmin, async (req: AuthRequest, res: Res
     const { data, error, count } = await query
       .range(offset, offset + Number(limit) - 1);
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     res.json({
       data,
@@ -185,8 +187,8 @@ app.get('/api/admin/users', authenticateAdmin, async (req: AuthRequest, res: Res
         pages: Math.ceil((count || 0) / Number(limit)),
       },
     });
-  } catch (error) {
-    console.error('Error fetching users:', error);
+  } catch (error: any) {
+    console.error('❌ Error fetching users:', error?.message || error);
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
@@ -203,17 +205,24 @@ app.get('/api/admin/users/:userId', authenticateAdmin, async (req: AuthRequest, 
       .single();
 
     if (userError || !user) {
+      console.error('User query error:', userError);
       res.status(404).json({ error: 'User not found' });
       return;
     }
 
+
     // Get user's quiz history
-    const { data: quizzes } = await supabase
+    const { data: quizzes, error: quizError } = await supabase
       .from('quiz_attempts')
       .select('*')
       .eq('user_id', userId)
       .order('attempted_at', { ascending: false })
       .limit(10);
+
+    if (quizError) {
+      console.error('Quiz attempts query error:', quizError);
+    }
+    console.log('Quiz attempts found:', quizzes?.length || 0);
 
     // Get user's sessions
     const { data: sessions } = await supabase
@@ -238,7 +247,7 @@ app.get('/api/admin/users/:userId', authenticateAdmin, async (req: AuthRequest, 
         totalLessonsCompleted: completions?.length || 0,
         totalQuizzes: quizzes?.length || 0,
         avgQuizScore: quizzes?.length
-          ? (quizzes.reduce((sum: number, q: any) => sum + (q.score || 0), 0) / quizzes.length).toFixed(2)
+          ? parseFloat((quizzes.reduce((sum: number, q: any) => sum + (q.score || 0), 0) / quizzes.length).toFixed(2))
           : 0,
       },
     });

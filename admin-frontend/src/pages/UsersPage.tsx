@@ -48,8 +48,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout }) => {
     navigate('/login');
   };
 
-  const handleDelete = async (userId: string, email: string) => {
-    if (confirm(`Are you sure you want to delete ${email}? This action cannot be undone.`)) {
+  const handleDelete = async (userId: string, username: string) => {
+    if (confirm(`Are you sure you want to delete ${username}? This action cannot be undone.`)) {
       try {
         setActionInProgress(userId);
         await apiClient.deleteUser(userId);
@@ -64,8 +64,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout }) => {
     }
   };
 
-  const handleResetProgress = async (userId: string, email: string) => {
-    if (confirm(`Reset progress for ${email}? This will reset their level and XP to 0.`)) {
+  const handleResetProgress = async (userId: string, username: string) => {
+    if (confirm(`Reset progress for ${username}? This will reset their level and XP to 0.`)) {
       try {
         setActionInProgress(userId);
         await apiClient.resetUserProgress(userId);
@@ -136,12 +136,12 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout }) => {
               <table>
                 <thead>
                   <tr>
-                    <th>Email</th>
                     <th>Username</th>
                     <th>Level</th>
-                    <th>XP Points</th>
-                    <th>Exam Type</th>
-                    <th>Joined</th>
+                    <th>XP</th>
+                    <th>Streak</th>
+                    <th>Last Updated</th>
+                    <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -150,15 +150,15 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout }) => {
                     <tr key={user.id}>
                       <td>
                         <span className={user.is_admin ? 'admin-badge' : ''}>
-                          {user.email}
+                          {user.username || '-'}
                           {user.is_admin && <span className="badge"> ADMIN</span>}
                         </span>
                       </td>
-                      <td>{user.username || '-'}</td>
                       <td>{user.level}</td>
-                      <td>{user.xp_points.toLocaleString()}</td>
-                      <td>{user.exam_type || '-'}</td>
-                      <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                      <td>{user.xp.toLocaleString()}</td>
+                      <td>{user.streak || 0}</td>
+                      <td>{new Date(user.updated_at).toLocaleDateString()}</td>
+                      <td>{user.is_admin ? 'Admin' : 'User'}</td>
                       <td>
                         <div className="table-actions">
                           <button
@@ -170,7 +170,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout }) => {
                           </button>
                           <button
                             className="btn-secondary btn-sm"
-                            onClick={() => handleResetProgress(user.id, user.email)}
+                            onClick={() => handleResetProgress(user.id, user.username || 'User')}
                             disabled={actionInProgress === user.id}
                             title="Reset user progress"
                           >
@@ -178,7 +178,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout }) => {
                           </button>
                           <button
                             className="btn-danger btn-sm"
-                            onClick={() => handleDelete(user.id, user.email)}
+                            onClick={() => handleDelete(user.id, user.username || 'User')}
                             disabled={actionInProgress === user.id}
                           >
                             <Trash2 size={14} />

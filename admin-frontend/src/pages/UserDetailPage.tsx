@@ -19,8 +19,6 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
   const [editData, setEditData] = useState({
     username: '',
     level: 0,
-    xp_points: 0,
-    exam_type: '',
     admin_notes: '',
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -37,14 +35,23 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
     try {
       setIsLoading(true);
       setError('');
-      const data = await apiClient.getUserDetail(userId);
-      setUser(data);
+      const response = await apiClient.getUserDetail(userId);
+
+      // The API returns { user, quizzes, sessions, completions, stats }
+      // Flatten the nested structure into a single UserDetail object
+      const completeUserData: UserDetail = {
+        ...(response.user || response),
+        quizzes: response.quizzes || [],
+        sessions: response.sessions || [],
+        completions: response.completions || [],
+        stats: response.stats || { totalLessonsCompleted: 0, totalQuizzes: 0, avgQuizScore: 0 }
+      };
+
+      setUser(completeUserData);
       setEditData({
-        username: data.username || '',
-        level: data.level,
-        xp_points: data.xp_points,
-        exam_type: data.exam_type || '',
-        admin_notes: data.admin_notes || '',
+        username: completeUserData.username || '',
+        level: completeUserData.level,
+        admin_notes: completeUserData.admin_notes || '',
       });
     } catch (err: any) {
       console.error('Failed to fetch user details:', err);
@@ -82,8 +89,6 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
       setEditData({
         username: user.username || '',
         level: user.level,
-        xp_points: user.xp_points,
-        exam_type: user.exam_type || '',
         admin_notes: user.admin_notes || '',
       });
     }
@@ -93,7 +98,7 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
   const handleDelete = async () => {
     if (!userId || !user) return;
 
-    if (confirm(`Are you sure you want to delete ${user.email}? This action cannot be undone.`)) {
+    if (confirm(`Are you sure you want to delete ${user.username}? This action cannot be undone.`)) {
       try {
         await apiClient.deleteUser(userId);
         alert('User deleted successfully');
@@ -108,7 +113,7 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
   const handleResetProgress = async () => {
     if (!userId || !user) return;
 
-    if (confirm(`Reset progress for ${user.email}? This will reset their level and XP to 0.`)) {
+    if (confirm(`Reset progress for ${user.username}? This will reset their level and XP to 0.`)) {
       try {
         await apiClient.resetUserProgress(userId);
         alert('User progress reset successfully');
@@ -132,6 +137,7 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
   }
 
   if (error || !user) {
+    console.error('Error state:', { error, user, userId });
     return (
       <Layout pageTitle="User Details" onLogout={handleLogout}>
         <div className="error-message">{error || 'User not found'}</div>
@@ -143,8 +149,21 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
     );
   }
 
+  if (!user.stats) {
+    console.warn('Missing user.stats:', user);
+    return (
+      <Layout pageTitle="User Details" onLogout={handleLogout}>
+        <div className="error-message">User data incomplete - missing stats</div>
+        <button className="btn-secondary" onClick={() => navigate('/users')}>
+          <ArrowLeft size={16} />
+          Back to Users
+        </button>
+      </Layout>
+    );
+  }
+
   return (
-    <Layout pageTitle={`User: ${user.email}`} onLogout={handleLogout}>
+    <Layout pageTitle={`User: ${user.username}`} onLogout={handleLogout}>
       <button
         className="btn-secondary"
         onClick={() => navigate('/users')}
@@ -175,17 +194,6 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
           {isEditing ? (
             <div className="edit-form">
               <div className="form-group">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  value={user.email}
-                  disabled
-                />
-                <small style={{ color: 'var(--text-secondary)' }}>Email cannot be changed</small>
-              </div>
-
-              <div className="form-group">
                 <label className="form-label">Username</label>
                 <input
                   type="text"
@@ -203,28 +211,6 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
                   value={editData.level}
                   onChange={(e) => setEditData({ ...editData, level: parseInt(e.target.value) })}
                   min="0"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">XP Points</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={editData.xp_points}
-                  onChange={(e) => setEditData({ ...editData, xp_points: parseInt(e.target.value) })}
-                  min="0"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Exam Type</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={editData.exam_type}
-                  onChange={(e) => setEditData({ ...editData, exam_type: e.target.value })}
-                  placeholder="e.g., CCNA, ENCOR"
                 />
               </div>
 
@@ -259,10 +245,6 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
           ) : (
             <div className="user-info">
               <div className="info-row">
-                <span className="info-label">Email:</span>
-                <span className="info-value">{user.email}</span>
-              </div>
-              <div className="info-row">
                 <span className="info-label">Username:</span>
                 <span className="info-value">{user.username || '-'}</span>
               </div>
@@ -271,22 +253,18 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
                 <span className="info-value">{user.level}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">XP Points:</span>
-                <span className="info-value">{user.xp_points.toLocaleString()}</span>
+                <span className="info-label">XP:</span>
+                <span className="info-value">{(user.xp || 0).toLocaleString()}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Exam Type:</span>
-                <span className="info-value">{user.exam_type || '-'}</span>
+                <span className="info-label">Streak:</span>
+                <span className="info-value">{user.streak || 0}</span>
               </div>
               <div className="info-row">
                 <span className="info-label">Status:</span>
                 <span className="info-value">
                   {user.is_admin ? <span className="badge admin">ADMIN</span> : <span className="badge">USER</span>}
                 </span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Joined:</span>
-                <span className="info-value">{new Date(user.created_at).toLocaleDateString()}</span>
               </div>
               <div className="info-row">
                 <span className="info-label">Last Updated:</span>
@@ -322,7 +300,7 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ onLogout }) => {
             </div>
             <div className="stat-item">
               <span className="stat-label">Average Quiz Score</span>
-              <span className="stat-value">{user.stats.avgQuizScore.toFixed(2)}%</span>
+              <span className="stat-value">{typeof user.stats.avgQuizScore === 'string' ? user.stats.avgQuizScore : (user.stats.avgQuizScore || 0).toFixed(2)}%</span>
             </div>
           </div>
         </div>

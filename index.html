@@ -9569,6 +9569,10 @@ function startQuiz(topic) {
   state.currentCorrect = 0;
   state.missedQuestions = [];
   state.answered = false;
+
+  // Save lesson completion
+  sbSaveLessonCompletion(topic.id);
+
   showScreen('screen-quiz');
   renderQuestion();
 }
@@ -9697,6 +9701,10 @@ function showResult() {
 
   saveState();
   updateHUD();
+
+  // Save quiz attempt to database
+  sbSaveQuizAttempt(correct, total, acc);
+
   if (leveledUp) launchConfetti();
 
   document.getElementById('stat-correct').textContent = correct + '/' + total;
@@ -12522,6 +12530,8 @@ async function authCreateProfile(user, username, eulaAccepted = false) {
 let profileUserId = null;
 let profileUsername = '';
 let profileCurrentAvatar = '👤';
+let currentSessionId = null;
+let sessionStartTime = null;
 
 async function authOnLogin(user) {
   profileUserId = user.id;
@@ -12607,10 +12617,17 @@ async function authOnLogin(user) {
 
   // User accepted EULA (or no EULA columns) - complete login
   document.getElementById('auth-overlay').classList.add('hidden');
+
+  // Start session tracking
+  sbStartSession();
+
   showScreen('screen-topics');
 }
 
 async function authHandleSignOut() {
+  // End session tracking before clearing profileUserId
+  await sbEndSession();
+
   await sb.auth.signOut();
   state.xp = 0; state.level = 1; state.streak = 0; state.topicScores = {};
   profileUserId = null; profileUsername = ''; profileCurrentAvatar = '👤';
@@ -12875,6 +12892,117 @@ async function profileExecuteDeleteAccount() {
 }
 
 // ── Supabase save (debounced 4 seconds) ──────────────────────────────────────
+// ── Save Quiz Attempts to Database ──────────────────────────────────────────
+async function sbSaveQuizAttempt(correctAnswers, totalQuestions, scorePercentage) {
+  if (!profileUserId || !state.currentTopic) return;
+
+  try {
+    const { data, error } = await sb.from('quiz_attempts').insert([{
+      user_id: profileUserId,
+      topic_id: state.currentTopic.id,
+      score: parseFloat(scorePercentage),
+      correct_answers: parseInt(correctAnswers),
+      total_questions: parseInt(totalQuestions),
+      time_spent_seconds: null,
+      attempted_at: new Date().toISOString()
+    }]);
+
+    if (error) {
+      console.error('[QUIZ] Failed to save attempt:', error.message);
+    }
+  } catch (err) {
+    console.error('[QUIZ] Error saving attempt:', err.message);
+  }
+}
+
+// ── Save Lesson Completions to Database ──────────────────────────────────────
+async function sbSaveLessonCompletion(topicId) {
+  if (!profileUserId || !topicId) return;
+
+  try {
+    const { data, error } = await sb.from('lesson_completion').insert([{
+      user_id: profileUserId,
+      topic_id: topicId,
+      completed_at: new Date().toISOString(),
+      time_spent_seconds: null
+    }]);
+
+    if (error) {
+      console.error('[LESSON] Failed to save completion:', error.message);
+    }
+  } catch (err) {
+    console.error('[LESSON] Error saving completion:', err.message);
+  }
+}
+
+// ── Save User Sessions to Database ──────────────────────────────────────────
+async function sbStartSession() {
+  if (!profileUserId) return;
+
+  try {
+    sessionStartTime = new Date();
+    const userAgent = navigator.userAgent;
+
+    // Detect device and browser
+    let deviceType = 'desktop';
+    let osName = 'Unknown';
+    let browser = 'Unknown';
+
+    if (/android/i.test(userAgent)) { deviceType = 'mobile'; osName = 'Android'; }
+    else if (/iphone|ipad|ipod/i.test(userAgent)) { deviceType = 'mobile'; osName = 'iOS'; }
+    else if (/mac/i.test(userAgent)) { osName = 'macOS'; }
+    else if (/win/i.test(userAgent)) { osName = 'Windows'; }
+    else if (/linux/i.test(userAgent)) { osName = 'Linux'; }
+
+    if (/chrome/i.test(userAgent) && !/chromium/i.test(userAgent)) { browser = 'Chrome'; }
+    else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) { browser = 'Safari'; }
+    else if (/firefox/i.test(userAgent)) { browser = 'Firefox'; }
+    else if (/edg/i.test(userAgent)) { browser = 'Edge'; }
+
+    const { data, error } = await sb.from('user_sessions').insert([{
+      user_id: profileUserId,
+      session_start: sessionStartTime.toISOString(),
+      device_type: deviceType,
+      os_name: osName,
+      browser: browser,
+      pages_visited: 0
+    }]).select('id').single();
+
+    if (error) {
+      console.error('[SESSION] Failed to start session:', error.message);
+    } else if (data) {
+      currentSessionId = data.id;
+    }
+  } catch (err) {
+    console.error('[SESSION] Error starting session:', err.message);
+  }
+}
+
+async function sbEndSession() {
+  if (!currentSessionId || !sessionStartTime) return;
+
+  try {
+    const sessionEndTime = new Date();
+    const totalSeconds = Math.round((sessionEndTime - sessionStartTime) / 1000);
+
+    const { error } = await sb.from('user_sessions')
+      .update({
+        session_end: sessionEndTime.toISOString(),
+        total_time_seconds: totalSeconds
+      })
+      .eq('id', currentSessionId);
+
+    if (error) {
+      console.error('[SESSION] Failed to end session:', error.message);
+    }
+  } catch (err) {
+    console.error('[SESSION] Error ending session:', err.message);
+  } finally {
+    currentSessionId = null;
+    sessionStartTime = null;
+  }
+}
+
 function sbSaveProfile() {
   clearTimeout(sbSaveTimer);
   sbSaveTimer = setTimeout(async () => {

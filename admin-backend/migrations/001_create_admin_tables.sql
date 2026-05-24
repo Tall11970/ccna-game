@@ -173,8 +173,6 @@ ADD COLUMN IF NOT EXISTS admin_notes TEXT;
 
 -- Create indexes on profiles for admin queries
 CREATE INDEX IF NOT EXISTS idx_profiles_is_admin ON public.profiles(is_admin);
-CREATE INDEX IF NOT EXISTS idx_profiles_created_at ON public.profiles(created_at);
-CREATE INDEX IF NOT EXISTS idx_profiles_exam_type ON public.profiles(exam_type) WHERE exam_type IS NOT NULL;
 
 -- Grant permissions (adjust role names as needed for your Supabase setup)
 GRANT SELECT, INSERT, UPDATE ON events TO authenticated;

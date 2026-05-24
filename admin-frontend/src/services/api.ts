@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export interface LoginResponse {
   token: string;
@@ -13,19 +13,22 @@ export interface LoginResponse {
 
 export interface User {
   id: string;
-  email: string;
   username: string;
   level: number;
-  xp_points: number;
-  created_at: string;
+  xp: number;
+  streak: number;
+  avatar?: string;
   updated_at: string;
   is_admin: boolean;
-  exam_type: string;
+  topic_scores?: any;
+  eula_accepted?: boolean;
+  eula_version?: string;
+  cookie_preferences?: any;
+  last_admin_login?: string;
+  admin_notes?: string;
 }
 
 export interface UserDetail extends User {
-  admin_notes?: string;
-  last_admin_login?: string;
   quizzes: any[];
   sessions: any[];
   completions: any[];
