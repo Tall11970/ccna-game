@@ -4174,6 +4174,10 @@ Switch# show port-security address</pre>`
         body: `<p><strong>DHCP Snooping</strong> is a Layer 2 security feature that validates DHCP messages and prevents rogue DHCP servers from operating on your network.</p><p><strong>The Problem:</strong> An attacker sets up a rogue DHCP server on your network and responds to DHCP requests with:</p><ul><li><strong>Wrong gateway:</strong> Points hosts to attacker's IP (Man-in-the-Middle)</li><li><strong>Wrong DNS:</strong> Points hosts to malicious DNS server for phishing</li><li><strong>Wrong router:</strong> Redirects all traffic through attacker's device</li></ul><p><strong>DHCP Snooping Solution:</strong> The switch <strong>trusts only certain ports</strong> (uplink to legitimate DHCP server). All other ports can <strong>send DHCP requests</strong> (client) but NOT <strong>send DHCP responses</strong> (server). If a rogue server tries to respond on an untrusted port, the response is dropped.</p>`
       },
       {
+        type: 'dhcp_snooping_anim',
+        title: 'DHCP Snooping Interactive Walkthrough'
+      },
+      {
         title: 'DHCP Snooping Trust Ports',
         body: `<p><strong>Two types of DHCP Snooping ports:</strong></p><ul><li><strong>Trusted Port:</strong> Connected to legitimate DHCP server or uplink. Can send and receive DHCP messages. Usually the port going to your core/distribution switches.</li><li><strong>Untrusted Port:</strong> Connected to end devices. Can SEND DHCP requests (client) but NOT receive/forward DHCP responses (server). Default for all ports.</li></ul><p><strong>Example Setup:</strong></p><ul><li><strong>Gi0/1 (uplink to distribution switch):</strong> TRUSTED — legitimate DHCP server is here</li><li><strong>Gi0/2-0/24 (access ports):</strong> UNTRUSTED — end devices connect here</li></ul><p>When rogue DHCP server responds on Gi0/5 (untrusted), the switch drops the response before it reaches clients.</p>`
       },
@@ -6356,6 +6360,146 @@ function buildHSRPAnim(root) {
 
     const prevBtn = root.querySelector('#hsrp-prev');
     const nextBtn = root.querySelector('#hsrp-next');
+    prevBtn?.addEventListener('click', () => { if (step > 0) { step--; renderStep(); } });
+    nextBtn?.addEventListener('click', () => { if (step < STEPS.length - 1) { step++; renderStep(); } });
+  }
+
+  renderStep();
+}
+
+// ── DHCP Snooping Animation ──────────────────────────────────────────────────
+function buildDHCPSnoopingAnim(root) {
+  let step = 0;
+  const STEPS = [
+    {
+      title: 'Network Setup',
+      desc: 'Legitimate DHCP server on trusted uplink port. PCs on untrusted access ports. Attacker with rogue DHCP server also on untrusted port.',
+      ports: [
+        { name: 'Gi0/1', type: 'TRUSTED', label: 'Uplink', content: '🖥️ DHCP Server\n(Legitimate)', bg: '#00ff88', border: '#00ff88' },
+        { name: 'Gi0/2', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-A', bg: '#666', border: '#666' },
+        { name: 'Gi0/3', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-B', bg: '#666', border: '#666' },
+        { name: 'Gi0/4', type: 'UNTRUSTED', label: 'Access', content: '🖥️ Rogue DHCP\n(Attacker)', bg: '#ff4466', border: '#ff4466' }
+      ],
+      switchStatus: 'DHCP Snooping ENABLED',
+      switchStatusColor: '#00ff88',
+      message: 'Setup: Legitimate DHCP server on trusted port. All access ports untrusted by default. Rogue server attempts to operate on untrusted port.',
+      messageColor: '#aaa'
+    },
+    {
+      title: 'Client Sends DHCP DISCOVER',
+      desc: 'PC-A broadcasts DHCP DISCOVER (client request) on untrusted port Gi0/2. DHCP Snooping allows this — clients can request IPs.',
+      ports: [
+        { name: 'Gi0/1', type: 'TRUSTED', label: 'Uplink', content: '🖥️ DHCP Server', bg: '#00ff88', border: '#00ff88' },
+        { name: 'Gi0/2', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-A\n→ DISCOVER', bg: '#ff9900', border: '#ff9900' },
+        { name: 'Gi0/3', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-B', bg: '#666', border: '#666' },
+        { name: 'Gi0/4', type: 'UNTRUSTED', label: 'Access', content: '🖥️ Rogue DHCP', bg: '#ff4466', border: '#ff4466' }
+      ],
+      switchStatus: 'ALLOW: DHCP Request',
+      switchStatusColor: '#00ff88',
+      message: '✓ DISCOVER allowed on untrusted port (Clients can REQUEST)',
+      messageColor: '#00ff88'
+    },
+    {
+      title: 'Legitimate Server Responds',
+      desc: 'DHCP server sends OFFER on trusted port Gi0/1. DHCP Snooping allows responses only on trusted ports. Legitimate traffic flows.',
+      ports: [
+        { name: 'Gi0/1', type: 'TRUSTED', label: 'Uplink', content: '🖥️ DHCP Server\n← OFFER', bg: '#00ff88', border: '#00ff88' },
+        { name: 'Gi0/2', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-A\n← OFFER', bg: '#00d4ff', border: '#00d4ff' },
+        { name: 'Gi0/3', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-B', bg: '#666', border: '#666' },
+        { name: 'Gi0/4', type: 'UNTRUSTED', label: 'Access', content: '🖥️ Rogue DHCP', bg: '#ff4466', border: '#ff4466' }
+      ],
+      switchStatus: 'ALLOW: Trusted Port',
+      switchStatusColor: '#00ff88',
+      message: '✓ OFFER accepted from trusted port (Legitimate server)',
+      messageColor: '#00ff88'
+    },
+    {
+      title: 'Rogue Server Attempts Response',
+      desc: 'Rogue DHCP server tries to send OFFER on untrusted port Gi0/4. DHCP Snooping policy: BLOCK all responses on untrusted ports.',
+      ports: [
+        { name: 'Gi0/1', type: 'TRUSTED', label: 'Uplink', content: '🖥️ DHCP Server', bg: '#00ff88', border: '#00ff88' },
+        { name: 'Gi0/2', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-A', bg: '#666', border: '#666' },
+        { name: 'Gi0/3', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-B', bg: '#666', border: '#666' },
+        { name: 'Gi0/4', type: 'UNTRUSTED', label: 'Access', content: '🖥️ Rogue DHCP\n← OFFER❌', bg: '#ff4466', border: '#ff4466' }
+      ],
+      switchStatus: 'BLOCK: Untrusted Port!',
+      switchStatusColor: '#ff4466',
+      message: '❌ OFFER DROPPED on untrusted port (Rogue server blocked!)',
+      messageColor: '#ff4466'
+    },
+    {
+      title: 'Client Completes DHCP',
+      desc: 'PC-A sends REQUEST and gets ACK from legitimate server. Gets correct gateway & DNS. Rogue server\'s bogus offers never reached clients.',
+      ports: [
+        { name: 'Gi0/1', type: 'TRUSTED', label: 'Uplink', content: '🖥️ DHCP Server\n← ACK', bg: '#00ff88', border: '#00ff88' },
+        { name: 'Gi0/2', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-A\n✓ Got IP!', bg: '#00ff88', border: '#00ff88' },
+        { name: 'Gi0/3', type: 'UNTRUSTED', label: 'Access', content: '🖥️ PC-B', bg: '#666', border: '#666' },
+        { name: 'Gi0/4', type: 'UNTRUSTED', label: 'Access', content: '🖥️ Rogue DHCP\n(Powerless)', bg: '#999', border: '#999' }
+      ],
+      switchStatus: 'PROTECTED',
+      switchStatusColor: '#00ff88',
+      message: '✓ DHCP Snooping prevents rogue DHCP attack! Legitimate server wins.',
+      messageColor: '#00ff88'
+    }
+  ];
+
+  function renderStep() {
+    const s = STEPS[step];
+    root.innerHTML = `<div style="padding:16px;border-radius:8px;background:rgba(0,0,0,0.2)">
+      <style>
+        .dhcp-step-title { font-size: 1rem; font-weight: 700; color: #00d4ff; margin-bottom: 6px; }
+        .dhcp-step-desc { font-size: 0.85rem; line-height: 1.5; color: #aaa; margin-bottom: 12px; }
+        .dhcp-ports { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+        .dhcp-port { border: 2px solid; border-radius: 8px; padding: 10px; text-align: center; font-size: 0.75rem; }
+        .dhcp-port-name { font-weight: 700; margin-bottom: 4px; }
+        .dhcp-port-type { font-size: 0.7rem; color: #666; margin-bottom: 6px; opacity: 0.8; }
+        .dhcp-port-content { white-space: pre-line; line-height: 1.3; font-size: 0.8rem; font-weight: 700; }
+        .dhcp-switch { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 12px; border: 2px solid; }
+        .dhcp-switch-label { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+        .dhcp-switch-status { font-size: 1rem; font-weight: 700; }
+        .dhcp-message { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 12px; font-size: 0.9rem; }
+        .dhcp-controls { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+        .dhcp-btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+        .dhcp-btn:disabled { opacity: 0.4; cursor: default; }
+        .dhcp-btn:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .dhcp-prev { background: #666; color: #fff; }
+        .dhcp-next { background: #00d4ff; color: #000; }
+        .dhcp-step-num { color: #666; font-size: 0.8rem; text-align: center; margin-top: 10px; }
+      </style>
+
+      <div class="dhcp-step-title">${s.title}</div>
+      <div class="dhcp-step-desc">${s.desc}</div>
+
+      <!-- Ports -->
+      <div class="dhcp-ports">
+        ${s.ports.map(p => `
+          <div class="dhcp-port" style="border-color: ${p.border}; background: rgba(${p.bg === '#00ff88' ? '0,255,136' : p.bg === '#ff9900' ? '255,153,0' : p.bg === '#ff4466' ? '255,68,102' : p.bg === '#00d4ff' ? '0,212,255' : p.bg === '#999' ? '153,153,153' : '102,102,102'},0.1)">
+            <div class="dhcp-port-name" style="color: ${p.bg}">${p.name}</div>
+            <div class="dhcp-port-type" style="color: ${p.border}">${p.type}</div>
+            <div class="dhcp-port-content" style="color: ${p.bg}">${p.content}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Switch Status -->
+      <div class="dhcp-switch" style="border-color: ${s.switchStatusColor}; background: rgba(${s.switchStatusColor === '#00ff88' ? '0,255,136' : '255,68,102'},0.08)">
+        <div class="dhcp-switch-label">Switch Status</div>
+        <div class="dhcp-switch-status" style="color: ${s.switchStatusColor}">${s.switchStatus}</div>
+      </div>
+
+      <!-- Message -->
+      <div class="dhcp-message" style="color: ${s.messageColor}">${s.message}</div>
+
+      <!-- Controls -->
+      <div class="dhcp-controls">
+        <button class="dhcp-btn dhcp-prev" id="dhcp-prev" ${step === 0 ? 'disabled' : ''}>◀ Previous</button>
+        <button class="dhcp-btn dhcp-next" id="dhcp-next" ${step === STEPS.length - 1 ? 'disabled' : ''}>Next ▶</button>
+      </div>
+      <div class="dhcp-step-num">Step ${step + 1} / ${STEPS.length}</div>
+    </div>`;
+
+    const prevBtn = root.querySelector('#dhcp-prev');
+    const nextBtn = root.querySelector('#dhcp-next');
     prevBtn?.addEventListener('click', () => { if (step > 0) { step--; renderStep(); } });
     nextBtn?.addEventListener('click', () => { if (step < STEPS.length - 1) { step++; renderStep(); } });
   }
@@ -8601,6 +8745,12 @@ function renderLesson(topic) {
         <div id="hsrp-anim-root"></div>`;
       container.appendChild(card);
       buildHSRPAnim(document.getElementById('hsrp-anim-root'));
+      continue;
+    } else if (section.type === 'dhcp_snooping_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="dhcp-snooping-anim-root"></div>`;
+      container.appendChild(card);
+      buildDHCPSnoopingAnim(document.getElementById('dhcp-snooping-anim-root'));
       continue;
     } else if (section.type === 'route_table_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
