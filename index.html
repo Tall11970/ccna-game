@@ -4204,6 +4204,10 @@ Switch# debug ip dhcp snooping</pre>`
         body: `<p><strong>DAI (Dynamic ARP Inspection)</strong> validates ARP messages to prevent ARP spoofing attacks.</p><p><strong>What is ARP Spoofing?</strong></p><p>ARP spoofing is when an attacker sends fake ARP replies claiming they own a legitimate IP/MAC address. Example:</p><ul><li><strong>Legitimate:</strong> Router (10.0.0.1) has MAC aaa.aaa.aaaa</li><li><strong>Spoofed:</strong> Attacker's PC has MAC bbb.bbb.bbbb but sends ARP reply: "I am 10.0.0.1 at bbb.bbb.bbbb"</li><li><strong>Result:</strong> Hosts update their ARP table and send traffic meant for router to attacker instead (Man-in-the-Middle)</li></ul><p><strong>DAI Solution:</strong> The switch validates ARP messages by checking them against the <strong>DHCP Snooping binding table</strong> (which tracks IP-to-MAC mappings). If an ARP message doesn't match, it's dropped.</p>`
       },
       {
+        type: 'dai_anim',
+        title: 'DAI Attack Prevention Walkthrough'
+      },
+      {
         title: 'DAI Configuration',
         body: `<p><strong>Enable DAI on a VLAN:</strong></p><pre>Switch(config)# ip arp inspection vlan 10
 Switch(config)# exit
@@ -6507,6 +6511,228 @@ function buildDHCPSnoopingAnim(root) {
   renderStep();
 }
 
+// ── DAI (Dynamic ARP Inspection) Animation ──────────────────────────────────
+function buildDAIAnim(root) {
+  let step = 0;
+  const STEPS = [
+    {
+      title: 'Network Setup',
+      desc: 'Router with legitimate IP 10.0.0.1 and MAC aaa.aaa.aaaa. Hosts and attacker connected to switch. DAI enabled with DHCP Snooping binding table.',
+      devices: [
+        { name: 'Router', ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', type: 'Legitimate', color: '#00ff88', status: 'Online' },
+        { name: 'PC-A', ip: '10.0.0.10', mac: 'ccc.ccc.cccc', type: 'Host', color: '#00d4ff', status: 'Ready' },
+        { name: 'PC-B', ip: '10.0.0.11', mac: 'ddd.ddd.dddd', type: 'Host', color: '#00d4ff', status: 'Ready' },
+        { name: 'Attacker', ip: '10.0.0.50', mac: 'bbb.bbb.bbbb', type: 'Rogue', color: '#ff4466', status: 'Waiting' }
+      ],
+      bindingTable: [
+        { ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', source: 'Static' },
+        { ip: '10.0.0.10', mac: 'ccc.ccc.cccc', source: 'DHCP' },
+        { ip: '10.0.0.11', mac: 'ddd.ddd.dddd', source: 'DHCP' }
+      ],
+      daiStatus: 'ACTIVE',
+      daiStatusColor: '#00ff88',
+      message: 'Setup: Legitimate network with router and hosts. DAI enabled, watching for ARP spoofing.',
+      messageColor: '#aaa'
+    },
+    {
+      title: 'Host Sends ARP Request',
+      desc: 'PC-A broadcasts ARP request: "Who has 10.0.0.1?" Switch forwards this normally.',
+      devices: [
+        { name: 'Router', ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', type: 'Legitimate', color: '#00ff88', status: 'Online' },
+        { name: 'PC-A', ip: '10.0.0.10', mac: 'ccc.ccc.cccc', type: 'Host', color: '#ff9900', status: '→ ARP Request' },
+        { name: 'PC-B', ip: '10.0.0.11', mac: 'ddd.ddd.dddd', type: 'Host', color: '#00d4ff', status: 'Ready' },
+        { name: 'Attacker', ip: '10.0.0.50', mac: 'bbb.bbb.bbbb', type: 'Rogue', color: '#ff4466', status: 'Listening' }
+      ],
+      bindingTable: [
+        { ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', source: 'Static' },
+        { ip: '10.0.0.10', mac: 'ccc.ccc.cccc', source: 'DHCP' },
+        { ip: '10.0.0.11', mac: 'ddd.ddd.dddd', source: 'DHCP' }
+      ],
+      daiStatus: 'MONITORING',
+      daiStatusColor: '#00d4ff',
+      message: '✓ ARP request forwarded (DAI allows ARP requests)',
+      messageColor: '#00d4ff'
+    },
+    {
+      title: 'Router Sends Legitimate ARP Reply',
+      desc: 'Router responds: "I am 10.0.0.1 at aaa.aaa.aaaa". DAI validates this against binding table.',
+      devices: [
+        { name: 'Router', ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', type: 'Legitimate', color: '#00ff88', status: '← ARP Reply' },
+        { name: 'PC-A', ip: '10.0.0.10', mac: 'ccc.ccc.cccc', type: 'Host', color: '#00d4ff', status: '← Receiving' },
+        { name: 'PC-B', ip: '10.0.0.11', mac: 'ddd.ddd.dddd', type: 'Host', color: '#00d4ff', status: 'Ready' },
+        { name: 'Attacker', ip: '10.0.0.50', mac: 'bbb.bbb.bbbb', type: 'Rogue', color: '#ff4466', status: 'Listening' }
+      ],
+      bindingTable: [
+        { ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', source: 'Static', highlight: true },
+        { ip: '10.0.0.10', mac: 'ccc.ccc.cccc', source: 'DHCP' },
+        { ip: '10.0.0.11', mac: 'ddd.ddd.dddd', source: 'DHCP' }
+      ],
+      daiStatus: 'VALIDATING',
+      daiStatusColor: '#00d4ff',
+      message: '✓ ARP reply validated against binding table (10.0.0.1 = aaa.aaa.aaaa) MATCH!',
+      messageColor: '#00ff88'
+    },
+    {
+      title: 'Legitimate ARP Reply Allowed',
+      desc: 'DAI found a match in the binding table. Reply is allowed to reach PC-A. ARP table updated correctly.',
+      devices: [
+        { name: 'Router', ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', type: 'Legitimate', color: '#00ff88', status: 'Online' },
+        { name: 'PC-A', ip: '10.0.0.10', mac: 'ccc.ccc.cccc', type: 'Host', color: '#00ff88', status: '✓ Got Reply' },
+        { name: 'PC-B', ip: '10.0.0.11', mac: 'ddd.ddd.dddd', type: 'Host', color: '#00d4ff', status: 'Ready' },
+        { name: 'Attacker', ip: '10.0.0.50', mac: 'bbb.bbb.bbbb', type: 'Rogue', color: '#ff4466', status: 'Plotting' }
+      ],
+      bindingTable: [
+        { ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', source: 'Static' },
+        { ip: '10.0.0.10', mac: 'ccc.ccc.cccc', source: 'DHCP' },
+        { ip: '10.0.0.11', mac: 'ddd.ddd.dddd', source: 'DHCP' }
+      ],
+      daiStatus: 'ALLOWED',
+      daiStatusColor: '#00ff88',
+      message: '✓ Legitimate ARP reply ALLOWED. PC-A now knows router is at aaa.aaa.aaaa',
+      messageColor: '#00ff88'
+    },
+    {
+      title: 'Attacker Attempts ARP Spoof',
+      desc: 'Attacker sends fake ARP reply: "I am 10.0.0.1 at bbb.bbb.bbbb". Trying to trick PCs into sending traffic to attacker.',
+      devices: [
+        { name: 'Router', ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', type: 'Legitimate', color: '#00ff88', status: 'Online' },
+        { name: 'PC-A', ip: '10.0.0.10', mac: 'ccc.ccc.cccc', type: 'Host', color: '#00d4ff', status: 'Ready' },
+        { name: 'PC-B', ip: '10.0.0.11', mac: 'ddd.ddd.dddd', type: 'Host', color: '#00d4ff', status: 'Ready' },
+        { name: 'Attacker', ip: '10.0.0.50', mac: 'bbb.bbb.bbbb', type: 'Rogue', color: '#ff4466', status: '→ SPOOF!' }
+      ],
+      bindingTable: [
+        { ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', source: 'Static', highlight: true },
+        { ip: '10.0.0.10', mac: 'ccc.ccc.cccc', source: 'DHCP' },
+        { ip: '10.0.0.11', mac: 'ddd.ddd.dddd', source: 'DHCP' }
+      ],
+      daiStatus: 'VALIDATING',
+      daiStatusColor: '#ff9900',
+      message: '⚠️ Attacker sending fake ARP: "I am 10.0.0.1 at bbb.bbb.bbbb"',
+      messageColor: '#ff9900'
+    },
+    {
+      title: 'DAI Detects Invalid ARP',
+      desc: 'DAI checks binding table: 10.0.0.1 should map to aaa.aaa.aaaa, NOT bbb.bbb.bbbb. Mismatch detected!',
+      devices: [
+        { name: 'Router', ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', type: 'Legitimate', color: '#00ff88', status: 'Online' },
+        { name: 'PC-A', ip: '10.0.0.10', mac: 'ccc.ccc.cccc', type: 'Host', color: '#00d4ff', status: 'Ready' },
+        { name: 'PC-B', ip: '10.0.0.11', mac: 'ddd.ddd.dddd', type: 'Host', color: '#00d4ff', status: 'Ready' },
+        { name: 'Attacker', ip: '10.0.0.50', mac: 'bbb.bbb.bbbb', type: 'Rogue', color: '#ff4466', status: 'Blocked!' }
+      ],
+      bindingTable: [
+        { ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', source: 'Static', highlight: true },
+        { ip: '10.0.0.10', mac: 'ccc.ccc.cccc', source: 'DHCP' },
+        { ip: '10.0.0.11', mac: 'ddd.ddd.dddd', source: 'DHCP' }
+      ],
+      daiStatus: 'BLOCKING',
+      daiStatusColor: '#ff4466',
+      message: '❌ MISMATCH! 10.0.0.1 should be aaa.aaa.aaaa, not bbb.bbb.bbbb',
+      messageColor: '#ff4466'
+    },
+    {
+      title: 'Spoofed ARP Dropped',
+      desc: 'DAI drops the fake ARP reply before it reaches any host. Hosts never see the spoofed message. Attack prevented!',
+      devices: [
+        { name: 'Router', ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', type: 'Legitimate', color: '#00ff88', status: 'Protected' },
+        { name: 'PC-A', ip: '10.0.0.10', mac: 'ccc.ccc.cccc', type: 'Host', color: '#00ff88', status: '✓ Safe' },
+        { name: 'PC-B', ip: '10.0.0.11', mac: 'ddd.ddd.dddd', type: 'Host', color: '#00ff88', status: '✓ Safe' },
+        { name: 'Attacker', ip: '10.0.0.50', mac: 'bbb.bbb.bbbb', type: 'Rogue', color: '#999', status: 'Failed' }
+      ],
+      bindingTable: [
+        { ip: '10.0.0.1', mac: 'aaa.aaa.aaaa', source: 'Static' },
+        { ip: '10.0.0.10', mac: 'ccc.ccc.cccc', source: 'DHCP' },
+        { ip: '10.0.0.11', mac: 'ddd.ddd.dddd', source: 'DHCP' }
+      ],
+      daiStatus: 'PROTECTED',
+      daiStatusColor: '#00ff88',
+      message: '✓ DAI protected network! Spoofed ARP dropped. Hosts safe from MITM attack.',
+      messageColor: '#00ff88'
+    }
+  ];
+
+  function renderStep() {
+    const s = STEPS[step];
+    root.innerHTML = `<div style="padding:16px;border-radius:8px;background:rgba(0,0,0,0.2)">
+      <style>
+        .dai-step-title { font-size: 1rem; font-weight: 700; color: #00d4ff; margin-bottom: 6px; }
+        .dai-step-desc { font-size: 0.85rem; line-height: 1.5; color: #aaa; margin-bottom: 12px; }
+        .dai-devices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+        .dai-device { border: 2px solid; border-radius: 8px; padding: 10px; text-align: center; font-size: 0.75rem; }
+        .dai-device-name { font-weight: 700; margin-bottom: 4px; }
+        .dai-device-ip { font-size: 0.7rem; color: #666; margin-bottom: 2px; }
+        .dai-device-mac { font-size: 0.65rem; color: #666; margin-bottom: 4px; font-family: monospace; }
+        .dai-device-status { font-size: 0.8rem; font-weight: 700; margin-top: 4px; }
+        .dai-binding { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+        .dai-binding-title { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+        .dai-binding-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 0.75rem; padding: 6px; border-radius: 4px; background: rgba(0,0,0,0.2); margin-bottom: 4px; }
+        .dai-binding-row.highlight { background: rgba(0,255,136,0.15); border: 1px solid #00ff88; }
+        .dai-binding-label { color: #666; }
+        .dai-switch { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 12px; border: 2px solid; }
+        .dai-switch-label { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+        .dai-switch-status { font-size: 1rem; font-weight: 700; }
+        .dai-message { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 12px; font-size: 0.9rem; }
+        .dai-controls { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+        .dai-btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+        .dai-btn:disabled { opacity: 0.4; cursor: default; }
+        .dai-btn:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .dai-prev { background: #666; color: #fff; }
+        .dai-next { background: #00d4ff; color: #000; }
+        .dai-step-num { color: #666; font-size: 0.8rem; text-align: center; margin-top: 10px; }
+      </style>
+
+      <div class="dai-step-title">${s.title}</div>
+      <div class="dai-step-desc">${s.desc}</div>
+
+      <!-- Devices -->
+      <div class="dai-devices">
+        ${s.devices.map(d => `
+          <div class="dai-device" style="border-color: ${d.color}; background: rgba(${d.color === '#00ff88' ? '0,255,136' : d.color === '#00d4ff' ? '0,212,255' : d.color === '#ff9900' ? '255,153,0' : d.color === '#ff4466' ? '255,68,102' : '153,153,153'},0.1)">
+            <div class="dai-device-name" style="color: ${d.color}">${d.name}</div>
+            <div class="dai-device-ip" style="color: ${d.color}">${d.ip}</div>
+            <div class="dai-device-mac" style="color: ${d.color}">${d.mac}</div>
+            <div class="dai-device-status" style="color: ${d.color}; font-size: 0.75rem;">${d.status}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- DAI Binding Table -->
+      <div class="dai-binding">
+        <div class="dai-binding-title">DAI Binding Table (IP-to-MAC Mappings)</div>
+        ${s.bindingTable.map(b => `
+          <div class="dai-binding-row ${b.highlight ? 'highlight' : ''}">
+            <div><span class="dai-binding-label">IP:</span> <strong style="color: #00d4ff">${b.ip}</strong></div>
+            <div><span class="dai-binding-label">MAC:</span> <strong style="color: #00d4ff">${b.mac}</strong></div>
+            <div><span class="dai-binding-label">Source:</span> <strong style="color: #666">${b.source}</strong></div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- DAI Status -->
+      <div class="dai-switch" style="border-color: ${s.daiStatusColor}; background: rgba(${s.daiStatusColor === '#00ff88' ? '0,255,136' : s.daiStatusColor === '#00d4ff' ? '0,212,255' : s.daiStatusColor === '#ff9900' ? '255,153,0' : '255,68,102'},0.08)">
+        <div class="dai-switch-label">DAI Status</div>
+        <div class="dai-switch-status" style="color: ${s.daiStatusColor}">${s.daiStatus}</div>
+      </div>
+
+      <!-- Message -->
+      <div class="dai-message" style="color: ${s.messageColor}">${s.message}</div>
+
+      <!-- Controls -->
+      <div class="dai-controls">
+        <button class="dai-btn dai-prev" id="dai-prev" ${step === 0 ? 'disabled' : ''}>◀ Previous</button>
+        <button class="dai-btn dai-next" id="dai-next" ${step === STEPS.length - 1 ? 'disabled' : ''}>Next ▶</button>
+      </div>
+      <div class="dai-step-num">Step ${step + 1} / ${STEPS.length}</div>
+    </div>`;
+
+    const prevBtn = root.querySelector('#dai-prev');
+    const nextBtn = root.querySelector('#dai-next');
+    prevBtn?.addEventListener('click', () => { if (step > 0) { step--; renderStep(); } });
+    nextBtn?.addEventListener('click', () => { if (step < STEPS.length - 1) { step++; renderStep(); } });
+  }
+
+  renderStep();
+}
+
 // ── Hub vs Switch Animation ───────────────────────────────────────────────────
 function buildHubSwitchAnim(root) {
   const HUB_C = '#ff9900', SW_C = '#00d4ff';
@@ -8751,6 +8977,12 @@ function renderLesson(topic) {
         <div id="dhcp-snooping-anim-root"></div>`;
       container.appendChild(card);
       buildDHCPSnoopingAnim(document.getElementById('dhcp-snooping-anim-root'));
+      continue;
+    } else if (section.type === 'dai_anim') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="dai-anim-root"></div>`;
+      container.appendChild(card);
+      buildDAIAnim(document.getElementById('dai-anim-root'));
       continue;
     } else if (section.type === 'route_table_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
