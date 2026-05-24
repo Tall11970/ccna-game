@@ -1,0 +1,34 @@
+.snapshot-info {
+  background: var(--bg-tertiary);
+  border-left: 3px solid var(--accent-cyan);
+  padding: 16px;
+  border-radius: 6px;
+}
+
+.snapshot-info p {
+  margin: 8px 0;
+  color: var(--text-secondary);
+}
+
+.snapshot-info strong {
+  color: var(--text-primary);
+}
+
+.snapshot-info ul {
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+  margin-top: 8px;
+}
+
+.snapshot-info li {
+  padding: 6px 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.snapshot-info li::before {
+  content: '▸ ';
+  color: var(--accent-cyan);
+  margin-right: 8px;
+}
