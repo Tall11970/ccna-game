@@ -6,7 +6,7 @@
 <title>NetQuest – CCNA Training</title>
 <style>
   :root {
-    --bg: #0f1729;
+    --bg: #0a0e1a;
     --panel: #162035;
     --border: #243a60;
     --accent: #00d4ff;
@@ -47,8 +47,13 @@
     align-items: center;
     padding: 20px;
     background-image:
+      linear-gradient(0deg, transparent 24%, rgba(0,212,255,0.18) 25%, rgba(0,212,255,0.18) 26%, transparent 27%, transparent 74%, rgba(0,212,255,0.18) 75%, rgba(0,212,255,0.18) 76%, transparent 77%, transparent),
+      linear-gradient(90deg, transparent 24%, rgba(0,212,255,0.18) 25%, rgba(0,212,255,0.18) 26%, transparent 27%, transparent 74%, rgba(0,212,255,0.18) 75%, rgba(0,212,255,0.18) 76%, transparent 77%, transparent),
       radial-gradient(ellipse at 20% 20%, var(--bg-gradient1) 0%, transparent 60%),
       radial-gradient(ellipse at 80% 80%, var(--bg-gradient2) 0%, transparent 60%);
+    background-size: 50px 50px, 50px 50px, 100% 100%, 100% 100%;
+    background-attachment: fixed;
+    animation: circuit-flow 7s linear infinite;
     transition: background 0.3s, color 0.3s;
   }
 
@@ -1453,7 +1458,27 @@
   }
 
   /* ── Auth Modal ── */
-  #auth-overlay { position:fixed; inset:0; background:#080c18; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; transition:opacity 0.3s; }
+  @keyframes circuit-flow {
+    0% { background-position: 0 0, 0 0; }
+    100% { background-position: 50px 50px, -50px -50px; }
+  }
+
+  #auth-overlay {
+    position:fixed;
+    inset:0;
+    background-color: #0f1729;
+    background-image:
+      linear-gradient(0deg, transparent 24%, rgba(0,212,255,0.25) 25%, rgba(0,212,255,0.25) 26%, transparent 27%, transparent 74%, rgba(0,212,255,0.25) 75%, rgba(0,212,255,0.25) 76%, transparent 77%, transparent),
+      linear-gradient(90deg, transparent 24%, rgba(0,212,255,0.25) 25%, rgba(0,212,255,0.25) 26%, transparent 27%, transparent 74%, rgba(0,212,255,0.25) 75%, rgba(0,212,255,0.25) 76%, transparent 77%, transparent);
+    background-size: 50px 50px;
+    animation: circuit-flow 7s linear infinite;
+    z-index:9999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    transition:opacity 0.3s;
+  }
   #auth-overlay.hidden { display:none; }
   .auth-card { background:#0d1122; border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:32px 28px; width:100%; max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
   .auth-logo { font-size:1.6rem; font-weight:800; color:#fff; margin-bottom:4px; }
