@@ -100,8 +100,9 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
               <XAxis dataKey="topic_id" tick={{ fill: '#8ba3c0', fontSize: 11 }} angle={-35} textAnchor="end" interval={0} />
               <YAxis tick={{ fill: '#8ba3c0', fontSize: 12 }} domain={[0, 100]} />
               <Tooltip
-                contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
-                labelStyle={{ color: '#e0eeff' }}
+                contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                itemStyle={{ color: '#e0eeff' }}
                 formatter={(val: any, name: string) => [
                   name === 'avg_score' ? `${val}%` : name === 'pass_rate' ? `${val}%` : val,
                   name === 'avg_score' ? 'Avg Score' : name === 'pass_rate' ? 'Pass Rate' : 'Attempts'
@@ -130,8 +131,9 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
               <XAxis dataKey="range" tick={{ fill: '#8ba3c0', fontSize: 12 }} />
               <YAxis tick={{ fill: '#8ba3c0', fontSize: 12 }} allowDecimals={false} />
               <Tooltip
-                contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
-                labelStyle={{ color: '#e0eeff' }}
+                contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                itemStyle={{ color: '#e0eeff' }}
                 formatter={(val: any) => [val, 'Attempts']}
               />
               <Bar dataKey="count" name="Attempts" radius={[4, 4, 0, 0]}>
@@ -167,7 +169,9 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
                   <Cell fill="#ff4466" />
                 </Pie>
                 <Tooltip
-                  contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px', color: '#e0eeff' }}
+                  contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                  labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                  itemStyle={{ color: '#e0eeff' }}
                   formatter={(val: any, name: string, props: any) => {
                     const total = pieData.passFailData.reduce((s: number, d: any) => s + d.value, 0);
                     return [`${val} attempts (${((val / total) * 100).toFixed(1)}%)`, name];
@@ -194,7 +198,9 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
                   <Cell fill="#2a3a5a" />
                 </Pie>
                 <Tooltip
-                  contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px', color: '#e0eeff' }}
+                  contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                  labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                  itemStyle={{ color: '#e0eeff' }}
                   formatter={(val: any, name: string) => {
                     const total = pieData.userActivityData.reduce((s: number, d: any) => s + d.value, 0);
                     return [`${val} users (${((val / total) * 100).toFixed(1)}%)`, name];
@@ -222,7 +228,9 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px', color: '#e0eeff' }}
+                  contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                  labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                  itemStyle={{ color: '#e0eeff' }}
                   formatter={(val: any, name: string) => {
                     const total = pieData.deviceBreakdown.reduce((s: number, d: any) => s + d.value, 0);
                     return [`${val} sessions (${((val / total) * 100).toFixed(1)}%)`, name];
@@ -250,7 +258,9 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px', color: '#e0eeff' }}
+                  contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                  labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                  itemStyle={{ color: '#e0eeff' }}
                   formatter={(val: any, name: string) => {
                     const total = pieData.browserBreakdown.reduce((s: number, d: any) => s + d.value, 0);
                     return [`${val} sessions (${((val / total) * 100).toFixed(1)}%)`, name];
@@ -279,8 +289,9 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
                 tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
               <YAxis tick={{ fill: '#8ba3c0', fontSize: 12 }} />
               <Tooltip
-                contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
-                labelStyle={{ color: '#e0eeff' }}
+                contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                itemStyle={{ color: '#e0eeff' }}
                 labelFormatter={(d) => new Date(d).toLocaleDateString()}
               />
               <Legend wrapperStyle={{ color: '#8ba3c0' }} />
