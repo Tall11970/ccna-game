@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BarChart3, Users, LogOut } from 'lucide-react';
+import { BarChart3, Users, LogOut, TrendingUp } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -41,6 +41,14 @@ const Layout: React.FC<LayoutProps> = ({ children, pageTitle, onLogout }) => {
           >
             <Users size={20} />
             <span>Users</span>
+          </Link>
+
+          <Link
+            to="/analytics"
+            className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}
+          >
+            <TrendingUp size={20} />
+            <span>Analytics</span>
           </Link>
         </nav>
 

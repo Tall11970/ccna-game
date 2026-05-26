@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/UsersPage';
 import UserDetailPage from './pages/UserDetailPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import './App.css';
 
 const App: React.FC = () => {
@@ -74,6 +75,16 @@ const App: React.FC = () => {
           element={
             isAuthenticated ? (
               <UserDetailPage onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            isAuthenticated ? (
+              <AnalyticsPage onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" replace />
             )

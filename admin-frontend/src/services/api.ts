@@ -57,7 +57,7 @@ export interface AnalyticsOverview {
 }
 
 class ApiClient {
-  private client: AxiosInstance;
+  public client: AxiosInstance;
   private token: string | null = localStorage.getItem('admin_token');
 
   constructor() {
@@ -145,6 +145,11 @@ class ApiClient {
   // Analytics
   async getAnalyticsOverview(): Promise<AnalyticsOverview> {
     const response = await this.client.get<AnalyticsOverview>('/admin/analytics/overview');
+    return response.data;
+  }
+
+  async generateSnapshot(): Promise<{ message: string; snapshot: any }> {
+    const response = await this.client.post('/admin/analytics/snapshot');
     return response.data;
   }
 }

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
+import cron from 'node-cron';
 
 // Load environment variables
 dotenv.config();
@@ -364,42 +365,263 @@ app.post('/api/admin/users/:userId/reset-progress', authenticateAdmin, async (re
 app.get('/api/admin/analytics/overview', authenticateAdmin, async (req: AuthRequest, res: Response) => {
   try {
     // Get total users
-    const { count: totalUsers } = await supabase
+    const { count: totalUsers, error: totalUsersError } = await supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true });
 
-    // Get users created in last 30 days
+    if (totalUsersError) throw totalUsersError;
+
+    // Get users updated in last 30 days (new signups)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { count: newUsers } = await supabase
+    const { count: newUsers, error: newUsersError } = await supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true })
-      .gt('created_at', thirtyDaysAgo);
+      .gte('updated_at', thirtyDaysAgo);
 
-    // Get active users (with sessions in last 7 days)
+    if (newUsersError) throw newUsersError;
+
+    // Get active users (with sessions in last 7 days) - get unique user IDs
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { count: activeUsers } = await supabase
+    const { data: activeSessions, error: sessionError } = await supabase
       .from('user_sessions')
-      .select('user_id', { count: 'exact', head: true })
-      .gt('session_start', sevenDaysAgo)
-      .distinct('user_id');
+      .select('user_id')
+      .gte('session_start', sevenDaysAgo);
+
+    if (sessionError) throw sessionError;
+
+    // Get unique active users
+    const uniqueActiveUsers = new Set(activeSessions?.map(s => s.user_id) || []).size;
 
     // Get latest analytics snapshot
-    const { data: latestSnapshot } = await supabase
+    const { data: latestSnapshot, error: snapshotError } = await supabase
       .from('analytics_snapshots')
       .select('*')
       .order('snapshot_date', { ascending: false })
       .limit(1)
       .single();
 
+    // latestSnapshot can be null if no snapshots exist yet
     res.json({
       totalUsers: totalUsers || 0,
       newUsersThisMonth: newUsers || 0,
-      activeUsersLast7Days: activeUsers || 0,
-      latestSnapshot,
+      activeUsersLast7Days: uniqueActiveUsers,
+      latestSnapshot: latestSnapshot || null,
     });
-  } catch (error) {
-    console.error('Error fetching analytics:', error);
-    res.status(500).json({ error: 'Failed to fetch analytics' });
+  } catch (error: any) {
+    console.error('❌ Error fetching analytics:', error?.message || error);
+    res.status(500).json({ error: 'Failed to fetch analytics', details: error?.message });
+  }
+});
+
+// GET /api/admin/analytics/quiz-performance - Quiz scores grouped by topic
+app.get('/api/admin/analytics/quiz-performance', authenticateAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from('quiz_attempts')
+      .select('topic_id, score, correct_answers, total_questions');
+
+    if (error) throw error;
+
+    // Group by topic
+    const topicMap: Record<string, { scores: number[], attempts: number, totalCorrect: number, totalQuestions: number }> = {};
+    data?.forEach((attempt: any) => {
+      if (!topicMap[attempt.topic_id]) {
+        topicMap[attempt.topic_id] = { scores: [], attempts: 0, totalCorrect: 0, totalQuestions: 0 };
+      }
+      topicMap[attempt.topic_id].scores.push(attempt.score || 0);
+      topicMap[attempt.topic_id].attempts++;
+      topicMap[attempt.topic_id].totalCorrect += attempt.correct_answers || 0;
+      topicMap[attempt.topic_id].totalQuestions += attempt.total_questions || 0;
+    });
+
+    const result = Object.entries(topicMap).map(([topic_id, stats]) => ({
+      topic_id,
+      attempts: stats.attempts,
+      avg_score: parseFloat((stats.scores.reduce((a, b) => a + b, 0) / stats.scores.length).toFixed(1)),
+      pass_rate: parseFloat(((stats.scores.filter(s => s >= 70).length / stats.scores.length) * 100).toFixed(1)),
+      highest_score: Math.max(...stats.scores),
+      lowest_score: Math.min(...stats.scores),
+    })).sort((a, b) => b.attempts - a.attempts);
+
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error fetching quiz performance:', error?.message);
+    res.status(500).json({ error: 'Failed to fetch quiz performance' });
+  }
+});
+
+// GET /api/admin/analytics/user-growth - User growth from snapshots
+app.get('/api/admin/analytics/user-growth', authenticateAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from('analytics_snapshots')
+      .select('snapshot_date, total_users, active_users, new_users, quizzes_completed')
+      .order('snapshot_date', { ascending: true })
+      .limit(30);
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error: any) {
+    console.error('Error fetching user growth:', error?.message);
+    res.status(500).json({ error: 'Failed to fetch user growth' });
+  }
+});
+
+// GET /api/admin/analytics/leaderboard - Top users by XP, score, streak
+app.get('/api/admin/analytics/leaderboard', authenticateAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    // Top by XP
+    const { data: topXP } = await supabase
+      .from('profiles')
+      .select('id, username, xp, level, streak')
+      .order('xp', { ascending: false })
+      .limit(10);
+
+    // Top quiz scores per user
+    const { data: quizData } = await supabase
+      .from('quiz_attempts')
+      .select('user_id, score');
+
+    // Calculate avg score per user
+    const userScores: Record<string, number[]> = {};
+    quizData?.forEach((q: any) => {
+      if (!userScores[q.user_id]) userScores[q.user_id] = [];
+      userScores[q.user_id].push(q.score || 0);
+    });
+
+    const topByScore = topXP?.map((user: any) => ({
+      ...user,
+      avg_quiz_score: userScores[user.id]?.length
+        ? parseFloat((userScores[user.id].reduce((a: number, b: number) => a + b, 0) / userScores[user.id].length).toFixed(1))
+        : 0,
+      total_quizzes: userScores[user.id]?.length || 0,
+    }));
+
+    res.json(topByScore || []);
+  } catch (error: any) {
+    console.error('Error fetching leaderboard:', error?.message);
+    res.status(500).json({ error: 'Failed to fetch leaderboard' });
+  }
+});
+
+// GET /api/admin/analytics/score-distribution - Score histogram
+app.get('/api/admin/analytics/score-distribution', authenticateAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from('quiz_attempts')
+      .select('score');
+
+    if (error) throw error;
+
+    // Build histogram in 10% buckets
+    const buckets: Record<string, number> = {
+      '0-10': 0, '11-20': 0, '21-30': 0, '31-40': 0, '41-50': 0,
+      '51-60': 0, '61-70': 0, '71-80': 0, '81-90': 0, '91-100': 0,
+    };
+
+    data?.forEach((attempt: any) => {
+      const score = attempt.score || 0;
+      const bucket = Math.min(Math.floor(score / 10), 9);
+      const labels = Object.keys(buckets);
+      buckets[labels[bucket]]++;
+    });
+
+    const result = Object.entries(buckets).map(([range, count]) => ({ range, count }));
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error fetching score distribution:', error?.message);
+    res.status(500).json({ error: 'Failed to fetch score distribution' });
+  }
+});
+
+// ── Shared snapshot generation function ──────────────────────────────────────
+async function generateDailySnapshot(): Promise<any> {
+  const today = new Date().toISOString().split('T')[0];
+
+  const { count: totalUsers } = await supabase
+    .from('profiles').select('id', { count: 'exact', head: true });
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { count: newUsers } = await supabase
+    .from('profiles').select('id', { count: 'exact', head: true })
+    .gte('updated_at', thirtyDaysAgo);
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: activeSessions } = await supabase
+    .from('user_sessions').select('user_id').gte('session_start', sevenDaysAgo);
+  const activeUsers = new Set(activeSessions?.map((s: any) => s.user_id) || []).size;
+
+  const { count: quizzesCompleted } = await supabase
+    .from('quiz_attempts').select('id', { count: 'exact', head: true })
+    .gte('attempted_at', today);
+
+  const { data: quizScores } = await supabase
+    .from('quiz_attempts').select('score');
+  const avgQuizScore = quizScores?.length
+    ? parseFloat((quizScores.reduce((sum: number, q: any) => sum + (q.score || 0), 0) / quizScores.length).toFixed(2))
+    : 0;
+
+  const { data: sessions } = await supabase
+    .from('user_sessions').select('total_time_seconds')
+    .not('total_time_seconds', 'is', null);
+  const avgSessionDuration = sessions?.length
+    ? Math.round(sessions.reduce((sum: number, s: any) => sum + (s.total_time_seconds || 0), 0) / sessions.length)
+    : 0;
+
+  const { data: topicAttempts } = await supabase
+    .from('quiz_attempts').select('topic_id');
+  const topicCounts: Record<string, number> = {};
+  topicAttempts?.forEach((a: any) => {
+    topicCounts[a.topic_id] = (topicCounts[a.topic_id] || 0) + 1;
+  });
+  const topTopics = Object.entries(topicCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([topic_id, attempts]) => ({ topic_id, attempts }));
+
+  const { data: deviceData } = await supabase
+    .from('user_sessions').select('device_type');
+  const deviceBreakdown: Record<string, number> = {};
+  deviceData?.forEach((s: any) => {
+    const d = s.device_type || 'unknown';
+    deviceBreakdown[d] = (deviceBreakdown[d] || 0) + 1;
+  });
+
+  const { data: snapshot, error } = await supabase
+    .from('analytics_snapshots')
+    .upsert({
+      snapshot_date: today,
+      total_users: totalUsers || 0,
+      active_users: activeUsers,
+      new_users: newUsers || 0,
+      quizzes_completed: quizzesCompleted || 0,
+      avg_quiz_score: avgQuizScore,
+      avg_session_duration_seconds: avgSessionDuration,
+      top_topics: topTopics,
+      device_breakdown: deviceBreakdown,
+    }, { onConflict: 'snapshot_date' })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return snapshot;
+}
+
+// POST /api/admin/analytics/snapshot - Manually generate a snapshot
+app.post('/api/admin/analytics/snapshot', authenticateAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const snapshot = await generateDailySnapshot();
+
+    await supabase.from('admin_audit_log').insert({
+      admin_id: req.adminId,
+      action: 'snapshot_generated',
+      description: `Manually generated analytics snapshot for ${new Date().toISOString().split('T')[0]}`,
+    });
+
+    res.json({ message: 'Snapshot generated successfully', snapshot });
+  } catch (error: any) {
+    console.error('❌ Error generating snapshot:', error?.message);
+    res.status(500).json({ error: 'Failed to generate snapshot' });
   }
 });
 
@@ -416,6 +638,22 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: 'Route not found' });
 });
+
+// ── Scheduled Jobs ────────────────────────────────────────────────────────────
+// Auto-generate analytics snapshot every day at midnight
+cron.schedule('0 0 * * *', async () => {
+  console.log('🕛 Running scheduled daily snapshot...');
+  try {
+    await generateDailySnapshot();
+    console.log('✅ Daily snapshot generated automatically');
+  } catch (error: any) {
+    console.error('❌ Scheduled snapshot failed:', error?.message);
+  }
+}, {
+  timezone: 'America/New_York' // Change to your timezone
+});
+
+console.log('⏰ Daily snapshot scheduled for midnight (America/New_York)');
 
 // Start server
 app.listen(PORT, () => {
