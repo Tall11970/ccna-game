@@ -504,6 +504,60 @@ app.get('/api/admin/analytics/leaderboard', authenticateAdmin, async (req: AuthR
   }
 });
 
+// GET /api/admin/analytics/pie-data - Data for pie charts
+app.get('/api/admin/analytics/pie-data', authenticateAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    // Device breakdown
+    const { data: deviceData } = await supabase
+      .from('user_sessions').select('device_type');
+    const deviceCounts: Record<string, number> = {};
+    deviceData?.forEach((s: any) => {
+      const d = s.device_type || 'unknown';
+      deviceCounts[d] = (deviceCounts[d] || 0) + 1;
+    });
+    const deviceBreakdown = Object.entries(deviceCounts).map(([name, value]) => ({ name, value }));
+
+    // Pass/Fail rate (70% pass threshold)
+    const { data: quizData } = await supabase
+      .from('quiz_attempts').select('score');
+    const passed = quizData?.filter((q: any) => (q.score || 0) >= 70).length || 0;
+    const failed = (quizData?.length || 0) - passed;
+    const passFailData = [
+      { name: 'Passed (≥70%)', value: passed },
+      { name: 'Failed (<70%)', value: failed },
+    ].filter(d => d.value > 0);
+
+    // Active vs Inactive users
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: activeSessions } = await supabase
+      .from('user_sessions').select('user_id').gte('session_start', sevenDaysAgo);
+    const activeUserIds = new Set(activeSessions?.map((s: any) => s.user_id) || []);
+    const { count: totalUsers } = await supabase
+      .from('profiles').select('id', { count: 'exact', head: true });
+    const activeCount = activeUserIds.size;
+    const inactiveCount = (totalUsers || 0) - activeCount;
+    const userActivityData = [
+      { name: 'Active (7d)', value: activeCount },
+      { name: 'Inactive', value: inactiveCount },
+    ].filter(d => d.value > 0);
+
+    // Browser breakdown
+    const { data: browserData } = await supabase
+      .from('user_sessions').select('browser');
+    const browserCounts: Record<string, number> = {};
+    browserData?.forEach((s: any) => {
+      const b = s.browser || 'Unknown';
+      browserCounts[b] = (browserCounts[b] || 0) + 1;
+    });
+    const browserBreakdown = Object.entries(browserCounts).map(([name, value]) => ({ name, value }));
+
+    res.json({ deviceBreakdown, passFailData, userActivityData, browserBreakdown });
+  } catch (error: any) {
+    console.error('Error fetching pie data:', error?.message);
+    res.status(500).json({ error: 'Failed to fetch pie data' });
+  }
+});
+
 // GET /api/admin/analytics/score-distribution - Score histogram
 app.get('/api/admin/analytics/score-distribution', authenticateAdmin, async (req: AuthRequest, res: Response) => {
   try {

@@ -4,7 +4,8 @@ import Layout from '../components/Layout';
 import { apiClient } from '../services/api';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Legend, Cell
+  Tooltip, ResponsiveContainer, Legend, Cell,
+  PieChart, Pie, Sector
 } from 'recharts';
 
 interface AnalyticsPageProps {
@@ -22,6 +23,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [scoreDistribution, setScoreDistribution] = useState<any[]>([]);
   const [overview, setOverview] = useState<any>(null);
+  const [pieData, setPieData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -41,18 +43,20 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
   const fetchAll = async () => {
     try {
       setIsLoading(true);
-      const [quiz, growth, leaders, distribution, over] = await Promise.all([
+      const [quiz, growth, leaders, distribution, over, pie] = await Promise.all([
         apiClient.client.get('/admin/analytics/quiz-performance'),
         apiClient.client.get('/admin/analytics/user-growth'),
         apiClient.client.get('/admin/analytics/leaderboard'),
         apiClient.client.get('/admin/analytics/score-distribution'),
         apiClient.client.get('/admin/analytics/overview'),
+        apiClient.client.get('/admin/analytics/pie-data'),
       ]);
       setQuizPerf(quiz.data);
       setUserGrowth(growth.data);
       setLeaderboard(leaders.data);
       setScoreDistribution(distribution.data);
       setOverview(over.data);
+      setPieData(pie.data);
     } catch (err: any) {
       setError('Failed to load analytics data');
     } finally {
@@ -143,6 +147,104 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
             </BarChart>
           </ResponsiveContainer>
         )}
+      </div>
+
+      {/* Pie Charts Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+
+        {/* Pass / Fail Rate */}
+        <div className="card">
+          <h3 style={{ marginBottom: '4px' }}>✅ Pass / Fail Rate</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>Pass threshold: 70%</p>
+          {!pieData?.passFailData?.length ? (
+            <p style={{ color: 'var(--text-secondary)' }}>No quiz data yet</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={pieData.passFailData} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
+                  paddingAngle={4} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}>
+                  <Cell fill="#00ff88" />
+                  <Cell fill="#ff4466" />
+                </Pie>
+                <Tooltip contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
+                  formatter={(val: any, name: string) => [val, name]} />
+                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Active vs Inactive Users */}
+        <div className="card">
+          <h3 style={{ marginBottom: '4px' }}>👥 User Activity</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>Active in last 7 days vs inactive</p>
+          {!pieData?.userActivityData?.length ? (
+            <p style={{ color: 'var(--text-secondary)' }}>No user data yet</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={pieData.userActivityData} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
+                  paddingAngle={4} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}>
+                  <Cell fill="#00d4ff" />
+                  <Cell fill="#243a60" />
+                </Pie>
+                <Tooltip contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
+                  formatter={(val: any, name: string) => [val, name]} />
+                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Device Breakdown */}
+        <div className="card">
+          <h3 style={{ marginBottom: '4px' }}>📱 Device Breakdown</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>Sessions by device type</p>
+          {!pieData?.deviceBreakdown?.length ? (
+            <p style={{ color: 'var(--text-secondary)' }}>No session data yet</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={pieData.deviceBreakdown} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
+                  paddingAngle={4} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}>
+                  {pieData.deviceBreakdown.map((_: any, i: number) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
+                  formatter={(val: any, name: string) => [val, name]} />
+                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Browser Breakdown */}
+        <div className="card">
+          <h3 style={{ marginBottom: '4px' }}>🌐 Browser Breakdown</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>Sessions by browser</p>
+          {!pieData?.browserBreakdown?.length ? (
+            <p style={{ color: 'var(--text-secondary)' }}>No session data yet</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={pieData.browserBreakdown} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
+                  paddingAngle={4} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}>
+                  {pieData.browserBreakdown.map((_: any, i: number) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
+                  formatter={(val: any, name: string) => [val, name]} />
+                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
 
       {/* User Growth Over Time */}
