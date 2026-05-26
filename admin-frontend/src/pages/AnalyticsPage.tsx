@@ -155,7 +155,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '24px' }}>
 
         {/* Pass / Fail Rate */}
-        <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card">
           <h3 style={{ marginBottom: '4px' }}>✅ Pass / Fail Rate</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>Pass threshold: 70% — hover slices for details</p>
           {!pieData?.passFailData?.length ? (
@@ -184,7 +184,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
         </div>
 
         {/* Active vs Inactive Users */}
-        <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card">
           <h3 style={{ marginBottom: '4px' }}>👥 User Activity</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>Active last 7 days vs inactive — hover for details</p>
           {!pieData?.userActivityData?.length ? (
@@ -213,7 +213,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
         </div>
 
         {/* Device Breakdown */}
-        <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card">
           <h3 style={{ marginBottom: '4px' }}>📱 Device Breakdown</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>Sessions by device type — hover for details</p>
           {!pieData?.deviceBreakdown?.length ? (
@@ -243,7 +243,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
         </div>
 
         {/* Browser Breakdown */}
-        <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card">
           <h3 style={{ marginBottom: '4px' }}>🌐 Browser Breakdown</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>Sessions by browser — hover for details</p>
           {!pieData?.browserBreakdown?.length ? (
