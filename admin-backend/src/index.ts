@@ -650,10 +650,10 @@ cron.schedule('0 0 * * *', async () => {
     console.error('❌ Scheduled snapshot failed:', error?.message);
   }
 }, {
-  timezone: 'America/New_York' // Change to your timezone
+  timezone: 'America/Los_Angeles'
 });
 
-console.log('⏰ Daily snapshot scheduled for midnight (America/New_York)');
+console.log('⏰ Daily snapshot scheduled for midnight (America/Los_Angeles)');
 
 // Start server
 app.listen(PORT, () => {
