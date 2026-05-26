@@ -153,94 +153,110 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onLogout }) => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '24px' }}>
 
         {/* Pass / Fail Rate */}
-        <div className="card">
+        <div className="card" style={{ overflow: 'hidden' }}>
           <h3 style={{ marginBottom: '4px' }}>✅ Pass / Fail Rate</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>Pass threshold: 70%</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>Pass threshold: 70% — hover slices for details</p>
           {!pieData?.passFailData?.length ? (
             <p style={{ color: 'var(--text-secondary)' }}>No quiz data yet</p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={260}>
               <PieChart>
-                <Pie data={pieData.passFailData} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
-                  paddingAngle={4} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}>
+                <Pie data={pieData.passFailData} cx="50%" cy="45%" innerRadius={60} outerRadius={90}
+                  paddingAngle={4} dataKey="value">
                   <Cell fill="#00ff88" />
                   <Cell fill="#ff4466" />
                 </Pie>
-                <Tooltip contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
-                  formatter={(val: any, name: string) => [val, name]} />
-                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem' }} />
+                <Tooltip
+                  contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px', color: '#e0eeff' }}
+                  formatter={(val: any, name: string, props: any) => {
+                    const total = pieData.passFailData.reduce((s: number, d: any) => s + d.value, 0);
+                    return [`${val} attempts (${((val / total) * 100).toFixed(1)}%)`, name];
+                  }}
+                />
+                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem', paddingTop: '8px' }} />
               </PieChart>
             </ResponsiveContainer>
           )}
         </div>
 
         {/* Active vs Inactive Users */}
-        <div className="card">
+        <div className="card" style={{ overflow: 'hidden' }}>
           <h3 style={{ marginBottom: '4px' }}>👥 User Activity</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>Active in last 7 days vs inactive</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>Active last 7 days vs inactive — hover for details</p>
           {!pieData?.userActivityData?.length ? (
             <p style={{ color: 'var(--text-secondary)' }}>No user data yet</p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={260}>
               <PieChart>
-                <Pie data={pieData.userActivityData} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
-                  paddingAngle={4} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}>
+                <Pie data={pieData.userActivityData} cx="50%" cy="45%" innerRadius={60} outerRadius={90}
+                  paddingAngle={4} dataKey="value">
                   <Cell fill="#00d4ff" />
-                  <Cell fill="#243a60" />
+                  <Cell fill="#2a3a5a" />
                 </Pie>
-                <Tooltip contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
-                  formatter={(val: any, name: string) => [val, name]} />
-                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem' }} />
+                <Tooltip
+                  contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px', color: '#e0eeff' }}
+                  formatter={(val: any, name: string) => {
+                    const total = pieData.userActivityData.reduce((s: number, d: any) => s + d.value, 0);
+                    return [`${val} users (${((val / total) * 100).toFixed(1)}%)`, name];
+                  }}
+                />
+                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem', paddingTop: '8px' }} />
               </PieChart>
             </ResponsiveContainer>
           )}
         </div>
 
         {/* Device Breakdown */}
-        <div className="card">
+        <div className="card" style={{ overflow: 'hidden' }}>
           <h3 style={{ marginBottom: '4px' }}>📱 Device Breakdown</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>Sessions by device type</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>Sessions by device type — hover for details</p>
           {!pieData?.deviceBreakdown?.length ? (
             <p style={{ color: 'var(--text-secondary)' }}>No session data yet</p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={260}>
               <PieChart>
-                <Pie data={pieData.deviceBreakdown} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
-                  paddingAngle={4} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}>
+                <Pie data={pieData.deviceBreakdown} cx="50%" cy="45%" innerRadius={60} outerRadius={90}
+                  paddingAngle={4} dataKey="value">
                   {pieData.deviceBreakdown.map((_: any, i: number) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
-                  formatter={(val: any, name: string) => [val, name]} />
-                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem' }} />
+                <Tooltip
+                  contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px', color: '#e0eeff' }}
+                  formatter={(val: any, name: string) => {
+                    const total = pieData.deviceBreakdown.reduce((s: number, d: any) => s + d.value, 0);
+                    return [`${val} sessions (${((val / total) * 100).toFixed(1)}%)`, name];
+                  }}
+                />
+                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem', paddingTop: '8px' }} />
               </PieChart>
             </ResponsiveContainer>
           )}
         </div>
 
         {/* Browser Breakdown */}
-        <div className="card">
+        <div className="card" style={{ overflow: 'hidden' }}>
           <h3 style={{ marginBottom: '4px' }}>🌐 Browser Breakdown</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>Sessions by browser</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>Sessions by browser — hover for details</p>
           {!pieData?.browserBreakdown?.length ? (
             <p style={{ color: 'var(--text-secondary)' }}>No session data yet</p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={260}>
               <PieChart>
-                <Pie data={pieData.browserBreakdown} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
-                  paddingAngle={4} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}>
+                <Pie data={pieData.browserBreakdown} cx="50%" cy="45%" innerRadius={60} outerRadius={90}
+                  paddingAngle={4} dataKey="value">
                   {pieData.browserBreakdown.map((_: any, i: number) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px' }}
-                  formatter={(val: any, name: string) => [val, name]} />
-                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem' }} />
+                <Tooltip
+                  contentStyle={{ background: '#162035', border: '1px solid #243a60', borderRadius: '8px', color: '#e0eeff' }}
+                  formatter={(val: any, name: string) => {
+                    const total = pieData.browserBreakdown.reduce((s: number, d: any) => s + d.value, 0);
+                    return [`${val} sessions (${((val / total) * 100).toFixed(1)}%)`, name];
+                  }}
+                />
+                <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.85rem', paddingTop: '8px' }} />
               </PieChart>
             </ResponsiveContainer>
           )}
