@@ -679,6 +679,137 @@ app.post('/api/admin/analytics/snapshot', authenticateAdmin, async (req: AuthReq
   }
 });
 
+// GET /api/admin/dashboard/extra-stats - All extra dashboard widgets in one call
+app.get('/api/admin/dashboard/extra-stats', authenticateAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const nowTs = Date.now();
+    const sevenDaysAgo = new Date(nowTs - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const fourteenDaysAgo = new Date(nowTs - 14 * 24 * 60 * 60 * 1000).toISOString();
+    const thirtyDaysAgo = new Date(nowTs - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    // 1. Recent Activity — last 10 quiz attempts
+    const { data: recentAttempts } = await supabase
+      .from('quiz_attempts')
+      .select('user_id, topic_id, score, correct_answers, total_questions, attempted_at')
+      .order('attempted_at', { ascending: false })
+      .limit(10);
+
+    // Fetch usernames for those users
+    const userIds = [...new Set(recentAttempts?.map((a: any) => a.user_id) || [])];
+    const { data: userProfiles } = userIds.length
+      ? await supabase.from('profiles').select('id, username').in('id', userIds)
+      : { data: [] };
+    const usernameMap: Record<string, string> = {};
+    userProfiles?.forEach((p: any) => { usernameMap[p.id] = p.username; });
+
+    const recentActivity = recentAttempts?.map((a: any) => ({
+      username: usernameMap[a.user_id] || 'Unknown',
+      topic_id: a.topic_id,
+      score: a.score,
+      correct_answers: a.correct_answers,
+      total_questions: a.total_questions,
+      attempted_at: a.attempted_at,
+    })) || [];
+
+    // 2. 7-Day DAU
+    const dauData = [];
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(nowTs - i * 24 * 60 * 60 * 1000);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setHours(23, 59, 59, 999);
+      const { data: daySessions } = await supabase
+        .from('user_sessions')
+        .select('user_id')
+        .gte('session_start', dayStart.toISOString())
+        .lte('session_start', dayEnd.toISOString());
+      dauData.push({
+        date: dayStart.toISOString().split('T')[0],
+        dau: new Set(daySessions?.map((s: any) => s.user_id) || []).size,
+      });
+    }
+
+    // 3. Streak leaderboard — top 5
+    const { data: streakLeaders } = await supabase
+      .from('profiles')
+      .select('id, username, streak, level, xp')
+      .order('streak', { ascending: false })
+      .gt('streak', 0)
+      .limit(5);
+
+    // 4. Struggling topics — avg score < 60%
+    const { data: allAttempts } = await supabase
+      .from('quiz_attempts')
+      .select('topic_id, score');
+
+    const topicStats: Record<string, number[]> = {};
+    allAttempts?.forEach((a: any) => {
+      if (!topicStats[a.topic_id]) topicStats[a.topic_id] = [];
+      topicStats[a.topic_id].push(a.score || 0);
+    });
+
+    const strugglingTopics = Object.entries(topicStats)
+      .map(([topic_id, scores]) => ({
+        topic_id,
+        avg_score: parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)),
+        attempts: scores.length,
+      }))
+      .filter(t => t.avg_score < 60)
+      .sort((a, b) => a.avg_score - b.avg_score)
+      .slice(0, 5);
+
+    // 5. At-risk users — no session in last 30 days
+    const { data: recentSessions } = await supabase
+      .from('user_sessions')
+      .select('user_id')
+      .gte('session_start', thirtyDaysAgo);
+    const recentUserIds = new Set(recentSessions?.map((s: any) => s.user_id) || []);
+    const { count: totalUsers } = await supabase
+      .from('profiles').select('id', { count: 'exact', head: true });
+    const atRiskCount = Math.max(0, (totalUsers || 0) - recentUserIds.size);
+
+    // 6. Week comparison — this week vs last week
+    const [twQuiz, lwQuiz, twSignup, lwSignup, twSession, lwSession] = await Promise.all([
+      supabase.from('quiz_attempts').select('score').gte('attempted_at', sevenDaysAgo),
+      supabase.from('quiz_attempts').select('score').gte('attempted_at', fourteenDaysAgo).lt('attempted_at', sevenDaysAgo),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', sevenDaysAgo),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', fourteenDaysAgo).lt('updated_at', sevenDaysAgo),
+      supabase.from('user_sessions').select('user_id').gte('session_start', sevenDaysAgo),
+      supabase.from('user_sessions').select('user_id').gte('session_start', fourteenDaysAgo).lt('session_start', sevenDaysAgo),
+    ]);
+
+    const avgScore = (rows: any[]) => rows.length
+      ? parseFloat((rows.reduce((s, q) => s + (q.score || 0), 0) / rows.length).toFixed(1)) : 0;
+
+    const weekComparison = {
+      thisWeek: {
+        quizzes: twQuiz.data?.length || 0,
+        avgScore: avgScore(twQuiz.data || []),
+        newSignups: twSignup.count || 0,
+        activeUsers: new Set(twSession.data?.map((s: any) => s.user_id) || []).size,
+      },
+      lastWeek: {
+        quizzes: lwQuiz.data?.length || 0,
+        avgScore: avgScore(lwQuiz.data || []),
+        newSignups: lwSignup.count || 0,
+        activeUsers: new Set(lwSession.data?.map((s: any) => s.user_id) || []).size,
+      },
+    };
+
+    // 7. Recent signups — last 5 users
+    const { data: recentSignups } = await supabase
+      .from('profiles')
+      .select('id, username, level, xp, updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(5);
+
+    res.json({ recentActivity, dauData, streakLeaders: streakLeaders || [], strugglingTopics, atRiskCount, weekComparison, recentSignups: recentSignups || [] });
+  } catch (error: any) {
+    console.error('Error fetching extra stats:', error?.message);
+    res.status(500).json({ error: 'Failed to fetch extra stats' });
+  }
+});
+
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled error:', err);
