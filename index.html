@@ -5389,23 +5389,7 @@ resource "aci_application_profile" "web" {
       },
       {
         title: 'IPsec VPN Deep Dive',
-        body: `<p><strong>IPsec</strong> provides encryption and authentication for IP packets. Uses two phases:</p>
-<p><strong>IKE Phase 1 (IKE SA):</strong> Establishes a secure management channel</p>
-<ul>
-  <li>Authenticates peers (PSK or certificates)</li>
-  <li>Negotiates encryption, hashing, DH group</li>
-  <li>Two modes: <strong>Main Mode</strong> (6 messages, more secure) or <strong>Aggressive Mode</strong> (3 messages, faster but less secure)</li>
-</ul>
-<p><strong>IKE Phase 2 (IPsec SA):</strong> Establishes the actual data tunnel</p>
-<ul>
-  <li>Uses Quick Mode — 3 messages</li>
-  <li>Negotiates IPsec protocols: ESP or AH</li>
-</ul>
-<p><strong>ESP (Encapsulating Security Payload):</strong> Encrypts AND authenticates — most commonly used. Protocol 50.</p>
-<p><strong>AH (Authentication Header):</strong> Authenticates only — no encryption. Protocol 51. Rarely used alone.</p>
-<p><strong>Tunnel vs Transport mode:</strong><br>
-<strong>Tunnel:</strong> Encrypts the entire original IP packet (includes original headers) — used for site-to-site VPNs.<br>
-<strong>Transport:</strong> Only encrypts the payload — used for host-to-host VPNs.</p>`
+        type: 'ipsec_cards',
       },
       {
         title: 'Cryptography Fundamentals',
@@ -9875,6 +9859,12 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildIPSIDSAnim(document.getElementById('ipsids-cards-root'));
       continue;
+    } else if (section.type === 'ipsec_cards') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="ipsec-cards-root"></div>`;
+      container.appendChild(card);
+      buildIPSecAnim(document.getElementById('ipsec-cards-root'));
+      continue;
     } else if (section.type === 'acl_placement_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="acl-place-root"></div>`;
@@ -13063,6 +13053,426 @@ function buildIPSIDSAnim(root) {
         </div>`;
       const animEl = detailContainer.querySelector(`[id$="-anim"]`);
       if (animEl) card.animInit(animEl);
+      detailContainer.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    });
+    grid.appendChild(chip);
+  });
+}
+
+// ── IPsec VPN Deep Dive Interactive Cards ─────────────────────────────────────
+function buildIPSecAnim(root) {
+  const cards = [
+    {
+      id: 'ike1',
+      icon: '🤝',
+      name: 'IKE Phase 1',
+      subtitle: 'Building the Management Tunnel',
+      color: '#00d4ff',
+      tagline: 'Peers authenticate and agree on crypto settings before any data flows',
+      keyFacts: [
+        'Creates the IKE SA (Security Association) — a secure channel for management only',
+        'Main Mode: 6 messages — identity protected, slower but more secure',
+        'Aggressive Mode: 3 messages — identity exposed, faster but less secure',
+        'Peers authenticate via Pre-Shared Key (PSK) or digital certificates',
+        'Negotiates: encryption algo (AES), hash (SHA), DH group, lifetime',
+        'Diffie-Hellman key exchange creates shared secret without sending it over the wire',
+      ],
+      anim: `
+<div id="ike1-anim" style="background:rgba(0,212,255,0.05);border-radius:12px;border:1px solid rgba(0,212,255,0.2);padding:14px;margin:10px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="text-align:center;min-width:70px;">
+      <div style="font-size:1.6rem;">🏢</div>
+      <div style="font-size:0.65rem;color:#00d4ff;font-weight:700;">Router A</div>
+      <div style="font-size:0.58rem;color:#8ba3c0;">Initiator</div>
+    </div>
+    <div style="flex:1;margin:0 8px;position:relative;">
+      <div id="ike1-progress-bar" style="height:4px;background:rgba(0,212,255,0.15);border-radius:2px;margin-bottom:8px;overflow:hidden;">
+        <div id="ike1-progress-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#00d4ff,#00ff88);border-radius:2px;transition:width 0.6s ease;"></div>
+      </div>
+      <div id="ike1-msg-track" style="position:relative;height:80px;"></div>
+    </div>
+    <div style="text-align:center;min-width:70px;">
+      <div style="font-size:1.6rem;">🏭</div>
+      <div style="font-size:0.65rem;color:#00d4ff;font-weight:700;">Router B</div>
+      <div style="font-size:0.58rem;color:#8ba3c0;">Responder</div>
+    </div>
+  </div>
+  <div id="ike1-mode-tabs" style="display:flex;gap:8px;margin-bottom:8px;">
+    <button id="ike1-main-btn" onclick="ike1SwitchMode('main')" style="flex:1;padding:6px;border:none;border-radius:8px;font-size:0.68rem;font-weight:700;cursor:pointer;background:rgba(0,212,255,0.3);color:#00d4ff;border:1px solid rgba(0,212,255,0.5);">🔒 Main Mode (6 msg)</button>
+    <button id="ike1-agg-btn" onclick="ike1SwitchMode('agg')" style="flex:1;padding:6px;border:none;border-radius:8px;font-size:0.68rem;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.05);color:#8ba3c0;border:1px solid rgba(255,255,255,0.1);">⚡ Aggressive (3 msg)</button>
+  </div>
+  <div id="ike1-step-desc" style="background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 12px;font-size:0.65rem;color:#e0eeff;min-height:38px;border:1px solid rgba(0,212,255,0.15);"></div>
+  <div id="ike1-result" style="margin-top:8px;text-align:center;font-size:0.7rem;font-weight:700;opacity:0;transition:opacity 0.5s;color:#00ff88;"></div>
+</div>`
+    },
+    {
+      id: 'ike2',
+      icon: '🔐',
+      name: 'IKE Phase 2',
+      subtitle: 'Building the Data Tunnel (IPsec SA)',
+      color: '#00ff88',
+      tagline: 'Uses the Phase 1 channel to negotiate the actual encrypted data tunnel',
+      keyFacts: [
+        'Runs inside the secure Phase 1 IKE SA channel — already encrypted',
+        'Quick Mode — only 3 messages (fast)',
+        'Negotiates IPsec SA: which protocol (ESP or AH), encryption, hash, lifetime',
+        'Creates TWO unidirectional SAs — one for each direction of traffic',
+        'Each SA has a unique SPI (Security Parameter Index) to identify it',
+        'When lifetime expires, Phase 2 re-negotiates (re-keys) automatically',
+      ],
+      anim: `
+<div id="ike2-anim" style="background:rgba(0,255,136,0.04);border-radius:12px;border:1px solid rgba(0,255,136,0.2);padding:14px;margin:10px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div style="text-align:center;min-width:60px;"><div style="font-size:1.4rem;">🏢</div><div style="font-size:0.6rem;color:#8ba3c0;">Router A</div></div>
+    <div style="flex:1;margin:0 8px;">
+      <!-- Phase 1 tunnel indicator -->
+      <div style="background:rgba(0,212,255,0.08);border:1px dashed rgba(0,212,255,0.4);border-radius:8px;padding:4px 8px;text-align:center;font-size:0.6rem;color:#00d4ff;margin-bottom:6px;">🔒 Protected by Phase 1 IKE SA</div>
+      <div id="ike2-msg-track" style="position:relative;height:70px;"></div>
+    </div>
+    <div style="text-align:center;min-width:60px;"><div style="font-size:1.4rem;">🏭</div><div style="font-size:0.6rem;color:#8ba3c0;">Router B</div></div>
+  </div>
+  <!-- SA result display -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+    <div id="ike2-sa-ab" style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.15);border-radius:8px;padding:8px;font-size:0.6rem;opacity:0.3;transition:opacity 0.5s;">
+      <div style="color:#00ff88;font-weight:700;margin-bottom:3px;">SA → A to B</div>
+      <div style="color:#8ba3c0;">SPI: <span id="ike2-spi-ab" style="color:#00d4ff;">—</span></div>
+      <div style="color:#8ba3c0;">ESP / AES-256 / SHA-256</div>
+      <div id="ike2-sa-ab-status" style="color:#8ba3c0;margin-top:2px;"></div>
+    </div>
+    <div id="ike2-sa-ba" style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.15);border-radius:8px;padding:8px;font-size:0.6rem;opacity:0.3;transition:opacity 0.5s;">
+      <div style="color:#00ff88;font-weight:700;margin-bottom:3px;">SA → B to A</div>
+      <div style="color:#8ba3c0;">SPI: <span id="ike2-spi-ba" style="color:#00d4ff;">—</span></div>
+      <div style="color:#8ba3c0;">ESP / AES-256 / SHA-256</div>
+      <div id="ike2-sa-ba-status" style="color:#8ba3c0;margin-top:2px;"></div>
+    </div>
+  </div>
+  <div id="ike2-step-desc" style="background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 12px;font-size:0.65rem;color:#e0eeff;min-height:30px;border:1px solid rgba(0,255,136,0.15);"></div>
+</div>`
+    },
+    {
+      id: 'esah',
+      icon: '🔏',
+      name: 'ESP vs AH',
+      subtitle: 'Protocol 50 vs Protocol 51',
+      color: '#a855f7',
+      tagline: 'ESP encrypts + authenticates. AH authenticates only. Use ESP.',
+      keyFacts: [
+        'ESP (Protocol 50): Encrypts payload + authenticates — CONFIDENTIALITY + INTEGRITY',
+        'AH (Protocol 51): Authenticates only — INTEGRITY only, no encryption',
+        'ESP is almost always used — AH alone is rare in modern networks',
+        'AH authenticates the entire IP packet including headers — breaks NAT',
+        'ESP only authenticates payload — works fine through NAT',
+        'For NAT traversal, ESP is encapsulated in UDP port 4500 (NAT-T)',
+      ],
+      anim: `
+<div id="esah-anim" style="background:rgba(168,85,247,0.05);border-radius:12px;border:1px solid rgba(168,85,247,0.2);padding:14px;margin:10px 0;">
+  <div style="display:flex;gap:10px;margin-bottom:10px;">
+    <!-- ESP column -->
+    <div style="flex:1;background:rgba(168,85,247,0.07);border:2px solid rgba(168,85,247,0.4);border-radius:10px;padding:10px;">
+      <div style="font-size:0.72rem;font-weight:800;color:#a855f7;text-align:center;margin-bottom:8px;">🔏 ESP — Protocol 50</div>
+      <div id="esp-packet" style="font-size:0.58rem;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+        <div style="background:rgba(0,212,255,0.2);padding:3px 6px;color:#00d4ff;text-align:center;">New IP Header</div>
+        <div style="background:rgba(168,85,247,0.3);padding:3px 6px;color:#d4a8ff;text-align:center;">ESP Header (SPI+Seq)</div>
+        <div id="esp-orig-ip" style="background:rgba(255,204,0,0.15);padding:3px 6px;color:#ffcc00;text-align:center;position:relative;">
+          <span id="esp-lock-icon" style="margin-right:4px;">🔒</span>Original IP Hdr
+          <div style="font-size:0.5rem;color:#8ba3c0;">ENCRYPTED</div>
+        </div>
+        <div style="background:rgba(255,204,0,0.15);padding:3px 6px;color:#ffcc00;text-align:center;">
+          Payload (Data)
+          <div style="font-size:0.5rem;color:#8ba3c0;">ENCRYPTED</div>
+        </div>
+        <div style="background:rgba(0,255,136,0.2);padding:3px 6px;color:#00ff88;text-align:center;">ESP Auth Trailer<div style="font-size:0.5rem;">HMAC — integrity check</div></div>
+      </div>
+      <div style="margin-top:6px;font-size:0.6rem;">
+        <div style="color:#00ff88;">✅ Encrypted (AES)</div>
+        <div style="color:#00ff88;">✅ Authenticated</div>
+        <div style="color:#00ff88;">✅ Works through NAT</div>
+      </div>
+    </div>
+    <!-- AH column -->
+    <div style="flex:1;background:rgba(255,68,102,0.05);border:2px solid rgba(255,68,102,0.3);border-radius:10px;padding:10px;">
+      <div style="font-size:0.72rem;font-weight:800;color:#ff4466;text-align:center;margin-bottom:8px;">📋 AH — Protocol 51</div>
+      <div style="font-size:0.58rem;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+        <div style="background:rgba(0,212,255,0.2);padding:3px 6px;color:#00d4ff;text-align:center;">
+          Original IP Header
+          <div style="font-size:0.5rem;color:#00ff88;">Authenticated ✓</div>
+        </div>
+        <div style="background:rgba(255,68,102,0.2);padding:3px 6px;color:#ff8899;text-align:center;">AH Header (HMAC)<div style="font-size:0.5rem;">Integrity only</div></div>
+        <div style="background:rgba(255,255,255,0.05);padding:3px 6px;color:#aaa;text-align:center;">
+          Payload (Data)
+          <div style="font-size:0.5rem;color:#ff4466;">NOT ENCRYPTED ⚠️</div>
+        </div>
+      </div>
+      <div style="margin-top:6px;font-size:0.6rem;">
+        <div style="color:#ff4466;">❌ No encryption</div>
+        <div style="color:#00ff88;">✅ Authenticated</div>
+        <div style="color:#ff4466;">❌ Breaks NAT</div>
+      </div>
+    </div>
+  </div>
+  <div id="esah-demo" style="background:rgba(0,0,0,0.3);border-radius:8px;padding:8px;font-size:0.65rem;text-align:center;border:1px solid rgba(168,85,247,0.2);">
+    <div id="esah-demo-text" style="color:#e0eeff;"></div>
+    <div id="esah-demo-sub" style="color:#8ba3c0;font-size:0.6rem;margin-top:3px;"></div>
+  </div>
+</div>`
+    },
+    {
+      id: 'modes',
+      icon: '🚇',
+      name: 'Tunnel vs Transport',
+      subtitle: 'Two IPsec encapsulation modes',
+      color: '#ffcc00',
+      tagline: 'Tunnel wraps the whole packet. Transport only wraps the payload.',
+      keyFacts: [
+        'Tunnel Mode: Encrypts the ENTIRE original IP packet + adds new outer IP header',
+        'Tunnel Mode: Used for site-to-site VPNs (router-to-router)',
+        'Transport Mode: Encrypts only the payload (data), keeps original IP headers',
+        'Transport Mode: Used for host-to-host VPNs (e.g., workstation to server)',
+        'Tunnel mode hides original IP addresses from eavesdroppers',
+        'Transport mode is more efficient but exposes original IPs',
+      ],
+      anim: `
+<div id="modes-anim" style="background:rgba(255,204,0,0.04);border-radius:12px;border:1px solid rgba(255,204,0,0.2);padding:14px;margin:10px 0;">
+  <div style="display:flex;gap:8px;margin-bottom:10px;">
+    <button id="mode-tunnel-btn" onclick="ipsecSwitchMode('tunnel')" style="flex:1;padding:7px;border:2px solid #ffcc00;border-radius:8px;font-size:0.7rem;font-weight:700;cursor:pointer;background:rgba(255,204,0,0.2);color:#ffcc00;">🚇 Tunnel Mode</button>
+    <button id="mode-transport-btn" onclick="ipsecSwitchMode('transport')" style="flex:1;padding:7px;border:2px solid rgba(255,255,255,0.15);border-radius:8px;font-size:0.7rem;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.05);color:#8ba3c0;">🚀 Transport Mode</button>
+  </div>
+  <!-- Original packet -->
+  <div style="margin-bottom:8px;">
+    <div style="font-size:0.62rem;color:#8ba3c0;margin-bottom:4px;">📦 Original Packet (before IPsec):</div>
+    <div style="display:flex;gap:2px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+      <div style="background:rgba(0,212,255,0.25);padding:5px 8px;font-size:0.6rem;color:#00d4ff;font-weight:700;flex-shrink:0;">IP Header<div style="font-size:0.5rem;color:#8ba3c0;">10.1.1.1→10.2.2.2</div></div>
+      <div style="background:rgba(0,255,136,0.15);padding:5px;flex:1;font-size:0.6rem;color:#00ff88;text-align:center;">TCP/UDP Header</div>
+      <div style="background:rgba(255,255,255,0.08);padding:5px;flex:2;font-size:0.6rem;color:#aaa;text-align:center;">Data Payload</div>
+    </div>
+  </div>
+  <!-- After IPsec -->
+  <div id="ipsec-mode-display">
+    <div style="font-size:0.62rem;color:#8ba3c0;margin-bottom:4px;" id="mode-after-label">📦 After IPsec (Tunnel Mode):</div>
+    <div id="ipsec-mode-packet" style="display:flex;gap:2px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,204,0,0.3);transition:all 0.3s;"></div>
+  </div>
+  <div id="modes-desc" style="margin-top:8px;background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 12px;font-size:0.65rem;color:#e0eeff;border:1px solid rgba(255,204,0,0.15);min-height:36px;"></div>
+  <div style="display:flex;gap:8px;margin-top:8px;">
+    <div style="flex:1;background:rgba(255,204,0,0.06);border:1px solid rgba(255,204,0,0.2);border-radius:8px;padding:6px;font-size:0.6rem;text-align:center;">
+      <div style="color:#ffcc00;font-weight:700;">🚇 Tunnel</div>
+      <div style="color:#8ba3c0;margin-top:2px;">Router↔Router<br>Site-to-Site VPN<br>Hides original IPs</div>
+    </div>
+    <div style="flex:1;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.2);border-radius:8px;padding:6px;font-size:0.6rem;text-align:center;">
+      <div style="color:#00d4ff;font-weight:700;">🚀 Transport</div>
+      <div style="color:#8ba3c0;margin-top:2px;">Host↔Host<br>End-to-End VPN<br>More efficient</div>
+    </div>
+  </div>
+</div>`
+    },
+  ];
+
+  // Shared helpers injected into global scope for onclick handlers
+  window.ike1SwitchMode = function(mode) {
+    const root = document.getElementById('ike1-anim');
+    if (!root) return;
+    const mainBtn = root.querySelector('#ike1-main-btn');
+    const aggBtn = root.querySelector('#ike1-agg-btn');
+    if (mode === 'main') {
+      mainBtn.style.background='rgba(0,212,255,0.3)'; mainBtn.style.color='#00d4ff'; mainBtn.style.borderColor='rgba(0,212,255,0.5)';
+      aggBtn.style.background='rgba(255,255,255,0.05)'; aggBtn.style.color='#8ba3c0'; aggBtn.style.borderColor='rgba(255,255,255,0.1)';
+    } else {
+      aggBtn.style.background='rgba(255,140,0,0.25)'; aggBtn.style.color='#ff8c00'; aggBtn.style.borderColor='rgba(255,140,0,0.5)';
+      mainBtn.style.background='rgba(255,255,255,0.05)'; mainBtn.style.color='#8ba3c0'; mainBtn.style.borderColor='rgba(255,255,255,0.1)';
+    }
+    startIKE1Anim(root, mode);
+  };
+
+  window.ipsecSwitchMode = function(mode) {
+    const root = document.getElementById('modes-anim');
+    if (!root) return;
+    const tunnelBtn = root.querySelector('#mode-tunnel-btn');
+    const transportBtn = root.querySelector('#mode-transport-btn');
+    const pkt = root.querySelector('#ipsec-mode-packet');
+    const desc = root.querySelector('#modes-desc');
+    const afterLabel = root.querySelector('#mode-after-label');
+    if (mode === 'tunnel') {
+      tunnelBtn.style.borderColor='#ffcc00'; tunnelBtn.style.background='rgba(255,204,0,0.2)'; tunnelBtn.style.color='#ffcc00';
+      transportBtn.style.borderColor='rgba(255,255,255,0.15)'; transportBtn.style.background='rgba(255,255,255,0.05)'; transportBtn.style.color='#8ba3c0';
+      afterLabel.textContent='📦 After IPsec (Tunnel Mode):';
+      pkt.innerHTML = `
+        <div style="background:rgba(255,204,0,0.25);padding:5px 7px;font-size:0.58rem;color:#ffcc00;font-weight:700;flex-shrink:0;">NEW IP Hdr<div style="font-size:0.48rem;color:#8ba3c0;">Router IPs</div></div>
+        <div style="background:rgba(168,85,247,0.25);padding:5px 7px;font-size:0.58rem;color:#d4a8ff;font-weight:700;flex-shrink:0;">ESP Hdr</div>
+        <div style="background:rgba(255,204,0,0.12);padding:5px 6px;font-size:0.55rem;color:#aaa;flex-shrink:0;">🔒 Orig IP<div style="font-size:0.48rem;color:#ff8c00;">ENCRYPTED</div></div>
+        <div style="background:rgba(255,204,0,0.12);padding:5px 4px;flex:1;font-size:0.55rem;color:#aaa;text-align:center;">🔒 TCP+Data<div style="font-size:0.48rem;color:#ff8c00;">ENCRYPTED</div></div>
+        <div style="background:rgba(0,255,136,0.15);padding:5px 6px;font-size:0.55rem;color:#00ff88;flex-shrink:0;">ESP Auth</div>`;
+      desc.innerHTML='<strong style="color:#ffcc00;">Tunnel Mode:</strong> Entire original packet (IP header + data) is encrypted and wrapped in a new IP header with the router\'s addresses. Eavesdroppers see <em>router IPs only</em> — original 10.1.1.1→10.2.2.2 is hidden.';
+    } else {
+      transportBtn.style.borderColor='#00d4ff'; transportBtn.style.background='rgba(0,212,255,0.15)'; transportBtn.style.color='#00d4ff';
+      tunnelBtn.style.borderColor='rgba(255,255,255,0.15)'; tunnelBtn.style.background='rgba(255,255,255,0.05)'; tunnelBtn.style.color='#8ba3c0';
+      afterLabel.textContent='📦 After IPsec (Transport Mode):';
+      pkt.innerHTML = `
+        <div style="background:rgba(0,212,255,0.25);padding:5px 8px;font-size:0.58rem;color:#00d4ff;font-weight:700;flex-shrink:0;">IP Header<div style="font-size:0.48rem;color:#8ba3c0;">UNCHANGED</div></div>
+        <div style="background:rgba(168,85,247,0.25);padding:5px 7px;font-size:0.58rem;color:#d4a8ff;font-weight:700;flex-shrink:0;">ESP Hdr</div>
+        <div style="background:rgba(255,204,0,0.12);padding:5px 4px;flex:1;font-size:0.55rem;color:#aaa;text-align:center;">🔒 TCP+Data<div style="font-size:0.48rem;color:#ff8c00;">ENCRYPTED</div></div>
+        <div style="background:rgba(0,255,136,0.15);padding:5px 6px;font-size:0.55rem;color:#00ff88;flex-shrink:0;">ESP Auth</div>`;
+      desc.innerHTML='<strong style="color:#00d4ff;">Transport Mode:</strong> Only the payload is encrypted. The original IP header is kept intact and visible. More efficient than tunnel mode, but eavesdroppers can still see source/destination IPs. Used for host-to-host communication.';
+    }
+  };
+
+  function startIKE1Anim(root, mode) {
+    const track = root.querySelector('#ike1-msg-track');
+    const desc = root.querySelector('#ike1-step-desc');
+    const result = root.querySelector('#ike1-result');
+    const fill = root.querySelector('#ike1-progress-fill');
+    track.innerHTML = ''; result.style.opacity = '0';
+    const mainSteps = [
+      { dir:'→', label:'MSG 1', text:'Initiator proposes: "I support AES-256, SHA-256, DH group 14"', color:'#00d4ff' },
+      { dir:'←', label:'MSG 2', text:'Responder agrees: "Accepted. Using AES-256, SHA-256, DH14"', color:'#00d4ff' },
+      { dir:'→', label:'MSG 3', text:'Initiator sends DH public key (g^a mod p) — starts key exchange', color:'#a855f7' },
+      { dir:'←', label:'MSG 4', text:'Responder sends DH public key (g^b mod p) — both now compute same shared secret', color:'#a855f7' },
+      { dir:'→', label:'MSG 5', text:'Initiator sends encrypted identity + auth (PSK or cert) — 🔒 now encrypted', color:'#00ff88' },
+      { dir:'←', label:'MSG 6', text:'Responder authenticates, confirms — IKE Phase 1 complete! ✅', color:'#00ff88' },
+    ];
+    const aggSteps = [
+      { dir:'→', label:'MSG 1', text:'Initiator sends: proposal + DH public key + identity (all at once — faster but identity exposed!)', color:'#ff8c00' },
+      { dir:'←', label:'MSG 2', text:'Responder sends: DH key + accepted proposal + auth — identity also exposed ⚠️', color:'#ff8c00' },
+      { dir:'→', label:'MSG 3', text:'Initiator confirms authentication — Phase 1 complete (but identity was sent in cleartext)', color:'#ffcc00' },
+    ];
+    const steps = mode === 'main' ? mainSteps : aggSteps;
+    let si = 0;
+    function sendMsg() {
+      if (!document.contains(root) || si >= steps.length) {
+        if (si >= steps.length) {
+          result.textContent = mode === 'main' ? '✅ IKE SA established — secure management channel ready! (Main Mode: identities protected)' : '⚡ IKE SA established — faster but identities were exposed in plaintext (Aggressive Mode)';
+          result.style.color = mode === 'main' ? '#00ff88' : '#ffcc00';
+          result.style.opacity = '1';
+        }
+        return;
+      }
+      const s = steps[si];
+      fill.style.width = `${((si+1)/steps.length)*100}%`;
+      const msg = document.createElement('div');
+      msg.style.cssText = `position:absolute;top:${si*13}px;font-size:0.6rem;padding:2px 8px;border-radius:10px;background:${s.color}22;border:1px solid ${s.color}66;color:${s.color};opacity:0;transition:all 0.4s;white-space:nowrap;`;
+      msg.style.left = s.dir === '→' ? '10px' : 'auto';
+      msg.style.right = s.dir === '←' ? '10px' : 'auto';
+      msg.textContent = `${s.dir} ${s.label}`;
+      track.appendChild(msg);
+      setTimeout(()=>{ if(document.contains(msg)) msg.style.opacity='1'; desc.textContent=s.text; desc.style.borderColor=s.color+'44'; },50);
+      si++;
+      setTimeout(sendMsg, mode==='main' ? 900 : 1200);
+    }
+    sendMsg();
+  }
+
+  function startIKE2Anim(root) {
+    const track = root.querySelector('#ike2-msg-track');
+    const desc = root.querySelector('#ike2-step-desc');
+    const saAB = root.querySelector('#ike2-sa-ab');
+    const saBA = root.querySelector('#ike2-sa-ba');
+    const spiAB = root.querySelector('#ike2-spi-ab');
+    const spiBA = root.querySelector('#ike2-spi-ba');
+    const saABStatus = root.querySelector('#ike2-sa-ab-status');
+    const saBaStatus = root.querySelector('#ike2-sa-ba-status');
+    track.innerHTML = '';
+    const steps = [
+      { dir:'→', label:'QM MSG 1', text:'Initiator proposes IPsec SA: "Use ESP, AES-256, SHA-256, lifetime 3600s"', color:'#00ff88' },
+      { dir:'←', label:'QM MSG 2', text:'Responder agrees + sends nonce — both generate session keys from Phase 1 secret', color:'#00ff88' },
+      { dir:'→', label:'QM MSG 3', text:'Initiator confirms — TWO IPsec SAs created (one each direction)', color:'#00ff88' },
+    ];
+    let si = 0;
+    function sendMsg() {
+      if (!document.contains(root) || si >= steps.length) {
+        if (si >= steps.length) {
+          const spi1 = '0x' + Math.floor(Math.random()*0xFFFF).toString(16).toUpperCase().padStart(4,'0');
+          const spi2 = '0x' + Math.floor(Math.random()*0xFFFF).toString(16).toUpperCase().padStart(4,'0');
+          spiAB.textContent = spi1; spiBA.textContent = spi2;
+          saAB.style.opacity='1'; saBA.style.opacity='1';
+          saABStatus.textContent='✅ Active'; saABStatus.style.color='#00ff88';
+          saBaStatus.textContent='✅ Active'; saBaStatus.style.color='#00ff88';
+          desc.textContent='✅ Phase 2 complete! Two IPsec SAs active — encrypted data can now flow in both directions.';
+        }
+        return;
+      }
+      const s = steps[si];
+      const msg = document.createElement('div');
+      msg.style.cssText = `position:absolute;top:${si*22}px;font-size:0.6rem;padding:2px 8px;border-radius:10px;background:${s.color}22;border:1px solid ${s.color}66;color:${s.color};opacity:0;transition:opacity 0.4s;white-space:nowrap;`;
+      msg.style.left = s.dir==='→' ? '0' : 'auto'; msg.style.right = s.dir==='←' ? '0' : 'auto';
+      msg.textContent = `${s.dir} ${s.label}`;
+      track.appendChild(msg);
+      setTimeout(()=>{ if(document.contains(msg)){ msg.style.opacity='1'; desc.textContent=s.text; }},50);
+      si++;
+      setTimeout(sendMsg, 1100);
+    }
+    sendMsg();
+  }
+
+  function startESPAHAnim(root) {
+    const demo = root.querySelector('#esah-demo-text');
+    const sub = root.querySelector('#esah-demo-sub');
+    const scenarios = [
+      { text:'Sending sensitive data through ESP tunnel...', sub:'✅ Encrypted + Authenticated → attacker sees only cipher text', color:'#a855f7' },
+      { text:'Same data through AH...', sub:'⚠️ Attacker can READ the payload — only integrity is verified, no encryption!', color:'#ff4466' },
+      { text:'NAT device on the path...', sub:'✅ ESP works fine — only modifies outer header. AH would FAIL — it authenticates the IP header which NAT changes.', color:'#ffcc00' },
+    ];
+    let i = 0;
+    function next() {
+      if (!document.contains(root)) return;
+      const s = scenarios[i%scenarios.length];
+      demo.textContent=s.text; demo.style.color=s.color;
+      sub.textContent=s.sub; sub.style.color=s.color==='#ff4466'?'#ff4466':'#8ba3c0';
+      i++;
+      setTimeout(next, 3500);
+    }
+    next();
+  }
+
+  root.innerHTML = `
+<style>
+.ipsec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin:4px 0 14px; }
+.ipsec-chip {
+  background:rgba(255,255,255,0.04); border-radius:12px; padding:12px 10px;
+  cursor:pointer; border:2px solid rgba(255,255,255,0.08); transition:all 0.22s; text-align:center; user-select:none;
+}
+.ipsec-chip:hover { transform:translateY(-2px); border-color:var(--ic-color); background:rgba(255,255,255,0.07); }
+.ipsec-chip.active { border-color:var(--ic-color); background:rgba(0,0,0,0.25); box-shadow:0 0 18px -4px var(--ic-color); }
+.ipsec-detail { display:none; background:rgba(0,0,0,0.25); border-radius:14px; padding:16px; border:1px solid rgba(255,255,255,0.08); margin-bottom:8px; animation:threat-slide-in 0.28s ease; }
+.ipsec-detail.visible { display:block; }
+</style>
+<div style="font-size:0.82rem;color:#8ba3c0;margin-bottom:10px;">👇 Tap each phase to watch a live step-by-step negotiation demo</div>
+<div class="ipsec-grid" id="ipsec-grid"></div>
+<div id="ipsec-detail-container"></div>`;
+
+  const grid = root.querySelector('#ipsec-grid');
+  const detailContainer = root.querySelector('#ipsec-detail-container');
+  let activeId = null;
+
+  cards.forEach(card => {
+    const chip = document.createElement('div');
+    chip.className = 'ipsec-chip';
+    chip.style.setProperty('--ic-color', card.color);
+    chip.innerHTML = `
+      <div style="font-size:1.8rem;margin-bottom:4px;">${card.icon}</div>
+      <div style="font-size:0.8rem;font-weight:800;color:#e0eeff;margin-bottom:1px;">${card.name}</div>
+      <div style="font-size:0.6rem;color:${card.color};font-weight:600;margin-bottom:4px;">${card.subtitle}</div>
+      <div style="font-size:0.6rem;color:#8ba3c0;">${card.tagline}</div>`;
+    chip.addEventListener('click', () => {
+      if (activeId === card.id) {
+        chip.classList.remove('active'); detailContainer.innerHTML = ''; activeId = null; return;
+      }
+      grid.querySelectorAll('.ipsec-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active'); activeId = card.id;
+      detailContainer.innerHTML = `
+        <div class="ipsec-detail visible">
+          <div style="font-size:1rem;font-weight:800;color:${card.color};margin-bottom:2px;">${card.icon} ${card.name} — ${card.subtitle}</div>
+          <div style="font-size:0.78rem;color:#8ba3c0;margin-bottom:10px;">${card.tagline}</div>
+          ${card.anim}
+          <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px;margin-top:10px;">
+            <div style="font-size:0.72rem;font-weight:700;color:${card.color};margin-bottom:6px;">📌 Key Facts</div>
+            ${card.keyFacts.map(f=>`<div style="font-size:0.76rem;color:#c8daf0;display:flex;gap:6px;margin-bottom:5px;"><span style="color:${card.color};flex-shrink:0;">•</span>${f}</div>`).join('')}
+          </div>
+        </div>`;
+      const animEl = detailContainer.querySelector(`[id$="-anim"]`);
+      if (animEl) {
+        if (card.id === 'ike1') { startIKE1Anim(animEl, 'main'); }
+        else if (card.id === 'ike2') { startIKE2Anim(animEl); }
+        else if (card.id === 'esah') { startESPAHAnim(animEl); }
+        else if (card.id === 'modes') { window.ipsecSwitchMode('tunnel'); }
+      }
       detailContainer.scrollIntoView({ behavior:'smooth', block:'nearest' });
     });
     grid.appendChild(chip);
