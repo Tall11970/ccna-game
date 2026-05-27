@@ -5385,15 +5385,7 @@ resource "aci_application_profile" "web" {
       },
       {
         title: 'IPS and IDS',
-        type: 'table',
-        headers: ['Feature', 'IDS', 'IPS'],
-        rows: [
-          ['Placement', 'Out-of-band (copy of traffic)', 'Inline (in the traffic path)'],
-          ['Action on threat', 'Alert only — cannot block', 'Alert AND block traffic'],
-          ['Impact if fails', 'No traffic impact', 'Can block legitimate traffic'],
-          ['Performance impact', 'None on traffic', 'Adds latency'],
-          ['Use case', 'Monitoring/forensics', 'Active protection'],
-        ]
+        type: 'ipsids_cards',
       },
       {
         title: 'IPsec VPN Deep Dive',
@@ -9877,6 +9869,12 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildFirewallCardsAnim(document.getElementById('fw-cards-root'));
       continue;
+    } else if (section.type === 'ipsids_cards') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="ipsids-cards-root"></div>`;
+      container.appendChild(card);
+      buildIPSIDSAnim(document.getElementById('ipsids-cards-root'));
+      continue;
     } else if (section.type === 'acl_placement_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="acl-place-root"></div>`;
@@ -12681,6 +12679,390 @@ function buildFirewallCardsAnim(root) {
         </div>`;
       const animEl = detailContainer.querySelector(`[id$="-anim"]`);
       if (animEl) fw.animInit(animEl);
+      detailContainer.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    });
+    grid.appendChild(chip);
+  });
+}
+
+// ── IPS / IDS Interactive Cards ───────────────────────────────────────────────
+function buildIPSIDSAnim(root) {
+  const cards = [
+    {
+      id: 'ids',
+      icon: '👁️',
+      name: 'IDS',
+      subtitle: 'Intrusion Detection System',
+      color: '#00d4ff',
+      tagline: 'Out-of-band monitor — alerts only, cannot block',
+      keyFacts: [
+        'Receives a COPY of traffic via SPAN port or network TAP',
+        'Never in the live traffic path — zero impact if it fails',
+        'Can only generate alerts and logs — cannot drop packets',
+        'Great for forensics, compliance, and threat hunting',
+        'False positives are less dangerous (alerts ignored vs traffic dropped)',
+      ],
+      useCases: ['Security monitoring & forensics','Compliance logging (PCI-DSS, HIPAA)','Threat hunting on live networks','Detecting threats missed by other tools'],
+      anim: `
+<div id="ids-anim" style="background:rgba(0,212,255,0.05);border-radius:12px;border:1px solid rgba(0,212,255,0.2);padding:14px;margin:10px 0;position:relative;">
+  <!-- Network path row -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+    <div style="text-align:center;min-width:48px;"><div style="font-size:1.4rem;">💻</div><div style="font-size:0.6rem;color:#8ba3c0;">Client</div></div>
+    <div style="flex:1;position:relative;height:32px;margin:0 8px;">
+      <div style="position:absolute;top:50%;left:0;right:0;height:3px;background:rgba(0,212,255,0.25);transform:translateY(-50%);border-radius:2px;"></div>
+      <div id="ids-pkt" style="position:absolute;top:50%;left:0;transform:translateY(-50%);font-size:0.6rem;background:rgba(0,212,255,0.2);border:1px solid #00d4ff;border-radius:5px;padding:2px 6px;color:#e0eeff;white-space:nowrap;opacity:0;transition:left 0.9s linear,opacity 0.3s;"></div>
+    </div>
+    <div style="text-align:center;min-width:48px;"><div style="font-size:1.4rem;">🌐</div><div style="font-size:0.6rem;color:#8ba3c0;">Internet</div></div>
+  </div>
+  <!-- TAP + IDS -->
+  <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;">
+    <div style="width:48px;"></div>
+    <div style="flex:1;display:flex;align-items:center;gap:8px;">
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:5px 10px;font-size:0.62rem;text-align:center;">
+        <div style="color:#ffcc00;font-weight:700;">📡 SPAN/TAP</div>
+        <div style="color:#8ba3c0;font-size:0.55rem;">Copies traffic</div>
+      </div>
+      <div id="ids-copy-arrow" style="font-size:0.9rem;color:#8ba3c0;opacity:0;transition:opacity 0.3s;">↓ copy</div>
+      <div style="background:rgba(0,212,255,0.08);border:2px solid rgba(0,212,255,0.35);border-radius:8px;padding:5px 10px;font-size:0.62rem;text-align:center;">
+        <div style="color:#00d4ff;font-weight:700;">👁️ IDS Sensor</div>
+        <div style="color:#8ba3c0;font-size:0.55rem;">Out-of-band</div>
+      </div>
+    </div>
+    <div style="width:48px;"></div>
+  </div>
+  <!-- Alert log -->
+  <div style="background:rgba(0,0,0,0.35);border-radius:8px;border:1px solid rgba(0,212,255,0.15);padding:8px;font-size:0.6rem;font-family:monospace;min-height:52px;" id="ids-log">
+    <div style="color:#8ba3c0;margin-bottom:3px;"># IDS Alert Log</div>
+  </div>
+  <div id="ids-status" style="text-align:center;font-size:0.68rem;font-weight:700;margin-top:6px;min-height:16px;color:#8ba3c0;"></div>
+</div>`,
+      animInit: function(el) {
+        const pkt = el.querySelector('#ids-pkt');
+        const log = el.querySelector('#ids-log');
+        const status = el.querySelector('#ids-status');
+        const copyArrow = el.querySelector('#ids-copy-arrow');
+        const logHeader = log.querySelector('div');
+        const events = [
+          { label:'GET /index.html HTTP/1.1', threat:false, msg:null },
+          { label:'GET /login.php HTTP/1.1', threat:false, msg:null },
+          { label:'SELECT * FROM users--', threat:true, msg:'⚠️ ALERT: SQL Injection attempt detected! SRC:10.0.0.5 | Sig:1002 | Severity:HIGH' },
+          { label:'GET /about.html HTTP/1.1', threat:false, msg:null },
+          { label:'<script>alert(1)</script>', threat:true, msg:'⚠️ ALERT: XSS payload detected! SRC:10.0.0.9 | Sig:2041 | Severity:MED' },
+        ];
+        let i = 0;
+        function next() {
+          if (!document.contains(el)) return;
+          const e = events[i % events.length];
+          pkt.style.transition = 'none'; pkt.style.left = '0'; pkt.style.opacity = '0';
+          copyArrow.style.opacity = '0'; status.textContent = '';
+          setTimeout(() => {
+            if (!document.contains(el)) return;
+            pkt.textContent = e.label;
+            pkt.style.borderColor = e.threat ? '#ff4466' : '#00d4ff';
+            pkt.style.background = e.threat ? 'rgba(255,68,102,0.2)' : 'rgba(0,212,255,0.2)';
+            pkt.style.opacity = '1';
+            pkt.style.transition = 'left 0.9s linear, opacity 0.3s';
+            pkt.style.left = 'calc(100% - 160px)';
+            status.textContent = e.threat ? '🔴 Threat detected in copy...' : '🟢 Normal traffic flowing...';
+            status.style.color = e.threat ? '#ff4466' : '#00d4ff';
+          }, 150);
+          setTimeout(() => {
+            if (!document.contains(el)) return;
+            copyArrow.style.opacity = '1';
+            if (e.threat) {
+              const row = document.createElement('div');
+              row.style.cssText = 'color:#ff4466;animation:threat-slide-in 0.2s ease;';
+              row.textContent = e.msg;
+              log.appendChild(row);
+              if (log.children.length > 5) log.removeChild(log.children[1]);
+              status.textContent = '⚠️ Alert fired — but traffic STILL PASSED THROUGH!';
+              status.style.color = '#ffcc00';
+            }
+          }, 800);
+          i++;
+          setTimeout(next, 3200);
+        }
+        next();
+      }
+    },
+    {
+      id: 'ips',
+      icon: '🛡️',
+      name: 'IPS',
+      subtitle: 'Intrusion Prevention System',
+      color: '#00ff88',
+      tagline: 'Inline protection — detects AND blocks threats in real-time',
+      keyFacts: [
+        'Sits INLINE in the traffic path — all packets flow through it',
+        'Can drop malicious packets before they reach the destination',
+        'If IPS fails or is bypassed, traffic may be impacted (fail-open vs fail-closed)',
+        'Adds slight latency — inspect and forward takes time',
+        'False positives can block legitimate traffic — tuning is critical',
+      ],
+      useCases: ['Active threat prevention at network perimeter','Blocking exploits, malware, and C2 traffic','Protecting servers from known vulnerabilities','Enforcing security policy in real-time'],
+      anim: `
+<div id="ips-anim" style="background:rgba(0,255,136,0.04);border-radius:12px;border:1px solid rgba(0,255,136,0.2);padding:14px;margin:10px 0;">
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+    <div style="text-align:center;min-width:48px;"><div style="font-size:1.4rem;">💻</div><div style="font-size:0.6rem;color:#8ba3c0;">Client</div></div>
+    <div style="flex:1;position:relative;height:32px;">
+      <div style="position:absolute;top:50%;left:0;right:0;height:3px;background:rgba(0,255,136,0.2);transform:translateY(-50%);border-radius:2px;"></div>
+      <div id="ips-pkt-in" style="position:absolute;top:50%;left:0;transform:translateY(-50%);font-size:0.6rem;background:rgba(0,212,255,0.2);border:1px solid #00d4ff;border-radius:5px;padding:2px 6px;color:#e0eeff;white-space:nowrap;opacity:0;transition:left 0.6s linear,opacity 0.3s;"></div>
+    </div>
+    <div style="background:rgba(0,255,136,0.1);border:2px solid rgba(0,255,136,0.5);border-radius:10px;padding:6px 10px;text-align:center;min-width:64px;">
+      <div style="font-size:1.2rem;">🛡️</div>
+      <div style="font-size:0.6rem;color:#00ff88;font-weight:700;">IPS</div>
+      <div style="font-size:0.55rem;color:#8ba3c0;">Inline</div>
+    </div>
+    <div style="flex:1;position:relative;height:32px;">
+      <div style="position:absolute;top:50%;left:0;right:0;height:3px;background:rgba(0,255,136,0.2);transform:translateY(-50%);border-radius:2px;"></div>
+      <div id="ips-pkt-out" style="position:absolute;top:50%;left:0;transform:translateY(-50%);font-size:0.6rem;border-radius:5px;padding:2px 6px;white-space:nowrap;opacity:0;transition:left 0.7s linear,opacity 0.3s;"></div>
+    </div>
+    <div style="text-align:center;min-width:48px;"><div style="font-size:1.4rem;">🌐</div><div style="font-size:0.6rem;color:#8ba3c0;">Server</div></div>
+  </div>
+  <!-- Verdict display -->
+  <div id="ips-verdict-box" style="background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 12px;font-size:0.65rem;border:1px solid rgba(255,255,255,0.08);min-height:44px;margin-bottom:6px;">
+    <div id="ips-inspect-label" style="color:#8ba3c0;margin-bottom:4px;">🔬 Inspecting...</div>
+    <div id="ips-sig-match" style="color:#8ba3c0;"></div>
+    <div id="ips-action" style="font-weight:700;margin-top:3px;"></div>
+  </div>
+  <!-- Stats -->
+  <div style="display:flex;gap:8px;">
+    <div style="flex:1;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:6px;text-align:center;">
+      <div id="ips-allowed" style="font-size:1.3rem;font-weight:800;color:#00ff88;">0</div>
+      <div style="font-size:0.6rem;color:#8ba3c0;">Allowed</div>
+    </div>
+    <div style="flex:1;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.2);border-radius:8px;padding:6px;text-align:center;">
+      <div id="ips-blocked" style="font-size:1.3rem;font-weight:800;color:#ff4466;">0</div>
+      <div style="font-size:0.6rem;color:#8ba3c0;">Blocked</div>
+    </div>
+    <div style="flex:1;background:rgba(255,204,0,0.07);border:1px solid rgba(255,204,0,0.2);border-radius:8px;padding:6px;text-align:center;">
+      <div id="ips-latency" style="font-size:1.3rem;font-weight:800;color:#ffcc00;">~2ms</div>
+      <div style="font-size:0.6rem;color:#8ba3c0;">Added Latency</div>
+    </div>
+  </div>
+</div>`,
+      animInit: function(el) {
+        const pktIn = el.querySelector('#ips-pkt-in');
+        const pktOut = el.querySelector('#ips-pkt-out');
+        const inspectLabel = el.querySelector('#ips-inspect-label');
+        const sigMatch = el.querySelector('#ips-sig-match');
+        const action = el.querySelector('#ips-action');
+        const allowedEl = el.querySelector('#ips-allowed');
+        const blockedEl = el.querySelector('#ips-blocked');
+        let allowed = 0, blocked = 0;
+        const packets = [
+          { label:'GET /home HTTP/1.1', threat:false, sig:'No signature match', act:'✅ FORWARD → Server' },
+          { label:'POST /login — normal', threat:false, sig:'No signature match', act:'✅ FORWARD → Server' },
+          { label:'/../../../etc/passwd', threat:true, sig:'Sig #3301: Path Traversal attack', act:'❌ DROP + ALERT logged' },
+          { label:'User-Agent: sqlmap/1.7', threat:true, sig:'Sig #1088: SQLmap scanner detected', act:'❌ DROP + RESET connection' },
+          { label:'GET /api/data HTTP/2', threat:false, sig:'No signature match', act:'✅ FORWARD → Server' },
+          { label:'<iframe src=evil.js>', threat:true, sig:'Sig #2055: XSS iframe injection', act:'❌ DROP + ALERT logged' },
+        ];
+        let i = 0;
+        function next() {
+          if (!document.contains(el)) return;
+          const p = packets[i % packets.length];
+          pktIn.style.transition='none'; pktIn.style.left='0'; pktIn.style.opacity='0';
+          pktOut.style.transition='none'; pktOut.style.left='0'; pktOut.style.opacity='0';
+          inspectLabel.textContent='🔬 Inspecting...'; inspectLabel.style.color='#8ba3c0';
+          sigMatch.textContent=''; action.textContent='';
+          setTimeout(()=>{
+            if(!document.contains(el)) return;
+            pktIn.textContent=p.label; pktIn.style.opacity='1';
+            pktIn.style.transition='left 0.5s linear,opacity 0.3s'; pktIn.style.left='calc(100% - 10px)';
+          },150);
+          setTimeout(()=>{
+            if(!document.contains(el)) return;
+            inspectLabel.textContent='🔬 Checking signatures...'; inspectLabel.style.color='#ffcc00';
+            sigMatch.textContent=p.sig; sigMatch.style.color= p.threat ? '#ff4466' : '#8ba3c0';
+          },700);
+          setTimeout(()=>{
+            if(!document.contains(el)) return;
+            action.textContent=p.act; action.style.color= p.threat ? '#ff4466' : '#00ff88';
+            if(!p.threat){
+              pktOut.textContent='✅ '+p.label; pktOut.style.color='#00ff88';
+              pktOut.style.background='rgba(0,255,136,0.15)'; pktOut.style.border='1px solid #00ff88';
+              pktOut.style.opacity='1'; pktOut.style.transition='left 0.6s linear,opacity 0.3s'; pktOut.style.left='calc(100% - 10px)';
+              allowed++; allowedEl.textContent=allowed;
+            } else {
+              pktIn.style.opacity='0';
+              blocked++; blockedEl.textContent=blocked;
+            }
+          },1400);
+          i++;
+          setTimeout(next, 3400);
+        }
+        next();
+      }
+    },
+    {
+      id: 'compare',
+      icon: '⚖️',
+      name: 'IDS vs IPS',
+      subtitle: 'Side-by-side comparison',
+      color: '#ffcc00',
+      tagline: 'When to choose each — and why many use both',
+      keyFacts: [
+        'Many deployments run BOTH: IPS inline at perimeter + IDS for internal monitoring',
+        'IDS = visibility without risk of false positives blocking traffic',
+        'IPS = active protection but requires careful tuning to avoid outages',
+        'NGFW often includes IPS functionality built in',
+        'Start with IDS mode (detect-only), tune signatures, then switch to IPS (prevent) mode',
+      ],
+      useCases: ['Compliance: IDS for logging','Perimeter: IPS for blocking','Internal: IDS for lateral movement detection','Both together = defense in depth'],
+      anim: `
+<div id="compare-anim" style="background:rgba(255,204,0,0.04);border-radius:12px;border:1px solid rgba(255,204,0,0.2);padding:14px;margin:10px 0;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+    <!-- IDS column -->
+    <div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.25);border-radius:10px;padding:10px;">
+      <div style="font-size:0.72rem;font-weight:700;color:#00d4ff;margin-bottom:8px;text-align:center;">👁️ IDS</div>
+      <div style="position:relative;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:4px;font-size:0.6rem;">
+          <span>💻</span>
+          <div style="flex:1;height:2px;background:rgba(0,212,255,0.3);position:relative;">
+            <div id="cmp-ids-pkt" style="position:absolute;left:0;top:-4px;width:8px;height:8px;background:#00d4ff;border-radius:50%;opacity:0;transition:left 0.8s linear;"></div>
+          </div>
+          <div style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:4px;padding:2px 5px;font-size:0.58rem;color:#00d4ff;">TAP</div>
+          <div style="flex:1;height:2px;background:rgba(0,212,255,0.3);"></div>
+          <span>🌐</span>
+        </div>
+        <div style="margin-top:4px;display:flex;justify-content:center;">
+          <div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.3);border-radius:6px;padding:3px 8px;font-size:0.58rem;text-align:center;">
+            <div style="color:#00d4ff;">👁️ IDS</div>
+            <div id="cmp-ids-alert" style="color:#8ba3c0;font-size:0.55rem;min-height:12px;"></div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:0.6rem;color:#8ba3c0;line-height:1.5;">
+        <div>📍 Out-of-band</div><div>🔇 Cannot block</div><div>📋 Alert + log only</div>
+      </div>
+    </div>
+    <!-- IPS column -->
+    <div style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.25);border-radius:10px;padding:10px;">
+      <div style="font-size:0.72rem;font-weight:700;color:#00ff88;margin-bottom:8px;text-align:center;">🛡️ IPS</div>
+      <div style="position:relative;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:2px;font-size:0.6rem;">
+          <span>💻</span>
+          <div style="flex:1;height:2px;background:rgba(0,255,136,0.3);position:relative;">
+            <div id="cmp-ips-pkt" style="position:absolute;left:0;top:-4px;width:8px;height:8px;border-radius:50%;opacity:0;transition:left 0.7s linear;"></div>
+          </div>
+          <div style="background:rgba(0,255,136,0.1);border:2px solid rgba(0,255,136,0.4);border-radius:6px;padding:3px 8px;font-size:0.6rem;color:#00ff88;font-weight:700;">🛡️ IPS</div>
+          <div id="cmp-ips-after" style="flex:1;height:2px;background:rgba(0,255,136,0.3);"></div>
+          <span>🌐</span>
+        </div>
+        <div style="margin-top:4px;text-align:center;">
+          <div id="cmp-ips-verdict" style="font-size:0.6rem;font-weight:700;min-height:14px;"></div>
+        </div>
+      </div>
+      <div style="font-size:0.6rem;color:#8ba3c0;line-height:1.5;">
+        <div>📍 Inline</div><div>🚫 Can block</div><div>⚡ Active protection</div>
+      </div>
+    </div>
+  </div>
+  <!-- Recommendation bar -->
+  <div id="cmp-rec" style="background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.25);border-radius:8px;padding:8px 12px;font-size:0.65rem;color:#e0eeff;text-align:center;min-height:28px;"></div>
+</div>`,
+      animInit: function(el) {
+        const idsPkt = el.querySelector('#cmp-ids-pkt');
+        const ipsPkt = el.querySelector('#cmp-ips-pkt');
+        const idsAlert = el.querySelector('#cmp-ids-alert');
+        const ipsVerdict = el.querySelector('#cmp-ips-verdict');
+        const rec = el.querySelector('#cmp-rec');
+        const scenarios = [
+          { label:'Normal traffic', threat:false, idsMsg:'', ipsColor:'#00d4ff', ipsVerdict:'✅ Forwarded', rec:'💡 Normal traffic: both IDS and IPS let it through.' },
+          { label:'Attack packet!', threat:true, idsMsg:'⚠️ Alert only!', ipsColor:'#ff4466', ipsVerdict:'❌ BLOCKED', rec:'⚖️ IDS: alerted but traffic reached server. IPS: blocked before reaching server.' },
+          { label:'Normal traffic', threat:false, idsMsg:'', ipsColor:'#00d4ff', ipsVerdict:'✅ Forwarded', rec:'💡 Best practice: deploy BOTH — IPS inline + IDS internal for full visibility.' },
+        ];
+        let i = 0;
+        function runScenario() {
+          if (!document.contains(el)) return;
+          const s = scenarios[i % scenarios.length];
+          idsPkt.style.transition='none'; idsPkt.style.left='0'; idsPkt.style.opacity='0';
+          ipsPkt.style.transition='none'; ipsPkt.style.left='0'; ipsPkt.style.opacity='0';
+          idsAlert.textContent=''; ipsVerdict.textContent=''; rec.textContent='';
+          ipsPkt.style.background = s.threat ? '#ff4466' : '#00ff88';
+          idsPkt.style.background = s.threat ? '#ff4466' : '#00d4ff';
+          setTimeout(()=>{
+            if(!document.contains(el)) return;
+            idsPkt.style.opacity='1'; ipsPkt.style.opacity='1';
+            idsPkt.style.transition='left 0.8s linear'; idsPkt.style.left='calc(100% - 8px)';
+            ipsPkt.style.transition='left 0.7s linear'; ipsPkt.style.left= s.threat ? '50%' : 'calc(100% - 8px)';
+          },200);
+          setTimeout(()=>{
+            if(!document.contains(el)) return;
+            idsAlert.textContent=s.idsMsg; idsAlert.style.color='#ff4466';
+            ipsVerdict.textContent=s.ipsVerdict; ipsVerdict.style.color=s.ipsColor;
+            rec.textContent=s.rec; rec.style.color=s.threat?'#ffcc00':'#8ba3c0';
+          },1100);
+          i++;
+          setTimeout(runScenario, 4000);
+        }
+        runScenario();
+      }
+    },
+  ];
+
+  root.innerHTML = `
+<style>
+.ipsids-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:10px; margin:4px 0 14px; }
+.ipsids-chip {
+  background:rgba(255,255,255,0.04); border-radius:12px; padding:12px 10px;
+  cursor:pointer; border:2px solid rgba(255,255,255,0.08); transition:all 0.22s;
+  text-align:center; user-select:none;
+}
+.ipsids-chip:hover { transform:translateY(-2px); border-color:var(--ic-color); background:rgba(255,255,255,0.07); }
+.ipsids-chip.active { border-color:var(--ic-color); background:rgba(0,0,0,0.25); box-shadow:0 0 18px -4px var(--ic-color); }
+.ipsids-detail {
+  display:none; background:rgba(0,0,0,0.25); border-radius:14px; padding:16px;
+  border:1px solid rgba(255,255,255,0.08); margin-bottom:8px; animation:threat-slide-in 0.28s ease;
+}
+.ipsids-detail.visible { display:block; }
+</style>
+<div style="font-size:0.82rem;color:#8ba3c0;margin-bottom:10px;">👇 Tap a card to explore with a live interactive demo</div>
+<div class="ipsids-grid" id="ipsids-grid"></div>
+<div id="ipsids-detail-container"></div>`;
+
+  const grid = root.querySelector('#ipsids-grid');
+  const detailContainer = root.querySelector('#ipsids-detail-container');
+  let activeId = null;
+
+  cards.forEach(card => {
+    const chip = document.createElement('div');
+    chip.className = 'ipsids-chip';
+    chip.style.setProperty('--ic-color', card.color);
+    chip.innerHTML = `
+      <div style="font-size:1.8rem;margin-bottom:4px;">${card.icon}</div>
+      <div style="font-size:0.82rem;font-weight:800;color:#e0eeff;margin-bottom:1px;">${card.name}</div>
+      <div style="font-size:0.62rem;color:${card.color};font-weight:600;margin-bottom:5px;">${card.subtitle}</div>
+      <div style="font-size:0.62rem;color:#8ba3c0;">${card.tagline}</div>`;
+    chip.addEventListener('click', () => {
+      if (activeId === card.id) {
+        chip.classList.remove('active');
+        detailContainer.innerHTML = '';
+        activeId = null;
+        return;
+      }
+      grid.querySelectorAll('.ipsids-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeId = card.id;
+      detailContainer.innerHTML = `
+        <div class="ipsids-detail visible">
+          <div style="font-size:1rem;font-weight:800;color:${card.color};margin-bottom:2px;">${card.icon} ${card.name} — ${card.subtitle}</div>
+          <div style="font-size:0.78rem;color:#8ba3c0;margin-bottom:10px;">${card.tagline}</div>
+          ${card.anim}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+            <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px;">
+              <div style="font-size:0.72rem;font-weight:700;color:${card.color};margin-bottom:6px;">📌 Key Facts</div>
+              ${card.keyFacts.map(f=>`<div style="font-size:0.76rem;color:#c8daf0;display:flex;gap:6px;margin-bottom:5px;"><span style="color:${card.color};flex-shrink:0;">•</span>${f}</div>`).join('')}
+            </div>
+            <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px;">
+              <div style="font-size:0.72rem;font-weight:700;color:${card.color};margin-bottom:6px;">🎯 Use Cases</div>
+              ${card.useCases.map(u=>`<div style="font-size:0.76rem;color:#c8daf0;display:flex;gap:6px;margin-bottom:5px;"><span style="color:${card.color};flex-shrink:0;">→</span>${u}</div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+      const animEl = detailContainer.querySelector(`[id$="-anim"]`);
+      if (animEl) card.animInit(animEl);
       detailContainer.scrollIntoView({ behavior:'smooth', block:'nearest' });
     });
     grid.appendChild(chip);
