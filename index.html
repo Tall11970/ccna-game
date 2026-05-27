@@ -5401,16 +5401,7 @@ resource "aci_application_profile" "web" {
       },
       {
         title: 'Common LAN Attacks & Mitigations',
-        body: `<p><strong>ARP Spoofing/Poisoning:</strong> Attacker sends fake ARP replies, associating their MAC with a legitimate IP. Enables MITM.</p>
-<p>→ Mitigate with <strong>Dynamic ARP Inspection (DAI)</strong> on switches.</p>
-<p><strong>DHCP Spoofing:</strong> Rogue DHCP server hands out fake IP/gateway info, redirecting traffic.</p>
-<p>→ Mitigate with <strong>DHCP Snooping</strong> (trust only authorized ports).</p>
-<p><strong>MAC Flooding:</strong> Attacker fills switch CAM table with fake MACs, forcing switch to flood all frames.</p>
-<p>→ Mitigate with <strong>Port Security</strong> (limit MAC addresses per port).</p>
-<p><strong>VLAN Hopping:</strong> Attacker accesses VLANs they shouldn't — via switch spoofing or double tagging.</p>
-<p>→ Mitigate by disabling DTP, using dedicated native VLANs, and restricting trunk ports.</p>
-<p><strong>Rogue AP:</strong> Unauthorized AP connected to network, bypassing security.</p>
-<p>→ Mitigate with wireless intrusion detection and 802.1X on wired ports.</p>`
+        type: 'lan_attacks_cards',
       },
       {
         title: 'Defense in Depth',
@@ -9850,6 +9841,12 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildNACCardsAnim(document.getElementById('nac-cards-root'));
       continue;
+    } else if (section.type === 'lan_attacks_cards') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="lan-attacks-root"></div>`;
+      container.appendChild(card);
+      buildLANAttacksAnim(document.getElementById('lan-attacks-root'));
+      continue;
     } else if (section.type === 'acl_placement_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="acl-place-root"></div>`;
@@ -13461,6 +13458,440 @@ function buildIPSecAnim(root) {
       detailContainer.scrollIntoView({ behavior:'smooth', block:'nearest' });
     });
     grid.appendChild(chip);
+  });
+}
+
+// ── Common LAN Attacks & Mitigations Interactive Cards ────────────────────────
+function buildLANAttacksAnim(root) {
+  const cards = [
+    { id: 'arp',   icon: '☠️',  label: 'ARP Spoofing / Poisoning' },
+    { id: 'dhcp',  icon: '🎭',  label: 'DHCP Spoofing' },
+    { id: 'mac',   icon: '💥',  label: 'MAC Flooding' },
+    { id: 'vlan',  icon: '🪜',  label: 'VLAN Hopping' },
+    { id: 'rap',   icon: '📡',  label: 'Rogue AP' },
+  ];
+
+  root.innerHTML = `
+<style>
+.la-grid{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.la-chip{padding:10px 16px;border-radius:10px;background:rgba(255,70,70,0.1);border:1px solid rgba(255,70,70,0.3);
+         color:#ff6666;cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s;user-select:none}
+.la-chip:hover{background:rgba(255,70,70,0.18);transform:translateY(-2px)}
+.la-chip.active{background:rgba(255,70,70,0.22);border-color:#ff6666;box-shadow:0 0 14px rgba(255,70,70,.35)}
+.la-detail{margin-top:14px;padding:18px;background:rgba(0,0,0,0.3);border-radius:12px;
+           border:1px solid rgba(255,70,70,0.2);animation:la-fade .3s ease}
+@keyframes la-fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ARP table */
+.arp-tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin:8px 0}
+.arp-tbl th{padding:6px 10px;text-align:left;color:#aaa;font-weight:600;border-bottom:1px solid rgba(255,255,255,0.1)}
+.arp-tbl td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:#ccc;transition:all .4s}
+.arp-poisoned{background:rgba(255,50,50,0.2)!important;color:#ff6666!important}
+.arp-legit{background:rgba(0,255,136,0.08)}
+
+/* network node */
+.net-node{padding:8px 12px;border-radius:8px;text-align:center;font-size:.78rem;font-weight:700;min-width:70px}
+.net-row{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap}
+.net-arrow{color:#aaa;font-size:1.1rem}
+
+/* CAM table */
+.cam-row{display:flex;gap:6px;margin:2px 0;font-size:.75rem;font-family:monospace;opacity:0;transform:translateX(8px);transition:all .3s}
+.cam-cell{padding:3px 8px;border-radius:4px;min-width:120px}
+
+/* step reveal */
+.la-step{padding:8px 12px;border-radius:8px;margin:4px 0;font-size:.82rem;opacity:0;transform:translateX(-12px);transition:all .4s}
+
+/* mitigation badge */
+.mit-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;
+           font-size:.82rem;font-weight:700;margin:4px 4px 4px 0}
+
+/* packet bounce */
+@keyframes pkt-bounce{0%{transform:translateX(0)}25%{transform:translateX(60px)}50%{transform:translateX(30px)}75%{transform:translateX(80px)}100%{transform:translateX(0)}}
+.pkt-fly{animation:pkt-bounce 2s ease infinite}
+
+/* flood flash */
+@keyframes flood-flash{0%,100%{opacity:.5}50%{opacity:1}}
+</style>
+<div class="la-grid" id="la-chip-row"></div>
+<div id="la-detail-area"></div>`;
+
+  const chipRow = root.querySelector('#la-chip-row');
+  const detailArea = root.querySelector('#la-detail-area');
+  let activeId = null, animTimers = [];
+  function clearTimers(){ animTimers.forEach(clearTimeout); animTimers=[]; }
+
+  /* ── ARP Spoofing ── */
+  function arpDetail(){
+    return `<div class="la-detail">
+<h3 style="color:#ff6666;margin:0 0 8px">☠️ ARP Spoofing / Poisoning</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">ARP has <strong>no authentication</strong> — any device can send a "gratuitous ARP" claiming any IP. Attacker poisons ARP caches to redirect traffic through themselves (Man-in-the-Middle).</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+  <div>
+    <div style="color:#00ff88;font-size:.8rem;font-weight:600;margin-bottom:6px">✅ BEFORE: Legitimate ARP Table</div>
+    <table class="arp-tbl" id="arp-before">
+      <tr><th>IP Address</th><th>MAC Address</th><th>Type</th></tr>
+      <tr class="arp-legit"><td>10.0.0.1</td><td>AA:BB:CC:11:22:33</td><td>Router</td></tr>
+      <tr class="arp-legit"><td>10.0.0.5</td><td>DD:EE:FF:44:55:66</td><td>Server</td></tr>
+      <tr class="arp-legit"><td>10.0.0.99</td><td>11:22:33:AA:BB:CC</td><td>Attacker</td></tr>
+    </table>
+  </div>
+  <div>
+    <div style="color:#ff6666;font-size:.8rem;font-weight:600;margin-bottom:6px">☠️ AFTER: Poisoned ARP Cache</div>
+    <table class="arp-tbl" id="arp-after">
+      <tr><th>IP Address</th><th>MAC Address</th><th>Type</th></tr>
+      <tr id="arp-row-gw"><td>10.0.0.1</td><td>AA:BB:CC:11:22:33</td><td>Router</td></tr>
+      <tr id="arp-row-sv"><td>10.0.0.5</td><td>DD:EE:FF:44:55:66</td><td>Server</td></tr>
+      <tr class="arp-legit"><td>10.0.0.99</td><td>11:22:33:AA:BB:CC</td><td>Attacker</td></tr>
+    </table>
+  </div>
+</div>
+<div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px">ATTACK FLOW</div>
+<div id="arp-steps">
+${[
+  ['1','Attacker sends unsolicited ARP reply: "10.0.0.1 is at MY MAC (11:22:33:AA:BB:CC)"','rgba(255,50,50,0.1)','#ff6666'],
+  ['2','Victim\'s ARP cache updated — gateway MAC now points to attacker','rgba(255,100,0,0.1)','#ff8800'],
+  ['3','Attacker also poisons gateway: "Victim IP is at MY MAC"','rgba(255,50,50,0.1)','#ff6666'],
+  ['4','All victim↔gateway traffic now flows THROUGH attacker (MITM)','rgba(180,0,0,0.15)','#ff4444'],
+  ['5','Attacker reads, modifies, or drops packets in real time 😈','rgba(180,0,0,0.15)','#ff4444'],
+].map(([n,t,bg,c],i)=>`
+<div class="la-step" id="arp-step-${i}" style="background:${bg};border-left:3px solid ${c}">
+  <span style="color:${c};font-weight:700;margin-right:8px">Step ${n}.</span><span style="color:#ccc">${t}</span>
+</div>`).join('')}
+</div>
+<div style="margin-top:16px;padding:12px 16px;border-radius:10px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3)">
+  <div style="color:#00ff88;font-weight:700;font-size:.9rem;margin-bottom:8px">🛡️ Mitigation: Dynamic ARP Inspection (DAI)</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    ${[
+      ['DHCP Snooping Binding','DAI cross-references ARP against the DHCP snooping table (IP↔MAC↔port)'],
+      ['Trusted vs Untrusted','Uplinks = trusted; access ports = untrusted (ARP validated)'],
+      ['Rate Limiting','Limits ARP packets per port — prevents ARP flood'],
+      ['Drop & Log','Invalid ARP frames silently dropped + logged for alerting'],
+    ].map(([t,d])=>`
+    <div style="flex:1;min-width:130px;padding:8px;border-radius:7px;background:rgba(0,0,0,0.2);border:1px solid rgba(0,255,136,0.2)">
+      <div style="color:#00ff88;font-weight:700;font-size:.78rem;margin-bottom:3px">${t}</div>
+      <div style="color:#aaa;font-size:.75rem">${d}</div>
+    </div>`).join('')}
+  </div>
+  <div style="margin-top:8px;font-family:monospace;font-size:.78rem;color:#00d4ff;background:rgba(0,0,0,0.3);padding:8px;border-radius:6px">
+    ip arp inspection vlan 10<br>
+    interface Gi0/1<br>
+    &nbsp;ip arp inspection trust &nbsp;<span style="color:#aaa">! uplink only</span>
+  </div>
+</div>
+</div>`;
+  }
+
+  /* ── DHCP Spoofing ── */
+  function dhcpDetail(){
+    return `<div class="la-detail">
+<h3 style="color:#ff8800;margin:0 0 8px">🎭 DHCP Spoofing</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">A rogue DHCP server races the legitimate one. First server to respond wins — attacker provides fake gateway/DNS, redirecting ALL client traffic.</p>
+<div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px">RACE CONDITION — WHO RESPONDS FIRST?</div>
+<div style="position:relative;padding:14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.08);margin-bottom:12px">
+  <div class="net-row">
+    <div class="net-node" style="background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.4);color:#00d4ff">💻 Client<br><small style="font-weight:400">DHCP Discover</small></div>
+    <div class="net-arrow" id="dhcp-arrow-leg">──▶</div>
+    <div class="net-node" style="background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88" id="dhcp-legit-srv">✅ Legit DHCP<br><small style="font-weight:400">GW: 10.0.0.1</small></div>
+  </div>
+  <div class="net-row">
+    <div style="width:70px"></div>
+    <div class="net-arrow">──▶</div>
+    <div class="net-node" style="background:rgba(255,50,50,0.12);border:1px solid rgba(255,50,50,0.4);color:#ff6666" id="dhcp-rogue-srv">☠️ Rogue DHCP<br><small style="font-weight:400">GW: Attacker</small></div>
+  </div>
+  <div id="dhcp-winner" style="display:none;margin-top:10px;padding:8px 12px;border-radius:7px;font-size:.82rem;font-weight:700;text-align:center"></div>
+</div>
+<div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:6px">WHAT THE CLIENT RECEIVES (rogue wins)</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+  ${[
+    ['IP Address','192.168.1.55 (legitimate)','#ccc'],
+    ['Subnet Mask','255.255.255.0 (legitimate)','#ccc'],
+    ['Default Gateway','10.0.0.99 ← ATTACKER! ☠️','#ff6666'],
+    ['DNS Server','10.0.0.99 ← ATTACKER! ☠️','#ff6666'],
+  ].map(([f,v,c])=>`
+  <div style="flex:1;min-width:130px;padding:8px;border-radius:7px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
+    <div style="color:#aaa;font-size:.72rem;margin-bottom:2px">${f}</div>
+    <div style="color:${c};font-size:.82rem;font-weight:600">${v}</div>
+  </div>`).join('')}
+</div>
+<div style="padding:12px 16px;border-radius:10px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3)">
+  <div style="color:#00ff88;font-weight:700;font-size:.9rem;margin-bottom:8px">🛡️ Mitigation: DHCP Snooping</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+    ${[
+      ['Trusted Ports','Only uplinks/known DHCP server ports can send DHCP Offers/ACKs'],
+      ['Untrusted Ports','Access ports blocked from sending DHCP server messages'],
+      ['Binding Table','Tracks IP↔MAC↔Port — used by DAI and IP Source Guard'],
+      ['Rate Limiting','Limits DHCP messages per port — stops starvation attacks'],
+    ].map(([t,d])=>`
+    <div style="flex:1;min-width:130px;padding:8px;border-radius:7px;background:rgba(0,0,0,0.2);border:1px solid rgba(0,255,136,0.2)">
+      <div style="color:#00ff88;font-weight:700;font-size:.78rem;margin-bottom:3px">${t}</div>
+      <div style="color:#aaa;font-size:.75rem">${d}</div>
+    </div>`).join('')}
+  </div>
+  <div style="font-family:monospace;font-size:.78rem;color:#00d4ff;background:rgba(0,0,0,0.3);padding:8px;border-radius:6px">
+    ip dhcp snooping<br>
+    ip dhcp snooping vlan 10<br>
+    interface Gi0/1<br>
+    &nbsp;ip dhcp snooping trust &nbsp;<span style="color:#aaa">! uplink to real DHCP server</span>
+  </div>
+</div>
+</div>`;
+  }
+
+  /* ── MAC Flooding ── */
+  function macDetail(){
+    const fakeMacs = [
+      'DE:AD:BE:EF:00:01','DE:AD:BE:EF:00:02','DE:AD:BE:EF:00:03',
+      'DE:AD:BE:EF:00:04','DE:AD:BE:EF:00:05','DE:AD:BE:EF:00:06',
+      'DE:AD:BE:EF:00:07','DE:AD:BE:EF:00:08','DE:AD:BE:EF:00:09',
+      'DE:AD:BE:EF:00:0A','DE:AD:BE:EF:00:0B','DE:AD:BE:EF:00:0C',
+    ];
+    return `<div class="la-detail">
+<h3 style="color:#ffc800;margin:0 0 8px">💥 MAC Flooding</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">Switch CAM tables have limited size (~8K–128K entries). Attacker floods switch with frames using thousands of fake MACs. When CAM fills up, switch fails open — flooding ALL frames out ALL ports like a hub.</p>
+<div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px">CAM TABLE BEING FLOODED <span id="cam-count" style="color:#ff6666;font-weight:700">0 / 12</span> fake entries</div>
+<div id="cam-table" style="max-height:180px;overflow:hidden;background:rgba(0,0,0,0.25);border-radius:8px;padding:8px;border:1px solid rgba(255,255,255,0.08)">
+  <div style="display:flex;gap:6px;margin-bottom:4px;font-size:.7rem;color:#aaa;font-weight:600">
+    <div style="flex:2">MAC Address</div><div style="flex:1">Port</div><div style="flex:1">VLAN</div><div style="flex:1">Type</div>
+  </div>
+  <div style="display:flex;gap:6px;margin:2px 0;font-size:.75rem;font-family:monospace">
+    <div class="cam-cell" style="flex:2;background:rgba(0,255,136,0.1);color:#00ff88">AA:BB:CC:11:22:33</div>
+    <div class="cam-cell" style="flex:1;background:rgba(0,255,136,0.08);color:#00ff88">Gi0/1</div>
+    <div class="cam-cell" style="flex:1;background:rgba(0,255,136,0.08);color:#00ff88">10</div>
+    <div class="cam-cell" style="flex:1;background:rgba(0,255,136,0.08);color:#00ff88">Dynamic</div>
+  </div>
+  ${fakeMacs.map((mac,i)=>`
+  <div class="cam-row" id="cam-fake-${i}">
+    <div class="cam-cell" style="flex:2;background:rgba(255,50,50,0.12);color:#ff6666">${mac}</div>
+    <div class="cam-cell" style="flex:1;background:rgba(255,50,50,0.08);color:#ff8888">Gi0/99</div>
+    <div class="cam-cell" style="flex:1;background:rgba(255,50,50,0.08);color:#ff8888">10</div>
+    <div class="cam-cell" style="flex:1;background:rgba(255,50,50,0.08);color:#ff8888">Fake ☠️</div>
+  </div>`).join('')}
+</div>
+<div id="cam-overflow" style="display:none;margin:10px 0;padding:10px 14px;border-radius:8px;background:rgba(255,50,50,0.15);border:1px solid rgba(255,50,50,0.5);text-align:center;color:#ff6666;font-weight:700;animation:flood-flash 1s infinite">
+  ⚠️ CAM TABLE FULL — SWITCH DEGRADED TO HUB MODE — ALL FRAMES FLOODED TO ALL PORTS
+</div>
+<div style="margin-top:12px;padding:12px 16px;border-radius:10px;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.25)">
+  <div style="color:#00d4ff;font-weight:700;font-size:.9rem;margin-bottom:8px">🛡️ Mitigation: Port Security</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+    ${[
+      ['Max MAC Limit','Restrict port to 1–3 MACs max — extra MACs trigger violation'],
+      ['Sticky Learning','Dynamically learn first MACs and make them permanent'],
+      ['Violation Actions','Shutdown (default) / Restrict (drop+log) / Protect (drop silently)'],
+      ['802.1X Alternative','802.1X provides identity-based access — superior to port security'],
+    ].map(([t,d])=>`
+    <div style="flex:1;min-width:130px;padding:8px;border-radius:7px;background:rgba(0,0,0,0.2);border:1px solid rgba(0,212,255,0.2)">
+      <div style="color:#00d4ff;font-weight:700;font-size:.78rem;margin-bottom:3px">${t}</div>
+      <div style="color:#aaa;font-size:.75rem">${d}</div>
+    </div>`).join('')}
+  </div>
+  <div style="font-family:monospace;font-size:.78rem;color:#00d4ff;background:rgba(0,0,0,0.3);padding:8px;border-radius:6px">
+    interface Gi0/1<br>
+    &nbsp;switchport mode access<br>
+    &nbsp;switchport port-security maximum 2<br>
+    &nbsp;switchport port-security mac-address sticky<br>
+    &nbsp;switchport port-security violation shutdown
+  </div>
+</div>
+</div>`;
+  }
+
+  /* ── VLAN Hopping ── */
+  function vlanDetail(){
+    return `<div class="la-detail">
+<h3 style="color:#cc66ff;margin:0 0 8px">🪜 VLAN Hopping</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">Two techniques allow an attacker to jump between VLANs they shouldn't reach — both exploit default switch behavior.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+  <div style="flex:1;min-width:200px;padding:12px;border-radius:10px;background:rgba(255,50,50,0.08);border:1px solid rgba(255,50,50,0.3)">
+    <div style="color:#ff6666;font-weight:700;font-size:.88rem;margin-bottom:8px">🏷️ Method 1: Double Tagging</div>
+    ${[
+      ['Attacker','Crafts frame with TWO 802.1Q tags — Outer: native VLAN, Inner: target VLAN'],
+      ['Switch 1','Strips OUTER tag (native VLAN — no tag added). Forwards inner-tagged frame.'],
+      ['Switch 2','Sees INNER tag → delivers to target VLAN the attacker doesn\'t belong to!'],
+      ['Limitation','One-way attack only — replies can\'t return to attacker via same path'],
+    ].map(([who,what],i)=>`
+    <div class="la-step" id="vlan-dt-${i}" style="background:rgba(255,50,50,0.08);border-left:3px solid rgba(255,100,100,0.5);padding:6px 10px;margin:3px 0">
+      <span style="color:#ff8888;font-weight:700;font-size:.78rem">${who}: </span><span style="color:#ccc;font-size:.78rem">${what}</span>
+    </div>`).join('')}
+  </div>
+  <div style="flex:1;min-width:200px;padding:12px;border-radius:10px;background:rgba(180,0,255,0.08);border:1px solid rgba(180,0,255,0.3)">
+    <div style="color:#cc66ff;font-weight:700;font-size:.88rem;margin-bottom:8px">🔀 Method 2: Switch Spoofing</div>
+    ${[
+      ['Attacker','Sends DTP (Dynamic Trunking Protocol) negotiation frames'],
+      ['Victim Switch','Port in "dynamic auto" or "dynamic desirable" mode — negotiates trunk!'],
+      ['Result','Attacker port becomes a trunk — can now send/receive ALL VLAN traffic'],
+      ['Full Duplex','Two-way attack — attacker can reach AND receive from all VLANs'],
+    ].map(([who,what],i)=>`
+    <div class="la-step" id="vlan-ss-${i}" style="background:rgba(180,0,255,0.06);border-left:3px solid rgba(180,0,255,0.4);padding:6px 10px;margin:3px 0">
+      <span style="color:#cc66ff;font-weight:700;font-size:.78rem">${who}: </span><span style="color:#ccc;font-size:.78rem">${what}</span>
+    </div>`).join('')}
+  </div>
+</div>
+<div style="padding:12px 16px;border-radius:10px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3)">
+  <div style="color:#00ff88;font-weight:700;font-size:.9rem;margin-bottom:8px">🛡️ Mitigations</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+    ${[
+      ['Disable DTP','Set all access ports to explicit mode — no auto-negotiation:\nswitchport mode access\nswitchport nonegotiate','#00ff88'],
+      ['Change Native VLAN','Move native VLAN from default VLAN 1 to an unused VLAN (e.g., 999). Double-tagging fails.','#00d4ff'],
+      ['Explicit Trunk Config','Manually configure trunks — never rely on DTP auto-negotiation','#ffc800'],
+      ['Prune Allowed VLANs','Limit trunk to only VLANs that are actually needed:\nswitchport trunk allowed vlan 10,20','#cc66ff'],
+    ].map(([t,d,c])=>`
+    <div style="flex:1;min-width:130px;padding:8px;border-radius:7px;background:rgba(0,0,0,0.2);border:1px solid ${c}30">
+      <div style="color:${c};font-weight:700;font-size:.78rem;margin-bottom:3px">${t}</div>
+      <div style="color:#aaa;font-size:.73rem;white-space:pre-line">${d}</div>
+    </div>`).join('')}
+  </div>
+</div>
+</div>`;
+  }
+
+  /* ── Rogue AP ── */
+  function rapDetail(){
+    return `<div class="la-detail">
+<h3 style="color:#00d4ff;margin:0 0 8px">📡 Rogue Access Point</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">A rogue AP is any unauthorized wireless AP connected to the corporate network — whether planted by an attacker or accidentally set up by an employee.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+  <div style="flex:1;min-width:160px;padding:12px;border-radius:10px;background:rgba(255,50,50,0.08);border:1px solid rgba(255,50,50,0.3)">
+    <div style="color:#ff6666;font-weight:700;font-size:.88rem;margin-bottom:6px">☠️ Attacker Rogue AP</div>
+    <div style="color:#ccc;font-size:.8rem;line-height:1.6">
+      • Physically plugged into a switch port<br>
+      • Broadcasts an SSID matching corporate network<br>
+      • Bypasses perimeter firewall entirely<br>
+      • Direct LAN access — no VPN, no firewall check<br>
+      • Can capture credentials and run MITM
+    </div>
+  </div>
+  <div style="flex:1;min-width:160px;padding:12px;border-radius:10px;background:rgba(255,200,0,0.08);border:1px solid rgba(255,200,0,0.3)">
+    <div style="color:#ffc800;font-weight:700;font-size:.88rem;margin-bottom:6px">⚠️ Evil Twin AP</div>
+    <div style="color:#ccc;font-size:.8rem;line-height:1.6">
+      • Clones legitimate SSID + BSSID<br>
+      • Transmits at higher power to "win" clients<br>
+      • Clients connect thinking it's the real AP<br>
+      • All traffic captured (passwords, cookies)<br>
+      • Can serve fake captive portal for creds
+    </div>
+  </div>
+  <div style="flex:1;min-width:160px;padding:12px;border-radius:10px;background:rgba(180,0,255,0.08);border:1px solid rgba(180,0,255,0.3)">
+    <div style="color:#cc66ff;font-weight:700;font-size:.88rem;margin-bottom:6px">😇 Accidental Rogue AP</div>
+    <div style="color:#ccc;font-size:.8rem;line-height:1.6">
+      • Employee plugs in personal router for better Wi-Fi<br>
+      • No malicious intent — but still a security hole<br>
+      • Often uses WEP/open or weak password<br>
+      • Creates uncontrolled entry point to LAN<br>
+      • Equally dangerous as intentional rogue
+    </div>
+  </div>
+</div>
+<div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px">DETECTION & MITIGATION LAYERS</div>
+<div id="rap-steps">
+${[
+  ['📡 WIDS/WIPS','Wireless Intrusion Detection/Prevention System scans RF spectrum, fingerprints all APs, alerts on unknowns — can actively deauth clients from rogue AP','rgba(0,212,255,0.1)','#00d4ff'],
+  ['🔌 802.1X on Wired Ports','Require 802.1X authentication on ALL switch ports — rogue AP can\'t get network access without valid credentials','rgba(0,255,136,0.1)','#00ff88'],
+  ['📍 RF Triangulation','Multiple APs measure signal strength to physically locate rogue AP on a floor map — security team can remove it','rgba(255,200,0,0.1)','#ffc800'],
+  ['🔒 WPA3-Enterprise','Use certificate-based Wi-Fi auth — clients verify server cert, preventing evil twin attacks (fake AP won\'t have valid cert)','rgba(180,0,255,0.1)','#cc66ff'],
+  ['📋 NAC Posture Check','Even if device connects, NAC verifies it meets security requirements before granting full LAN access','rgba(0,255,136,0.08)','#00ff88'],
+].map(([icon,desc,bg,c],i)=>`
+<div class="la-step" id="rap-step-${i}" style="background:${bg};border-left:3px solid ${c};margin:5px 0;padding:8px 12px">
+  <div style="color:${c};font-weight:700;font-size:.82rem;margin-bottom:2px">${icon}</div>
+  <div style="color:#ccc;font-size:.8rem">${desc}</div>
+</div>`).join('')}
+</div>
+<div style="margin-top:12px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.04);font-size:.8rem;color:#aaa">
+  <strong style="color:#e0eeff">📌 CCNA Tip:</strong> Cisco WLC (Wireless LAN Controller) with CAPWAP automatically detects rogue APs in its RF neighborhood and can contain them via deauthentication frames.
+</div>
+</div>`;
+  }
+
+  const builders = { arp:arpDetail, dhcp:dhcpDetail, mac:macDetail, vlan:vlanDetail, rap:rapDetail };
+
+  function startArpAnim(){
+    // Step-by-step attack flow reveals
+    for(let i=0;i<5;i++){
+      const t = setTimeout(()=>{
+        const el = root.querySelector('#arp-step-'+i);
+        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
+      }, i*300+300);
+      animTimers.push(t);
+    }
+    // Poison the ARP table cells
+    const t1 = setTimeout(()=>{
+      const gw = root.querySelector('#arp-row-gw');
+      const sv = root.querySelector('#arp-row-sv');
+      if(gw){ gw.querySelectorAll('td')[1].textContent='11:22:33:AA:BB:CC'; gw.querySelectorAll('td')[1].style.color='#ff6666'; gw.style.background='rgba(255,50,50,0.2)'; }
+      if(sv){ sv.querySelectorAll('td')[1].textContent='11:22:33:AA:BB:CC'; sv.querySelectorAll('td')[1].style.color='#ff6666'; sv.style.background='rgba(255,50,50,0.2)'; }
+    }, 1600);
+    animTimers.push(t1);
+  }
+
+  function startDhcpAnim(){
+    // Show rogue server "winning" the race
+    const winner = root.querySelector('#dhcp-winner');
+    const rogue = root.querySelector('#dhcp-rogue-srv');
+    const t1 = setTimeout(()=>{
+      if(rogue){ rogue.style.boxShadow='0 0 16px rgba(255,50,50,0.7)'; rogue.style.transform='scale(1.05)'; rogue.style.transition='all .3s'; }
+    }, 800);
+    const t2 = setTimeout(()=>{
+      if(winner){ winner.style.display='block'; winner.style.background='rgba(255,50,50,0.15)'; winner.style.border='1px solid rgba(255,50,50,0.5)'; winner.style.color='#ff6666'; winner.innerHTML='☠️ ROGUE SERVER WON THE RACE! Client now uses attacker as gateway.'; }
+    }, 1400);
+    animTimers.push(t1, t2);
+  }
+
+  function startMacAnim(){
+    const fakeCount = 12;
+    const countEl = root.querySelector('#cam-count');
+    for(let i=0;i<fakeCount;i++){
+      const t = setTimeout(()=>{
+        const row = root.querySelector('#cam-fake-'+i);
+        if(row){ row.style.opacity='1'; row.style.transform='translateX(0)'; }
+        if(countEl) countEl.textContent=(i+1)+' / '+fakeCount;
+        if(i===fakeCount-1){
+          const overflow = root.querySelector('#cam-overflow');
+          if(overflow) overflow.style.display='block';
+        }
+      }, i*200+300);
+      animTimers.push(t);
+    }
+  }
+
+  function startVlanAnim(){
+    for(let i=0;i<4;i++){
+      const t1 = setTimeout(()=>{
+        const el = root.querySelector('#vlan-dt-'+i);
+        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
+      }, i*200+200);
+      const t2 = setTimeout(()=>{
+        const el = root.querySelector('#vlan-ss-'+i);
+        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
+      }, i*200+400);
+      animTimers.push(t1, t2);
+    }
+  }
+
+  function startRapAnim(){
+    for(let i=0;i<5;i++){
+      const t = setTimeout(()=>{
+        const el = root.querySelector('#rap-step-'+i);
+        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
+      }, i*250+200);
+      animTimers.push(t);
+    }
+  }
+
+  const animStarters = { arp:startArpAnim, dhcp:startDhcpAnim, mac:startMacAnim, vlan:startVlanAnim, rap:startRapAnim };
+
+  cards.forEach(card => {
+    const chip = document.createElement('div');
+    chip.className = 'la-chip';
+    chip.textContent = card.icon + ' ' + card.label;
+    chip.onclick = () => {
+      clearTimers();
+      if(activeId === card.id){ activeId=null; detailArea.innerHTML=''; chip.classList.remove('active'); return; }
+      root.querySelectorAll('.la-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      activeId = card.id;
+      detailArea.innerHTML = builders[card.id]();
+      if(animStarters[card.id]) animStarters[card.id]();
+    };
+    chipRow.appendChild(chip);
   });
 }
 
