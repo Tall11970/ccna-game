@@ -13449,6 +13449,54 @@ function buildIPSecAnim(root) {
   });
 }
 
+// ── Shared Step Player ───────────────────────────────────────────────────────
+(function(){
+  var s = document.createElement('style');
+  s.textContent = '.sp-ctrl{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);margin-bottom:14px}' +
+    '.sp-btn{padding:5px 11px;border:1px solid rgba(255,255,255,0.18);border-radius:6px;background:rgba(255,255,255,0.07);color:#e0eeff;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s}' +
+    '.sp-btn:hover:not(:disabled){background:rgba(255,255,255,0.14);transform:translateY(-1px)}' +
+    '.sp-btn:disabled{opacity:.3;cursor:default;transform:none}' +
+    '.sp-auto-btn{background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.35);color:#00d4ff}' +
+    '.sp-auto-btn.sp-playing{background:rgba(255,200,0,0.12);border-color:rgba(255,200,0,0.4);color:#ffc800}' +
+    '.sp-reset-btn{background:rgba(255,100,0,0.08);border-color:rgba(255,100,0,0.3);color:#ff8800}' +
+    '.sp-count{font-size:.8rem;color:#aaa;font-weight:600;flex:1;text-align:center;min-width:80px}';
+  document.head.appendChild(s);
+})();
+
+window.makeStepPlayer = function(container, steps, delay) {
+  if(!container || !steps || !steps.length) return null;
+  var cur=-1, total=steps.length, isAuto=false, timer=null;
+  var ctrl = document.createElement('div');
+  ctrl.className = 'sp-ctrl';
+  ctrl.innerHTML = '<button class="sp-btn sp-prev-btn">◀ Prev</button><span class="sp-count"></span><button class="sp-btn sp-next-btn">Next ▶</button><button class="sp-btn sp-auto-btn">▶ Auto</button><button class="sp-btn sp-reset-btn">↺ Reset</button>';
+  var prevBtn=ctrl.querySelector('.sp-prev-btn'), nextBtn=ctrl.querySelector('.sp-next-btn');
+  var autoBtn=ctrl.querySelector('.sp-auto-btn'), resetBtn=ctrl.querySelector('.sp-reset-btn');
+  var cntEl=ctrl.querySelector('.sp-count');
+  if(container.firstChild) container.insertBefore(ctrl,container.firstChild); else container.appendChild(ctrl);
+  function upd(){
+    prevBtn.disabled=cur<0; nextBtn.disabled=cur>=total-1;
+    cntEl.textContent='Step '+(cur+1)+' of '+total;
+    autoBtn.textContent=isAuto?'⏸ Stop':'▶ Auto';
+    autoBtn.className='sp-btn sp-auto-btn'+(isAuto?' sp-playing':'');
+  }
+  function go(idx){
+    idx=Math.max(-1,Math.min(total-1,idx));
+    if(idx>cur){ for(var i=cur+1;i<=idx;i++) if(steps[i]&&steps[i].show) steps[i].show(); }
+    else        { for(var i=cur;i>idx;i--)   if(steps[i]&&steps[i].hide) steps[i].hide(); }
+    cur=idx; upd();
+  }
+  function stop(){ clearTimeout(timer); isAuto=false; upd(); }
+  function auto(){
+    if(isAuto){stop();return;}
+    isAuto=true; upd();
+    (function tick(){ if(cur<total-1&&isAuto){go(cur+1);timer=setTimeout(tick,delay);}else stop(); })();
+  }
+  prevBtn.onclick=function(){stop();go(cur-1);}; nextBtn.onclick=function(){stop();go(cur+1);};
+  autoBtn.onclick=auto; resetBtn.onclick=function(){stop();go(-1);};
+  upd();
+  return {go:go,stop:stop,auto:auto};
+};
+
 // ── Defense in Depth Interactive Cards ───────────────────────────────────────
 function buildDefenseDepthAnim(root) {
   const layers = [
@@ -13568,28 +13616,25 @@ function buildDefenseDepthAnim(root) {
 
   /* ── ring SVG animate in ── */
   function animateRings(){
-    // Center first
-    const cr = root.querySelector('#did-center-ring');
-    const cl = root.querySelector('#did-center-label');
-    if(cr) cr.style.opacity='1'; if(cl) cl.style.opacity='1';
-    // Rings from inside out
-    [...layers].reverse().forEach((l,i)=>{
-      const t = setTimeout(()=>{
-        const ring = root.querySelector('#did-ring-'+l.id);
-        const lbl  = root.querySelector('#did-label-'+l.id);
-        if(ring) ring.style.opacity='1';
-        if(lbl)  lbl.style.opacity='1';
-      }, i*120);
-      animTimers.push(t);
+    var cr=root.querySelector('#did-center-ring'), cl=root.querySelector('#did-center-label');
+    var layersRev=[...layers].reverse();
+    var allSteps=[{
+      show:function(){if(cr)cr.style.opacity='1';if(cl)cl.style.opacity='1';},
+      hide:function(){if(cr)cr.style.opacity='0';if(cl)cl.style.opacity='0';}
+    }];
+    layersRev.forEach(function(l){
+      allSteps.push({
+        show:function(){var r=root.querySelector('#did-ring-'+l.id),lb=root.querySelector('#did-label-'+l.id);if(r)r.style.opacity='1';if(lb)lb.style.opacity='1';},
+        hide:function(){var r=root.querySelector('#did-ring-'+l.id),lb=root.querySelector('#did-label-'+l.id);if(r)r.style.opacity='0';if(lb)lb.style.opacity='0';}
+      });
     });
-    // Best practice checklist
-    for(let i=0;i<8;i++){
-      const t = setTimeout(()=>{
-        const el = root.querySelector('#bp-'+i);
-        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
-      }, i*100 + 900);
-      animTimers.push(t);
+    for(var bi=0;bi<8;bi++){
+      (function(idx){allSteps.push({
+        show:function(){var e=root.querySelector('#bp-'+idx);if(e){e.style.opacity='1';e.style.transform='translateX(0)';}},
+        hide:function(){var e=root.querySelector('#bp-'+idx);if(e){e.style.opacity='0';e.style.transform='translateX(-10px)';}},
+      });})(bi);
     }
+    makeStepPlayer(root.querySelector('.did-ring-area'), allSteps, 400);
   }
 
   /* ── layer detail builders ── */
@@ -14185,77 +14230,76 @@ ${[
 
   const builders = { arp:arpDetail, dhcp:dhcpDetail, mac:macDetail, vlan:vlanDetail, rap:rapDetail };
 
+  function elStep(id,showTx,hideTx){
+    return {
+      show:function(){var e=root.querySelector(id);if(e){e.style.opacity='1';e.style.transform=showTx||'translateX(0)';}},
+      hide:function(){var e=root.querySelector(id);if(e){e.style.opacity='0';e.style.transform=hideTx||'translateX(-12px)';}}
+    };
+  }
+
   function startArpAnim(){
-    // Step-by-step attack flow reveals
-    for(let i=0;i<5;i++){
-      const t = setTimeout(()=>{
-        const el = root.querySelector('#arp-step-'+i);
-        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
-      }, i*300+300);
-      animTimers.push(t);
-    }
-    // Poison the ARP table cells
-    const t1 = setTimeout(()=>{
-      const gw = root.querySelector('#arp-row-gw');
-      const sv = root.querySelector('#arp-row-sv');
-      if(gw){ gw.querySelectorAll('td')[1].textContent='11:22:33:AA:BB:CC'; gw.querySelectorAll('td')[1].style.color='#ff6666'; gw.style.background='rgba(255,50,50,0.2)'; }
-      if(sv){ sv.querySelectorAll('td')[1].textContent='11:22:33:AA:BB:CC'; sv.querySelectorAll('td')[1].style.color='#ff6666'; sv.style.background='rgba(255,50,50,0.2)'; }
-    }, 1600);
-    animTimers.push(t1);
+    var orig={gw:'AA:BB:CC:11:22:33',sv:'DD:EE:FF:44:55:66'};
+    function poisonRow(sel){var r=root.querySelector(sel);if(!r)return;var c=r.querySelectorAll('td')[1];c.textContent='11:22:33:AA:BB:CC';c.style.color='#ff6666';c.style.transition='color .4s';r.style.background='rgba(255,50,50,0.2)';r.style.transition='background .4s';}
+    function restoreRow(sel,mac){var r=root.querySelector(sel);if(!r)return;var c=r.querySelectorAll('td')[1];c.textContent=mac;c.style.color='';r.style.background='';}
+    var steps=[
+      elStep('#arp-step-0'),
+      elStep('#arp-step-1'),
+      {show:function(){elStep('#arp-step-2').show();poisonRow('#arp-row-gw');poisonRow('#arp-row-sv');},
+       hide:function(){elStep('#arp-step-2').hide();restoreRow('#arp-row-gw',orig.gw);restoreRow('#arp-row-sv',orig.sv);}},
+      elStep('#arp-step-3'),
+      elStep('#arp-step-4'),
+    ];
+    makeStepPlayer(root.querySelector('.la-detail'),steps,700);
   }
 
   function startDhcpAnim(){
-    // Show rogue server "winning" the race
-    const winner = root.querySelector('#dhcp-winner');
-    const rogue = root.querySelector('#dhcp-rogue-srv');
-    const t1 = setTimeout(()=>{
-      if(rogue){ rogue.style.boxShadow='0 0 16px rgba(255,50,50,0.7)'; rogue.style.transform='scale(1.05)'; rogue.style.transition='all .3s'; }
-    }, 800);
-    const t2 = setTimeout(()=>{
-      if(winner){ winner.style.display='block'; winner.style.background='rgba(255,50,50,0.15)'; winner.style.border='1px solid rgba(255,50,50,0.5)'; winner.style.color='#ff6666'; winner.innerHTML='☠️ ROGUE SERVER WON THE RACE! Client now uses attacker as gateway.'; }
-    }, 1400);
-    animTimers.push(t1, t2);
+    var steps=[
+      {show:function(){var r=root.querySelector('#dhcp-rogue-srv');if(r){r.style.boxShadow='0 0 16px rgba(255,50,50,0.7)';r.style.transform='scale(1.05)';r.style.transition='all .3s';}},
+       hide:function(){var r=root.querySelector('#dhcp-rogue-srv');if(r){r.style.boxShadow='';r.style.transform='';}},
+      },
+      {show:function(){var w=root.querySelector('#dhcp-winner');if(w){w.style.display='block';w.style.background='rgba(255,50,50,0.15)';w.style.border='1px solid rgba(255,50,50,0.5)';w.style.color='#ff6666';w.innerHTML='☠️ ROGUE SERVER WON THE RACE! Client now uses attacker as gateway.';}},
+       hide:function(){var w=root.querySelector('#dhcp-winner');if(w)w.style.display='none';},
+      },
+    ];
+    makeStepPlayer(root.querySelector('.la-detail'),steps,1600);
   }
 
   function startMacAnim(){
-    const fakeCount = 12;
-    const countEl = root.querySelector('#cam-count');
-    for(let i=0;i<fakeCount;i++){
-      const t = setTimeout(()=>{
-        const row = root.querySelector('#cam-fake-'+i);
-        if(row){ row.style.opacity='1'; row.style.transform='translateX(0)'; }
-        if(countEl) countEl.textContent=(i+1)+' / '+fakeCount;
-        if(i===fakeCount-1){
-          const overflow = root.querySelector('#cam-overflow');
-          if(overflow) overflow.style.display='block';
-        }
-      }, i*200+300);
-      animTimers.push(t);
+    var countEl=root.querySelector('#cam-count');
+    var steps=[];
+    for(var mi=0;mi<12;mi++){
+      (function(idx){steps.push({
+        show:function(){var r=root.querySelector('#cam-fake-'+idx);if(r){r.style.opacity='1';r.style.transform='translateX(0)';}if(countEl)countEl.textContent=(idx+1)+' / 12';},
+        hide:function(){var r=root.querySelector('#cam-fake-'+idx);if(r){r.style.opacity='0';r.style.transform='translateX(8px)';}if(countEl)countEl.textContent=idx+' / 12';},
+      });})(mi);
     }
+    steps.push({
+      show:function(){var ov=root.querySelector('#cam-overflow');if(ov)ov.style.display='block';},
+      hide:function(){var ov=root.querySelector('#cam-overflow');if(ov)ov.style.display='none';},
+    });
+    makeStepPlayer(root.querySelector('.la-detail'),steps,400);
   }
 
   function startVlanAnim(){
-    for(let i=0;i<4;i++){
-      const t1 = setTimeout(()=>{
-        const el = root.querySelector('#vlan-dt-'+i);
-        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
-      }, i*200+200);
-      const t2 = setTimeout(()=>{
-        const el = root.querySelector('#vlan-ss-'+i);
-        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
-      }, i*200+400);
-      animTimers.push(t1, t2);
+    var steps=[];
+    for(var vi=0;vi<4;vi++){
+      (function(idx){steps.push({
+        show:function(){var dt=root.querySelector('#vlan-dt-'+idx),ss=root.querySelector('#vlan-ss-'+idx);if(dt){dt.style.opacity='1';dt.style.transform='translateX(0)';}if(ss){ss.style.opacity='1';ss.style.transform='translateX(0)';}},
+        hide:function(){var dt=root.querySelector('#vlan-dt-'+idx),ss=root.querySelector('#vlan-ss-'+idx);if(dt){dt.style.opacity='0';dt.style.transform='translateX(-12px)';}if(ss){ss.style.opacity='0';ss.style.transform='translateX(-12px)';}},
+      });})(vi);
     }
+    makeStepPlayer(root.querySelector('.la-detail'),steps,500);
   }
 
   function startRapAnim(){
-    for(let i=0;i<5;i++){
-      const t = setTimeout(()=>{
-        const el = root.querySelector('#rap-step-'+i);
-        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
-      }, i*250+200);
-      animTimers.push(t);
+    var steps=[];
+    for(var ri=0;ri<5;ri++){
+      (function(idx){steps.push({
+        show:function(){var e=root.querySelector('#rap-step-'+idx);if(e){e.style.opacity='1';e.style.transform='translateX(0)';}},
+        hide:function(){var e=root.querySelector('#rap-step-'+idx);if(e){e.style.opacity='0';e.style.transform='translateX(-12px)';}},
+      });})(ri);
     }
+    makeStepPlayer(root.querySelector('.la-detail'),steps,600);
   }
 
   const animStarters = { arp:startArpAnim, dhcp:startDhcpAnim, mac:startMacAnim, vlan:startVlanAnim, rap:startRapAnim };
@@ -14430,28 +14474,6 @@ function buildNACCardsAnim(root) {
     </div>`).join('')}
   </div>
 </div>
-<script>
-window._dot1x_msgs = ${JSON.stringify(msgs)};
-(function(){
-  var area = document.getElementById('dot1x-msg-area');
-  if(!area) return;
-  window._dot1x_msgs.forEach(function(m,i){
-    setTimeout(function(){
-      var cols = ['#00d4ff','#ffc800','#cc66ff'];
-      var labels = ['Supplicant','Authenticator','Auth Server'];
-      var from = m[0], to = m[1], txt = m[2], c = m[3];
-      var d = document.createElement('div');
-      d.className = 'dot1x-msg';
-      var arrow = from < to ? '→' : '←';
-      d.style.cssText = 'font-size:.78rem;padding:5px 10px;border-radius:6px;margin:3px 0;opacity:0;transform:translateY(6px);transition:all .35s;background:'+c+'18;border-left:3px solid '+c+';color:#ccc';
-      d.innerHTML = '<span style="color:'+cols[from]+';font-weight:700">'+labels[from]+'</span> <span style="color:'+c+'">'+arrow+'</span> <span style="color:'+cols[to]+';font-weight:700">'+labels[to]+'</span>: <span style="color:'+c+'">'+txt+'</span>';
-      area.appendChild(d);
-      requestAnimationFrame(function(){ d.style.opacity='1'; d.style.transform='translateY(0)'; });
-      area.scrollTop = area.scrollHeight;
-    }, i*550 + 300);
-  });
-})();
-<\/script>
 </div>`;
   }
 
@@ -14495,17 +14517,6 @@ ${methods.map((m,i)=>`
     </div>
   </div>
 </div>`).join('')}
-<script>
-window.nacToggleEAP = function(i){
-  var box = document.getElementById('eap-detail-'+i);
-  var arrow = document.getElementById('eap-arrow-'+i);
-  if(!box) return;
-  var open = box.style.display === 'block';
-  document.querySelectorAll('.eap-detail-box').forEach(function(b){ b.style.display='none'; });
-  document.querySelectorAll('[id^="eap-arrow-"]').forEach(function(a){ a.textContent='▼'; });
-  if(!open){ box.style.display='block'; if(arrow) arrow.textContent='▲'; }
-};
-<\/script>
 </div>`;
   }
 
@@ -14653,21 +14664,63 @@ window.nacToggleEAP = function(i){
 
   const builders = { nac:nacDetail, dot1x:dot1xDetail, eap:eapDetail, radius:radiusDetail, tacacs:tacacsDetail, cmp:cmpDetail };
 
+  window.nacToggleEAP = function(i){
+    var box=document.getElementById('eap-detail-'+i), arrow=document.getElementById('eap-arrow-'+i);
+    if(!box) return;
+    var open=box.style.display==='block';
+    document.querySelectorAll('.eap-detail-box').forEach(function(b){b.style.display='none';});
+    document.querySelectorAll('[id^="eap-arrow-"]').forEach(function(a){a.textContent='▼';});
+    if(!open){box.style.display='block';if(arrow)arrow.textContent='▲';}
+  };
+
+  function initDot1xPlayer(r){
+    var msgs=[
+      [0,1,'EAPOL-Start','#00d4ff'],[1,0,'EAP-Request/Identity','#ffc800'],
+      [0,1,'EAP-Response/Identity','#00d4ff'],[1,2,'RADIUS Access-Request','#cc66ff'],
+      [2,1,'RADIUS Access-Challenge','#cc66ff'],[1,0,'EAP-Request/Challenge','#ffc800'],
+      [0,1,'EAP-Response/Credentials','#00d4ff'],[1,2,'RADIUS Access-Request','#cc66ff'],
+      [2,1,'RADIUS Access-Accept ✅','#00ff88'],[1,0,'EAP-Success — Port Opened 🎉','#00ff88'],
+    ];
+    var cols=['#00d4ff','#ffc800','#cc66ff'], labels=['Supplicant','Authenticator','Auth Server'];
+    var area=r.querySelector('#dot1x-msg-area');
+    if(!area) return;
+    var msgEls=msgs.map(function(m){
+      var from=m[0],to=m[1],txt=m[2],c=m[3],arrow=from<to?'→':'←';
+      var d=document.createElement('div');
+      d.style.cssText='font-size:.78rem;padding:5px 10px;border-radius:6px;margin:3px 0;opacity:0;transform:translateY(6px);transition:all .35s;background:'+c+'18;border-left:3px solid '+c+';color:#ccc';
+      d.innerHTML='<span style="color:'+cols[from]+';font-weight:700">'+labels[from]+'</span> <span style="color:'+c+'">'+arrow+'</span> <span style="color:'+cols[to]+';font-weight:700">'+labels[to]+'</span>: <span style="color:'+c+'">'+txt+'</span>';
+      area.appendChild(d);
+      return d;
+    });
+    var steps=msgEls.map(function(d){
+      return {
+        show:function(){d.style.opacity='1';d.style.transform='translateY(0)';area.scrollTop=area.scrollHeight;},
+        hide:function(){d.style.opacity='0';d.style.transform='translateY(6px)';}
+      };
+    });
+    makeStepPlayer(r.querySelector('.nac-detail'),steps,1200);
+  }
+
   function startNacAnim(){
-    for(let i=0;i<6;i++){
-      const t = setTimeout(()=>{
-        const el = root.querySelector('#ps-'+i);
-        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
-      }, i*200+200);
-      animTimers.push(t);
+    var steps=[];
+    for(var ni=0;ni<6;ni++){
+      (function(idx){steps.push({
+        show:function(){var e=root.querySelector('#ps-'+idx);if(e){e.style.opacity='1';e.style.transform='translateX(0)';}},
+        hide:function(){var e=root.querySelector('#ps-'+idx);if(e){e.style.opacity='0';e.style.transform='translateX(-14px)';}},
+      });})(ni);
     }
+    makeStepPlayer(root.querySelector('.nac-detail'),steps,500);
   }
 
   function startCmpAnim(){
-    root.querySelectorAll('[data-cmp-row]').forEach((el,i)=>{
-      const t = setTimeout(()=>{ el.style.opacity='1'; el.style.transform='translateX(0)'; }, i*120+300);
-      animTimers.push(t);
+    var els=Array.from(root.querySelectorAll('[data-cmp-row]'));
+    var steps=els.map(function(el){
+      return {
+        show:function(){el.style.opacity='1';el.style.transform='translateX(0)';},
+        hide:function(){el.style.opacity='0';el.style.transform='translateX(-10px)';}
+      };
     });
+    makeStepPlayer(root.querySelector('.nac-detail'),steps,350);
   }
 
   cards.forEach(card => {
@@ -14683,6 +14736,7 @@ window.nacToggleEAP = function(i){
       detailArea.innerHTML = builders[card.id]();
       if(card.id==='nac') startNacAnim();
       if(card.id==='cmp') startCmpAnim();
+      if(card.id==='dot1x') initDot1xPlayer(root);
     };
     chipRow.appendChild(chip);
   });
@@ -14826,7 +14880,13 @@ function buildCryptoAnim(root) {
     <div class="dh-arrow-right" id="dh-mid-arrow">⟷</div>
     <div class="dh-block" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:#00d4ff" id="dh-bob">Bob 👨</div>
   </div>
-  <div id="dh-steps" style="font-size:.82rem;color:#ccc;margin-top:8px"></div>
+  <div id="dh-steps" style="font-size:.82rem;color:#ccc;margin-top:8px">
+    <div id="dh-step-0" style="padding:4px 0;opacity:0;transition:opacity .4s;color:#ccc">1. Alice and Bob agree on public parameters (large prime <strong style="color:#aaa">p</strong>, generator <strong style="color:#aaa">g</strong>)</div>
+    <div id="dh-step-1" style="padding:4px 0;opacity:0;transition:opacity .4s;color:#ccc">2. Alice chooses secret <strong style="color:#ffc800">a</strong>, computes A = g<sup>a</sup> mod p → sends <span style="color:#00d4ff">A</span> to Bob</div>
+    <div id="dh-step-2" style="padding:4px 0;opacity:0;transition:opacity .4s;color:#ccc">3. Bob chooses secret <strong style="color:#cc66ff">b</strong>, computes B = g<sup>b</sup> mod p → sends <span style="color:#00d4ff">B</span> to Alice</div>
+    <div id="dh-step-3" style="padding:4px 0;opacity:0;transition:opacity .4s;color:#ccc">4. Alice computes: B<sup>a</sup> mod p = <span style="color:#00ff88">shared secret</span></div>
+    <div id="dh-step-4" style="padding:4px 0;opacity:0;transition:opacity .4s;color:#ccc">5. Bob computes: A<sup>b</sup> mod p = <span style="color:#00ff88">same shared secret!</span></div>
+  </div>
   <div id="dh-shared" style="display:none;margin-top:10px;padding:10px;border-radius:8px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.4);text-align:center;color:#00ff88;font-weight:700">
     🎉 Shared Secret Established — Without Ever Transmitting It!
   </div>
@@ -14853,6 +14913,9 @@ function buildCryptoAnim(root) {
       ['Hello!', 'SHA-256', 'b45cffe084dd3d20d928...1ecc4f94'],
       ['NetQuest', 'SHA-256', 'f2ca1bb6c7e907d06da5...b3c7e9c4'],
     ];
+    // Store in global so crHashNext (defined below) can access without inline script
+    window._crHashSamples = samples;
+    window._crHashIdx = 0;
     let hi = 0;
     return `<div class="cr-detail">
 <h3 style="color:#cc66ff;margin:0 0 10px">#️⃣ Hashing</h3>
@@ -14885,18 +14948,6 @@ function buildCryptoAnim(root) {
     </div>`).join('')}
   </div>
 </div>
-<script>
-window._cr_hash_samples = ${JSON.stringify(samples)};
-window._cr_hash_idx = 0;
-window.crHashNext = function() {
-  window._cr_hash_idx = (window._cr_hash_idx + 1) % window._cr_hash_samples.length;
-  var s = window._cr_hash_samples[window._cr_hash_idx];
-  var inp = document.getElementById('hash-input-box');
-  var out = document.getElementById('hash-out-box');
-  if(inp) inp.textContent = s[0];
-  if(out){ out.style.opacity='0'; setTimeout(function(){ out.textContent=s[2]; out.style.opacity='1'; out.style.transition='opacity .4s'; },200); }
-};
-<\/script>
 </div>`;
   }
 
@@ -14993,74 +15044,76 @@ window.crHashNext = function() {
 
   const detailBuilders = { sym: symDetail, asym: asymDetail, hash: hashDetail, hmac: hmacDetail, pki: pkiDetail };
 
+  window.crHashNext = function() {
+    if(!window._crHashSamples) return;
+    window._crHashIdx = (window._crHashIdx + 1) % window._crHashSamples.length;
+    var s = window._crHashSamples[window._crHashIdx];
+    var inp = document.getElementById('hash-input-box');
+    var out = document.getElementById('hash-out-box');
+    if(inp) inp.textContent = s[0];
+    if(out){ out.style.opacity='0'; setTimeout(function(){ out.textContent=s[2]; out.style.opacity='1'; out.style.transition='opacity .4s'; },200); }
+  };
+
   function startSymAnim() {
-    const stages = ['sym-enc-box','sym-cipher','sym-dec-box','sym-recovered'];
-    const progs = [25,50,75,100];
-    const prog = root.querySelector('#sym-prog');
-    stages.forEach((id,i) => {
-      const t = setTimeout(() => {
-        const el = root.querySelector('#'+id);
-        if(el){ el.style.boxShadow='0 0 14px rgba(255,200,0,0.6)'; el.style.transform='scale(1.05)'; el.style.transition='all .3s'; }
-        if(prog) prog.style.width = progs[i]+'%';
-        if(i > 0){
-          const prev = root.querySelector('#'+stages[i-1]);
-          if(prev){ prev.style.boxShadow='none'; prev.style.transform='scale(1)'; }
+    var stages=['sym-enc-box','sym-cipher','sym-dec-box','sym-recovered'], progs=[25,50,75,100];
+    var prog=root.querySelector('#sym-prog');
+    var steps=stages.map(function(id,i){
+      return {
+        show:function(){
+          var el=root.querySelector('#'+id);
+          if(el){el.style.boxShadow='0 0 14px rgba(255,200,0,0.6)';el.style.transform='scale(1.05)';el.style.transition='all .3s';}
+          if(prog) prog.style.width=progs[i]+'%';
+          if(i>0){var p=root.querySelector('#'+stages[i-1]);if(p){p.style.boxShadow='none';p.style.transform='scale(1)';}}
+        },
+        hide:function(){
+          var el=root.querySelector('#'+id);
+          if(el){el.style.boxShadow='none';el.style.transform='scale(1)';}
+          if(prog) prog.style.width=(i>0?progs[i-1]:0)+'%';
+          if(i>0){var p=root.querySelector('#'+stages[i-1]);if(p){p.style.boxShadow='0 0 14px rgba(255,200,0,0.6)';p.style.transform='scale(1.05)';}}
         }
-      }, i * 700 + 300);
-      animTimers.push(t);
+      };
     });
+    makeStepPlayer(root.querySelector('.cr-detail'),steps,1400);
   }
 
   function startAsymAnim() {
-    const steps = [
-      '1. Alice and Bob agree on public parameters (large prime p, generator g)',
-      '2. Alice chooses secret <strong style="color:#ffc800">a</strong>, computes A = g^a mod p → sends <span style="color:#00d4ff">A</span> to Bob',
-      '3. Bob chooses secret <strong style="color:#cc66ff">b</strong>, computes B = g^b mod p → sends <span style="color:#00d4ff">B</span> to Alice',
-      '4. Alice computes: B^a mod p = <span style="color:#00ff88">shared secret</span>',
-      '5. Bob computes:  A^b mod p = <span style="color:#00ff88">same shared secret!</span>',
-    ];
-    const container = root.querySelector('#dh-steps');
-    const sharedBox = root.querySelector('#dh-shared');
-    if(!container) return;
-    steps.forEach((txt,i) => {
-      const t = setTimeout(() => {
-        const d = document.createElement('div');
-        d.innerHTML = txt;
-        d.style.cssText='padding:4px 0;color:#ccc;font-size:.82rem;opacity:0;transition:opacity .4s';
-        container.appendChild(d);
-        requestAnimationFrame(() => d.style.opacity='1');
-        if(i===steps.length-1 && sharedBox){ sharedBox.style.display='block'; sharedBox.style.animation='cr-fade .5s ease'; }
-      }, i*550 + 200);
-      animTimers.push(t);
+    var sharedBox=root.querySelector('#dh-shared');
+    var steps=[];
+    for(var ai=0;ai<5;ai++){
+      (function(idx){steps.push({
+        show:function(){var e=root.querySelector('#dh-step-'+idx);if(e)e.style.opacity='1';if(idx===4&&sharedBox){sharedBox.style.display='block';sharedBox.style.animation='cr-fade .5s ease';}},
+        hide:function(){var e=root.querySelector('#dh-step-'+idx);if(e)e.style.opacity='0';if(idx===4&&sharedBox)sharedBox.style.display='none';}
+      });})(ai);
+    }
+    // RSA bars as final step
+    steps.push({
+      show:function(){root.querySelectorAll('.rsa-bar').forEach(function(b){b.style.width=b.dataset.w+'%';});},
+      hide:function(){root.querySelectorAll('.rsa-bar').forEach(function(b){b.style.width='0%';});}
     });
-    // RSA bars
-    const t2 = setTimeout(() => {
-      root.querySelectorAll('.rsa-bar').forEach(b => { b.style.width = b.dataset.w + '%'; });
-    }, 400);
-    animTimers.push(t2);
+    makeStepPlayer(root.querySelector('.cr-detail'),steps,1100);
   }
 
   function startHmacAnim() {
-    root.querySelectorAll('[data-step="hmac"]').forEach((el,i) => {
-      const t = setTimeout(() => {
-        el.style.opacity = '1';
-        el.style.transform = 'translateX(0)';
-      }, i * 250 + 300);
-      animTimers.push(t);
+    var els=Array.from(root.querySelectorAll('[data-step="hmac"]'));
+    var steps=els.map(function(el){
+      return {
+        show:function(){el.style.opacity='1';el.style.transform='translateX(0)';},
+        hide:function(){el.style.opacity='0';el.style.transform='translateX(-16px)';}
+      };
     });
+    makeStepPlayer(root.querySelector('.cr-detail'),steps,600);
   }
 
   function startPkiAnim() {
-    root.querySelectorAll('.pki-connector').forEach((c,i) => {
-      c.style.cssText = 'width:2px;height:0;background:linear-gradient(#ffc800,#00d4ff);margin-left:24px;transition:height .5s ease';
-      const t = setTimeout(() => { c.style.height='16px'; }, i*300+200);
-      animTimers.push(t);
-    });
-    root.querySelectorAll('.pki-step').forEach((el,i) => {
-      el.style.cssText += ';opacity:0;transform:translateY(10px);transition:all .4s ease ' + (i*0.12) + 's';
-      const t = setTimeout(() => { el.style.opacity='1'; el.style.transform='translateY(0)'; }, i*120+400);
-      animTimers.push(t);
-    });
+    var conns=Array.from(root.querySelectorAll('.pki-connector'));
+    conns.forEach(function(c){c.style.cssText='width:2px;height:0;background:linear-gradient(#ffc800,#00d4ff);margin-left:24px;transition:height .5s ease';});
+    var pkiSteps=Array.from(root.querySelectorAll('.pki-step'));
+    pkiSteps.forEach(function(el){el.style.opacity='0';el.style.transform='translateY(10px)';el.style.transition='all .4s ease';});
+    var steps=[
+      ...conns.map(function(c){return {show:function(){c.style.height='16px';},hide:function(){c.style.height='0';}};}),
+      ...pkiSteps.map(function(el){return {show:function(){el.style.opacity='1';el.style.transform='translateY(0)';},hide:function(){el.style.opacity='0';el.style.transform='translateY(10px)';}};}),
+    ];
+    makeStepPlayer(root.querySelector('.cr-detail'),steps,700);
   }
 
   cards.forEach(card => {
