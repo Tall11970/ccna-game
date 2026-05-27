@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { apiClient, AnalyticsOverview } from '../services/api';
 import { TrendingUp, Users, Activity, Calendar } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './DashboardPage.css';
 
 interface DashboardPageProps {
@@ -119,6 +120,109 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
           <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
             Active users ÷ total users (7d)
           </div>
+        </div>
+      </div>
+
+      {/* Mini Pie Charts Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '24px' }}>
+
+        {/* Engagement Rate Donut */}
+        <div className="card" style={{ textAlign: 'center' }}>
+          <h4 style={{ marginBottom: '2px', fontSize: '0.95rem' }}>⚡ Engagement Rate</h4>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', marginBottom: '0' }}>Active vs total users (7d)</p>
+          <ResponsiveContainer width="100%" height={180}>
+            <PieChart>
+              <Pie
+                data={[
+                  { name: 'Active (7d)', value: analytics?.activeUsersLast7Days || 0 },
+                  { name: 'Inactive', value: Math.max(0, (analytics?.totalUsers || 0) - (analytics?.activeUsersLast7Days || 0)) },
+                ]}
+                cx="50%" cy="50%" innerRadius={50} outerRadius={72}
+                paddingAngle={4} dataKey="value"
+              >
+                <Cell fill="#00d4ff" />
+                <Cell fill="#2a3a5a" />
+              </Pie>
+              <Tooltip
+                contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                itemStyle={{ color: '#e0eeff' }}
+                formatter={(val: any, name: string) => {
+                  const total = (analytics?.totalUsers || 0);
+                  return [`${val} users${total ? ` (${((val / total) * 100).toFixed(1)}%)` : ''}`, name];
+                }}
+              />
+              <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.78rem' }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Pass / Fail Rate Donut */}
+        <div className="card" style={{ textAlign: 'center' }}>
+          <h4 style={{ marginBottom: '2px', fontSize: '0.95rem' }}>✅ Pass / Fail Rate</h4>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', marginBottom: '0' }}>Quiz attempts ≥ 70% threshold</p>
+          <ResponsiveContainer width="100%" height={180}>
+            <PieChart>
+              <Pie
+                data={(() => {
+                  const score = analytics?.latestSnapshot?.avg_quiz_score;
+                  const completed = analytics?.latestSnapshot?.quizzes_completed || 0;
+                  if (!completed) return [{ name: 'No data', value: 1 }];
+                  const passEst = Math.round(completed * ((score && score >= 70 ? score : 70) / 100));
+                  return [
+                    { name: 'Passed (≥70%)', value: passEst },
+                    { name: 'Failed (<70%)', value: Math.max(0, completed - passEst) },
+                  ];
+                })()}
+                cx="50%" cy="50%" innerRadius={50} outerRadius={72}
+                paddingAngle={4} dataKey="value"
+              >
+                <Cell fill="#00ff88" />
+                <Cell fill="#ff4466" />
+              </Pie>
+              <Tooltip
+                contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                itemStyle={{ color: '#e0eeff' }}
+                formatter={(val: any, name: string) => {
+                  const completed = analytics?.latestSnapshot?.quizzes_completed || 0;
+                  return [`${val} attempts${completed ? ` (${((val / completed) * 100).toFixed(1)}%)` : ''}`, name];
+                }}
+              />
+              <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.78rem' }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* New vs Returning Users Donut */}
+        <div className="card" style={{ textAlign: 'center' }}>
+          <h4 style={{ marginBottom: '2px', fontSize: '0.95rem' }}>👥 New vs Returning</h4>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', marginBottom: '0' }}>New signups this month vs existing</p>
+          <ResponsiveContainer width="100%" height={180}>
+            <PieChart>
+              <Pie
+                data={[
+                  { name: 'New (this month)', value: analytics?.newUsersThisMonth || 0 },
+                  { name: 'Returning', value: Math.max(0, (analytics?.totalUsers || 0) - (analytics?.newUsersThisMonth || 0)) },
+                ]}
+                cx="50%" cy="50%" innerRadius={50} outerRadius={72}
+                paddingAngle={4} dataKey="value"
+              >
+                <Cell fill="#ffcc00" />
+                <Cell fill="#a855f7" />
+              </Pie>
+              <Tooltip
+                contentStyle={{ background: '#1a2a45', border: '1px solid #3a5a8a', borderRadius: '8px' }}
+                labelStyle={{ color: '#e0eeff', fontWeight: 600 }}
+                itemStyle={{ color: '#e0eeff' }}
+                formatter={(val: any, name: string) => {
+                  const total = analytics?.totalUsers || 0;
+                  return [`${val} users${total ? ` (${((val / total) * 100).toFixed(1)}%)` : ''}`, name];
+                }}
+              />
+              <Legend wrapperStyle={{ color: '#8ba3c0', fontSize: '0.78rem' }} />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
