@@ -12747,7 +12747,7 @@ function buildIPSIDSAnim(root) {
           { label:'GET /login.php HTTP/1.1', threat:false, msg:null },
           { label:'SELECT * FROM users--', threat:true, msg:'⚠️ ALERT: SQL Injection attempt detected! SRC:10.0.0.5 | Sig:1002 | Severity:HIGH' },
           { label:'GET /about.html HTTP/1.1', threat:false, msg:null },
-          { label:'<script>alert(1)</script>', threat:true, msg:'⚠️ ALERT: XSS payload detected! SRC:10.0.0.9 | Sig:2041 | Severity:MED' },
+          { label:'<img src=x onerror=alert(1)>', threat:true, msg:'⚠️ ALERT: XSS payload detected! SRC:10.0.0.9 | Sig:2041 | Severity:MED' },
         ];
         let i = 0;
         function next() {
