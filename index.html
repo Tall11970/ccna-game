@@ -4851,6 +4851,782 @@ resource "aci_application_profile" "web" {
     ]
   },
 
+  // ── WIRELESS LAN ─────────────────────────────────────────────────────────────
+  {
+    id: 'wireless_lan',
+    name: 'Wireless LAN (Wi-Fi)',
+    icon: '📶',
+    color: '#00d4ff',
+    lesson: [
+      {
+        title: 'Wireless Fundamentals',
+        body: `<p><strong>Wireless LANs (WLANs)</strong> use radio frequency (RF) signals instead of cables to transmit data.</p>
+<p><strong>Key RF Concepts:</strong></p>
+<ul>
+  <li><strong>2.4 GHz band:</strong> Longer range, more interference (microwaves, Bluetooth), 3 non-overlapping channels (1, 6, 11)</li>
+  <li><strong>5 GHz band:</strong> Shorter range, less interference, 25 non-overlapping channels, faster speeds</li>
+  <li><strong>6 GHz band (Wi-Fi 6E):</strong> Newest band, even less congestion, very high speeds</li>
+</ul>
+<p><strong>CSMA/CA</strong> (Carrier Sense Multiple Access / Collision Avoidance) — wireless uses <em>avoidance</em> (not detection like Ethernet's CSMA/CD) because you cannot detect collisions on wireless.</p>`
+      },
+      {
+        title: '802.11 Standards',
+        type: 'table',
+        headers: ['Standard', 'Band', 'Max Speed', 'Key Feature'],
+        rows: [
+          ['802.11a', '5 GHz', '54 Mbps', 'First 5 GHz standard'],
+          ['802.11b', '2.4 GHz', '11 Mbps', 'First widely-adopted Wi-Fi'],
+          ['802.11g', '2.4 GHz', '54 Mbps', 'Backward compatible with b'],
+          ['802.11n (Wi-Fi 4)', '2.4 & 5 GHz', '600 Mbps', 'MIMO, channel bonding'],
+          ['802.11ac (Wi-Fi 5)', '5 GHz only', '3.5 Gbps', 'MU-MIMO, 8 spatial streams'],
+          ['802.11ax (Wi-Fi 6)', '2.4, 5, 6 GHz', '9.6 Gbps', 'OFDMA, BSS coloring, TWT'],
+        ]
+      },
+      {
+        title: 'WLAN Architecture',
+        body: `<p><strong>Infrastructure Mode (most common):</strong></p>
+<ul>
+  <li><strong>BSS (Basic Service Set):</strong> One AP + its associated clients. Identified by BSSID (AP's MAC address)</li>
+  <li><strong>ESS (Extended Service Set):</strong> Multiple APs sharing the same SSID — allows roaming between APs</li>
+  <li><strong>SSID:</strong> The network name users see (e.g., "CorpWiFi")</li>
+  <li><strong>DS (Distribution System):</strong> The wired backbone connecting APs together</li>
+</ul>
+<p><strong>Ad-hoc / IBSS Mode:</strong> Devices connect directly to each other (peer-to-peer) — no AP needed. Rarely used in enterprise.</p>
+<p><strong>Roaming:</strong> When a client moves between APs in the same ESS, it re-associates without losing connectivity. Overlap of 15-20% coverage recommended.</p>`
+      },
+      {
+        title: 'Cisco WLAN Architecture: WLC & APs',
+        body: `<p>Enterprise wireless uses a <strong>split-MAC architecture</strong>:</p>
+<p><strong>Lightweight AP (LAP):</strong> Handles real-time tasks — sending/receiving RF, 802.11 frame transmission</p>
+<p><strong>Wireless LAN Controller (WLC):</strong> Handles management tasks — authentication, roaming, QoS policies, AP configuration</p>
+<p><strong>CAPWAP (Control And Provisioning of Wireless Access Points):</strong></p>
+<ul>
+  <li>Protocol used between WLC and APs</li>
+  <li><strong>CAPWAP Control channel:</strong> UDP port 5246 — management, configuration</li>
+  <li><strong>CAPWAP Data channel:</strong> UDP port 5247 — user traffic tunnel</li>
+  <li>All client traffic is tunneled from AP → WLC (centralized switching)</li>
+</ul>
+<p><strong>Autonomous AP:</strong> Self-contained, configured individually. Used in small/home networks. No WLC needed.</p>`
+      },
+      {
+        title: 'Wireless Security',
+        type: 'table',
+        headers: ['Protocol', 'Encryption', 'Authentication', 'Status'],
+        rows: [
+          ['WEP', 'RC4 (40/104-bit)', 'Shared key', '❌ Broken — never use'],
+          ['WPA', 'TKIP', 'PSK or 802.1X', '⚠️ Deprecated'],
+          ['WPA2-Personal', 'CCMP/AES', 'Pre-Shared Key', '✅ Common home/SMB'],
+          ['WPA2-Enterprise', 'CCMP/AES', '802.1X/EAP + RADIUS', '✅ Enterprise standard'],
+          ['WPA3-Personal', 'SAE (AES)', 'Simultaneous Auth of Equals', '✅ Most secure personal'],
+          ['WPA3-Enterprise', '192-bit suite', '802.1X + stronger EAP', '✅ Government/critical'],
+        ]
+      },
+      {
+        title: '802.1X Wireless Authentication',
+        body: `<p><strong>802.1X</strong> is the enterprise wireless authentication framework. Three roles:</p>
+<ul>
+  <li><strong>Supplicant:</strong> The client device (laptop, phone) wanting to connect</li>
+  <li><strong>Authenticator:</strong> The AP or WLC — passes credentials but doesn't validate them</li>
+  <li><strong>Authentication Server (AS):</strong> RADIUS server — validates credentials and grants/denies access</li>
+</ul>
+<p><strong>EAP (Extensible Authentication Protocol)</strong> methods used with 802.1X:</p>
+<ul>
+  <li><strong>EAP-TLS:</strong> Certificate-based, strongest, both client and server have certs</li>
+  <li><strong>PEAP:</strong> Only server certificate, user authenticates with username/password inside TLS tunnel</li>
+  <li><strong>EAP-FAST:</strong> Cisco proprietary, uses Protected Access Credentials (PACs)</li>
+</ul>`
+      },
+      {
+        title: 'Channel Planning & RF Design',
+        body: `<p><strong>2.4 GHz non-overlapping channels: 1, 6, 11</strong> (in North America)</p>
+<p>Using overlapping channels causes <strong>co-channel interference</strong> — always use 1, 6, or 11 for adjacent APs.</p>
+<p><strong>5 GHz</strong> has 25 non-overlapping 20 MHz channels — much better for dense deployments.</p>
+<p><strong>Signal strength measured in dBm:</strong></p>
+<ul>
+  <li>-30 dBm = Excellent</li>
+  <li>-67 dBm = Good (minimum for most applications)</li>
+  <li>-70 dBm = Fair</li>
+  <li>-80 dBm = Poor (approaching unusable)</li>
+</ul>
+<p><strong>Hidden Node Problem:</strong> Two clients can hear the AP but not each other — both transmit simultaneously causing collisions at AP. Solved by <strong>RTS/CTS</strong> (Request To Send / Clear To Send).</p>`
+      },
+      {
+        title: 'Wireless Troubleshooting',
+        body: `<p><strong>Common wireless issues and causes:</strong></p>
+<ul>
+  <li><strong>Slow speeds:</strong> Too many clients on one AP, wrong 802.11 standard, interference, distance</li>
+  <li><strong>Can't connect:</strong> Wrong SSID/passphrase, wrong security type, AP at capacity, MAC filtering</li>
+  <li><strong>Intermittent drops:</strong> Roaming issues, overlapping channels, RF interference (microwaves, Bluetooth, neighboring networks)</li>
+  <li><strong>No DHCP:</strong> Client connects but gets 169.254.x.x — DHCP scope exhausted or DHCP server unreachable</li>
+</ul>
+<p><strong>Useful show commands (WLC CLI):</strong></p>
+<p><code>show ap summary</code> — list all APs<br>
+<code>show client summary</code> — list associated clients<br>
+<code>show wlan summary</code> — list WLANs configured</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'Which 2.4 GHz channels are non-overlapping in North America?',
+        a: ['1, 2, 3','1, 5, 10','1, 6, 11','3, 7, 11'],
+        correct: 2,
+        explain: '<strong>Channels 1, 6, and 11</strong> are the only non-overlapping 2.4 GHz channels. Adjacent APs should use these to avoid co-channel interference.'
+      },
+      {
+        q: 'What protocol do Cisco lightweight APs use to communicate with a WLC?',
+        a: ['LWAPP','CAPWAP','RADIUS','SNMP'],
+        correct: 1,
+        explain: '<strong>CAPWAP</strong> (Control And Provisioning of Wireless Access Points) tunnels both control traffic (UDP 5246) and data traffic (UDP 5247) between APs and the WLC.'
+      },
+      {
+        q: 'Which wireless security protocol uses CCMP/AES encryption?',
+        a: ['WEP','WPA (TKIP)','WPA2','All of the above'],
+        correct: 2,
+        explain: '<strong>WPA2</strong> uses CCMP/AES encryption — significantly stronger than WEP (RC4) or WPA (TKIP). WPA2-Enterprise adds 802.1X authentication.'
+      },
+      {
+        q: 'In 802.1X wireless authentication, which device validates the user credentials?',
+        a: ['Supplicant','Access Point','RADIUS Server','WLC'],
+        correct: 2,
+        explain: 'The <strong>RADIUS/Authentication Server</strong> validates credentials. The AP/WLC is the authenticator (passes credentials) and the client is the supplicant (presents credentials).'
+      },
+      {
+        q: 'What is the maximum theoretical speed of 802.11ac (Wi-Fi 5)?',
+        a: ['600 Mbps','1 Gbps','3.5 Gbps','9.6 Gbps'],
+        correct: 2,
+        explain: '<strong>802.11ac (Wi-Fi 5)</strong> supports up to 3.5 Gbps. 802.11n peaks at 600 Mbps, and 802.11ax (Wi-Fi 6) reaches 9.6 Gbps.'
+      },
+      {
+        q: 'What is an SSID?',
+        a: ['The MAC address of the AP','The wireless network name','The IP address of the WLC','The channel number'],
+        correct: 1,
+        explain: '<strong>SSID (Service Set Identifier)</strong> is the name of the wireless network that users see (e.g., "CorporateWiFi"). The BSSID is the AP\'s MAC address.'
+      },
+      {
+        q: 'Which access method does 802.11 wireless use?',
+        a: ['CSMA/CD','TDMA','CSMA/CA','Token Ring'],
+        correct: 2,
+        explain: '<strong>CSMA/CA</strong> (Carrier Sense Multiple Access/Collision Avoidance) — wireless cannot detect collisions like Ethernet, so it avoids them by waiting and using RTS/CTS.'
+      },
+      {
+        q: 'What is the purpose of a Wireless LAN Controller (WLC)?',
+        a: ['Provide DHCP to wireless clients','Centrally manage lightweight APs and enforce wireless policies','Replace the need for APs','Provide internet connectivity'],
+        correct: 1,
+        explain: 'A <strong>WLC</strong> centrally manages all lightweight APs — handling roaming, QoS, security policies, and firmware. APs only handle real-time RF tasks.'
+      },
+      {
+        q: 'Which wireless security protocol is considered broken and should never be used?',
+        a: ['WPA2','WPA3','WPA','WEP'],
+        correct: 3,
+        explain: '<strong>WEP</strong> uses RC4 encryption and is completely broken — attackers can crack WEP keys in minutes. Always use WPA2 or WPA3.'
+      },
+      {
+        q: 'What does ESS stand for in wireless networking?',
+        a: ['Extended Service Set','Encrypted Security Standard','Enterprise Switching System','External SSID Service'],
+        correct: 0,
+        explain: '<strong>ESS (Extended Service Set)</strong> is multiple APs sharing the same SSID, allowing seamless client roaming across coverage areas.'
+      },
+      {
+        q: 'What is the hidden node problem in wireless?',
+        a: ['AP is hidden behind a firewall','Two clients hear the AP but not each other, causing simultaneous transmissions','SSID is not being broadcast','AP has no IP address'],
+        correct: 1,
+        explain: '<strong>Hidden node problem:</strong> Two clients are in range of the AP but out of range of each other. Both transmit simultaneously causing a collision at the AP. Solved with RTS/CTS.'
+      },
+      {
+        q: 'On which ports does CAPWAP operate?',
+        a: ['TCP 80 and 443','UDP 67 and 68','UDP 5246 (control) and 5247 (data)','TCP 23 and 22'],
+        correct: 2,
+        explain: '<strong>CAPWAP</strong> uses UDP 5246 for control traffic (management/config) and UDP 5247 for data traffic (tunneled user frames) between APs and the WLC.'
+      },
+      {
+        q: 'Which 802.11 standard operates on 5 GHz only?',
+        a: ['802.11b','802.11g','802.11n','802.11ac'],
+        correct: 3,
+        explain: '<strong>802.11ac (Wi-Fi 5)</strong> operates exclusively on the 5 GHz band. 802.11b and g use 2.4 GHz only. 802.11n is dual-band (2.4 and 5 GHz).'
+      },
+      {
+        q: 'What is the recommended minimum signal strength for reliable Wi-Fi?',
+        a: ['-30 dBm','-50 dBm','-67 dBm','-90 dBm'],
+        correct: 2,
+        explain: '<strong>-67 dBm</strong> is the commonly recommended minimum for reliable wireless. -30 dBm is excellent, -80 dBm is poor/unusable for most apps.'
+      },
+      {
+        q: 'Which EAP method requires certificates on BOTH the client and server?',
+        a: ['PEAP','EAP-FAST','EAP-TLS','EAP-MD5'],
+        correct: 2,
+        explain: '<strong>EAP-TLS</strong> is the strongest EAP method — requires digital certificates on both the authentication server AND the client device. PEAP only requires a server certificate.'
+      },
+      {
+        q: 'What is the difference between WPA2-Personal and WPA2-Enterprise?',
+        a: ['Enterprise uses stronger AES encryption','Personal uses 802.1X; Enterprise uses PSK','Personal uses a shared pre-shared key; Enterprise uses 802.1X/RADIUS for per-user authentication','There is no difference'],
+        correct: 2,
+        explain: '<strong>WPA2-Personal</strong> uses a single Pre-Shared Key (PSK) for everyone. <strong>WPA2-Enterprise</strong> uses 802.1X/RADIUS so each user authenticates with their own credentials.'
+      },
+      {
+        q: 'What new authentication method does WPA3-Personal introduce?',
+        a: ['TKIP','CCMP','SAE (Simultaneous Authentication of Equals)','EAP-TLS'],
+        correct: 2,
+        explain: '<strong>SAE (Simultaneous Authentication of Equals)</strong> replaces the PSK handshake in WPA3-Personal, providing forward secrecy and protection against offline dictionary attacks.'
+      },
+      {
+        q: 'How much coverage overlap is recommended between APs for seamless roaming?',
+        a: ['No overlap','5%','15-20%','50%'],
+        correct: 2,
+        explain: '<strong>15-20% overlap</strong> between AP coverage cells is recommended for smooth roaming. Too little = dead zones; too much = interference.'
+      },
+      {
+        q: 'A wireless client connects successfully but gets IP 169.254.x.x. What is the most likely cause?',
+        a: ['Wrong WPA2 password','DHCP server is unreachable or scope is exhausted','Wrong SSID','AP is overloaded'],
+        correct: 1,
+        explain: '<strong>169.254.x.x</strong> is an APIPA address — the client failed to get a DHCP address. Check if the DHCP scope is exhausted or if the DHCP server/helper is reachable.'
+      },
+      {
+        q: 'What is a BSSID?',
+        a: ['The wireless network name (SSID)','The MAC address of the access point identifying a specific BSS','The IP address of the WLC','The VLAN ID used for wireless traffic'],
+        correct: 1,
+        explain: '<strong>BSSID (Basic Service Set Identifier)</strong> is the MAC address of the access point. Each AP radio has its own BSSID, while multiple APs can share the same SSID.'
+      },
+    ]
+  },
+
+  // ── WAN TECHNOLOGIES ─────────────────────────────────────────────────────────
+  {
+    id: 'wan_technologies',
+    name: 'WAN Technologies',
+    icon: '🌍',
+    color: '#ffcc00',
+    lesson: [
+      {
+        title: 'WAN Overview',
+        body: `<p><strong>WAN (Wide Area Network)</strong> connects geographically separated networks — typically provided by a service provider (ISP, telco).</p>
+<p><strong>WAN vs LAN:</strong></p>
+<ul>
+  <li><strong>LAN:</strong> You own the infrastructure (switches, cables) — inside your building</li>
+  <li><strong>WAN:</strong> You lease the connection from a provider — between buildings/cities</li>
+</ul>
+<p><strong>WAN connection types:</strong></p>
+<ul>
+  <li><strong>Dedicated leased lines:</strong> Point-to-point, consistent bandwidth (T1, E1)</li>
+  <li><strong>Packet-switched:</strong> Share provider infrastructure (MPLS, Frame Relay)</li>
+  <li><strong>Internet-based:</strong> VPN over public internet (IPsec, SSL VPN)</li>
+  <li><strong>Broadband:</strong> DSL, cable, fiber for last-mile connectivity</li>
+</ul>`
+      },
+      {
+        title: 'Legacy WAN & Leased Lines',
+        type: 'table',
+        headers: ['Technology', 'Speed', 'Type', 'Status'],
+        rows: [
+          ['T1', '1.544 Mbps', 'Leased line (24 DS0 channels)', 'Legacy — still used'],
+          ['E1', '2.048 Mbps', 'European T1 equivalent', 'Legacy'],
+          ['T3 (DS3)', '44.736 Mbps', '28 T1s multiplexed', 'Legacy'],
+          ['Frame Relay', 'Variable', 'Packet-switched, DLCI addressing', 'Obsolete'],
+          ['ATM', 'Up to 622 Mbps', 'Cell-switched (53-byte cells)', 'Obsolete'],
+          ['SONET/SDH', 'OC-3 to OC-192', 'Fiber optic, telecom backbone', 'Still in use'],
+        ]
+      },
+      {
+        title: 'HDLC and PPP',
+        body: `<p>Serial WAN links use <strong>Layer 2 encapsulation</strong>. Two options on Cisco routers:</p>
+<p><strong>HDLC (High-Level Data Link Control):</strong></p>
+<ul>
+  <li>Cisco's default serial encapsulation</li>
+  <li>Cisco HDLC is proprietary — not compatible with non-Cisco devices</li>
+  <li>No authentication built in</li>
+</ul>
+<p><strong>PPP (Point-to-Point Protocol):</strong></p>
+<ul>
+  <li>Open standard — works between different vendors</li>
+  <li>Supports authentication: <strong>PAP</strong> (cleartext, weak) and <strong>CHAP</strong> (challenge-based, encrypted)</li>
+  <li>Supports compression and multilink (bundle multiple links)</li>
+</ul>
+<p><code>interface Serial0/0</code><br>
+<code> encapsulation ppp</code><br>
+<code> ppp authentication chap</code></p>`
+      },
+      {
+        title: 'MPLS (Multiprotocol Label Switching)',
+        body: `<p><strong>MPLS</strong> is a high-performance WAN technology used by service providers. It forwards packets based on <strong>labels</strong> rather than IP lookups — much faster.</p>
+<p><strong>Key MPLS components:</strong></p>
+<ul>
+  <li><strong>CE (Customer Edge):</strong> Customer's router — connects to provider network</li>
+  <li><strong>PE (Provider Edge):</strong> Provider's edge router — adds/removes MPLS labels (Label Edge Router)</li>
+  <li><strong>P (Provider Core):</strong> Core routers — forward based on labels only (Label Switch Router)</li>
+</ul>
+<p><strong>MPLS label operations:</strong></p>
+<ul>
+  <li><strong>Push:</strong> Add a label (ingress PE)</li>
+  <li><strong>Swap:</strong> Replace label (P routers)</li>
+  <li><strong>Pop:</strong> Remove label (egress PE)</li>
+</ul>
+<p>MPLS supports <strong>VPNs, QoS, and Traffic Engineering</strong>. Provider can create private virtual circuits (VRFs) between customer sites.</p>`
+      },
+      {
+        title: 'Broadband WAN (DSL, Cable, Fiber)',
+        body: `<p><strong>DSL (Digital Subscriber Line):</strong></p>
+<ul>
+  <li>Uses existing copper telephone lines</li>
+  <li><strong>ADSL:</strong> Asymmetric — faster download than upload (most common for homes)</li>
+  <li><strong>SDSL:</strong> Symmetric — equal upload/download (business use)</li>
+  <li>Distance-sensitive — degrades beyond ~18,000 feet from DSLAM</li>
+</ul>
+<p><strong>Cable (HFC — Hybrid Fiber-Coaxial):</strong></p>
+<ul>
+  <li>Uses cable TV infrastructure</li>
+  <li>Shared medium — speeds vary with neighborhood usage</li>
+  <li>Uses DOCSIS standard</li>
+</ul>
+<p><strong>Fiber (FTTH/FTTP):</strong></p>
+<ul>
+  <li>Fiber to the Home/Premises — highest performance</li>
+  <li>Symmetric speeds, low latency</li>
+  <li>Most expensive to deploy</li>
+</ul>
+<p><strong>PPPoE</strong> (PPP over Ethernet) — common DSL authentication method. Router negotiates PPP session with ISP over Ethernet/DSL connection.</p>`
+      },
+      {
+        title: 'VPN Technologies',
+        body: `<p><strong>VPN (Virtual Private Network)</strong> creates an encrypted tunnel over an untrusted network (internet).</p>
+<p><strong>Site-to-Site VPN:</strong></p>
+<ul>
+  <li>Connects entire networks (HQ ↔ branch office)</li>
+  <li>Always-on connection, transparent to users</li>
+  <li>Uses <strong>IPsec</strong> (tunnel mode) — encrypts entire original IP packet</li>
+</ul>
+<p><strong>Remote Access VPN:</strong></p>
+<ul>
+  <li>Individual users connecting from home/hotel</li>
+  <li><strong>SSL VPN:</strong> Uses HTTPS (TCP 443), browser-based or AnyConnect client</li>
+  <li><strong>IPsec VPN:</strong> Requires VPN client software</li>
+</ul>
+<p><strong>GRE Tunnels:</strong></p>
+<ul>
+  <li>Generic Routing Encapsulation — creates a virtual point-to-point link</li>
+  <li>NOT encrypted by itself — combine with IPsec for security</li>
+  <li>Can carry multicast traffic (useful for routing protocols over WAN)</li>
+</ul>`
+      },
+      {
+        title: 'SD-WAN',
+        body: `<p><strong>SD-WAN (Software-Defined WAN)</strong> is a modern WAN approach using software to manage multiple WAN links intelligently.</p>
+<p><strong>Traditional WAN problems SD-WAN solves:</strong></p>
+<ul>
+  <li>Single MPLS link — expensive, slow to provision</li>
+  <li>No intelligent path selection</li>
+  <li>Manual configuration at each site</li>
+</ul>
+<p><strong>SD-WAN benefits:</strong></p>
+<ul>
+  <li>Uses multiple links (MPLS + internet + LTE) simultaneously</li>
+  <li>Centralized management and policy from the cloud</li>
+  <li>Application-aware routing (send video calls over best link)</li>
+  <li>Zero-touch provisioning — new sites auto-configure</li>
+  <li>Lower cost than pure MPLS</li>
+</ul>
+<p><strong>Cisco SD-WAN (Viptela):</strong> vManage (management), vBond (orchestration), vSmart (control), vEdge (data plane)</p>`
+      },
+      {
+        title: 'WAN Design & Troubleshooting',
+        body: `<p><strong>Common WAN design patterns:</strong></p>
+<ul>
+  <li><strong>Hub-and-Spoke:</strong> Branch sites connect to central HQ — simple, cost-effective, all traffic through hub</li>
+  <li><strong>Full Mesh:</strong> Every site connects to every other — highest redundancy, most expensive</li>
+  <li><strong>Partial Mesh:</strong> Critical sites are fully meshed, others hub-and-spoke</li>
+</ul>
+<p><strong>WAN troubleshooting commands:</strong></p>
+<p><code>show interfaces serial 0/0</code> — check line/protocol status<br>
+<code>show ip interface brief</code> — quick status of all interfaces<br>
+<code>debug ppp authentication</code> — troubleshoot PPP auth<br>
+<code>ping</code> / <code>traceroute</code> — connectivity tests</p>
+<p><strong>Interface states:</strong><br>
+<code>Serial0/0 is up, line protocol is up</code> — working ✅<br>
+<code>Serial0/0 is up, line protocol is down</code> — Layer 1 OK, Layer 2 problem (encapsulation mismatch, clock rate)<br>
+<code>Serial0/0 is down</code> — physical layer issue</p>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the default Layer 2 encapsulation for Cisco serial interfaces?',
+        a: ['PPP','Frame Relay','HDLC','ATM'],
+        correct: 2,
+        explain: '<strong>HDLC</strong> is Cisco\'s default serial encapsulation. Note: Cisco HDLC is proprietary — for multi-vendor environments, use PPP instead.'
+      },
+      {
+        q: 'Which PPP authentication method uses a challenge-response mechanism and is more secure?',
+        a: ['PAP','CHAP','EAP','MS-CHAP'],
+        correct: 1,
+        explain: '<strong>CHAP</strong> (Challenge Handshake Authentication Protocol) uses a three-way challenge and never sends the password — far more secure than PAP which sends credentials in cleartext.'
+      },
+      {
+        q: 'In MPLS, what does a PE router do?',
+        a: ['Forwards packets based on IP lookup only','Adds (pushes) or removes (pops) MPLS labels at the network edge','Only forwards based on labels like P routers','Provides customer routing'],
+        correct: 1,
+        explain: '<strong>PE (Provider Edge)</strong> routers are Label Edge Routers (LERs) — they push labels onto packets entering the MPLS network and pop them when packets exit. P (core) routers only swap labels.'
+      },
+      {
+        q: 'What is the speed of a T1 leased line?',
+        a: ['512 Kbps','1.544 Mbps','10 Mbps','44.736 Mbps'],
+        correct: 1,
+        explain: '<strong>T1 = 1.544 Mbps</strong>, made up of 24 DS0 channels at 64 Kbps each. T3 (DS3) = 44.736 Mbps (28 T1s bundled together).'
+      },
+      {
+        q: 'What is the main advantage of ADSL over SDSL?',
+        a: ['Symmetric speeds','Better security','Lower cost and wider availability for consumers','Higher upload speeds'],
+        correct: 2,
+        explain: '<strong>ADSL</strong> is cheaper and more widely deployed than SDSL. It\'s asymmetric (faster download) which suits home users who download more than they upload.'
+      },
+      {
+        q: 'Which VPN type is always-on and connects entire office networks together?',
+        a: ['Remote Access VPN','SSL VPN','Site-to-Site VPN','GRE only'],
+        correct: 2,
+        explain: '<strong>Site-to-Site VPN</strong> creates a permanent tunnel between networks (HQ ↔ branch). Remote Access VPN is for individual users connecting from home/mobile.'
+      },
+      {
+        q: 'What is a key limitation of GRE tunnels?',
+        a: ['Cannot carry IPv4 traffic','Does not support routing protocols','Not encrypted by itself — needs IPsec for security','Limited to 10 Mbps'],
+        correct: 2,
+        explain: '<strong>GRE</strong> creates a tunnel but provides no encryption. For secure tunnels, combine GRE with IPsec. GRE\'s advantage is it can carry multicast, making it useful for routing protocols over WAN.'
+      },
+      {
+        q: 'What technology does SD-WAN use to manage multiple WAN links?',
+        a: ['MPLS only','Hardware appliances at each site','Software-defined centralized management with application-aware routing','Frame Relay'],
+        correct: 2,
+        explain: '<strong>SD-WAN</strong> uses software to centrally manage multiple WAN links (MPLS, internet, LTE), applying application-aware policies to route traffic optimally.'
+      },
+      {
+        q: 'What does PPPoE stand for and when is it used?',
+        a: ['Point-to-Point Protocol over Ethernet — used for DSL authentication with ISPs','Peer-to-Peer over Ethernet — used for VPNs','Protocol for Private over Ethernet — used for MPLS','Packet Protocol over Ethernet — used for Frame Relay'],
+        correct: 0,
+        explain: '<strong>PPPoE (Point-to-Point Protocol over Ethernet)</strong> is commonly used with DSL connections for ISP authentication. Your router negotiates a PPP session with the ISP over the DSL connection.'
+      },
+      {
+        q: 'What does "Serial0/0 is up, line protocol is down" indicate?',
+        a: ['Physical layer problem','Layer 2 problem — likely encapsulation mismatch or missing clock rate','IP addressing error','Routing table issue'],
+        correct: 1,
+        explain: '"Up/Down" means <strong>Layer 1 (physical) is OK</strong> but <strong>Layer 2 failed</strong>. Common causes: encapsulation mismatch (HDLC on one end, PPP on the other) or missing clock rate on DCE end.'
+      },
+      {
+        q: 'In MPLS terminology, what are CE routers?',
+        a: ['Core provider routers that swap labels','Provider edge routers that add/remove labels','Customer Edge routers that connect to the provider network','Central Exchange routers at data centers'],
+        correct: 2,
+        explain: '<strong>CE (Customer Edge)</strong> routers belong to the customer and connect to the provider PE routers. CE routers do not participate in MPLS label switching — they just route normally.'
+      },
+      {
+        q: 'Which WAN design has ALL sites connected to ALL other sites?',
+        a: ['Hub-and-Spoke','Partial Mesh','Full Mesh','Star topology'],
+        correct: 2,
+        explain: '<strong>Full Mesh</strong> connects every site to every other site — maximum redundancy but highest cost. Hub-and-Spoke is most common and cost-effective for branch connectivity.'
+      },
+      {
+        q: 'What is the main difference between packet-switched and circuit-switched WAN?',
+        a: ['Circuit-switched is faster','Packet-switched shares bandwidth dynamically; circuit-switched dedicates a fixed circuit','Packet-switched requires more hardware','There is no difference'],
+        correct: 1,
+        explain: '<strong>Circuit-switched</strong> (like old PSTN phone calls) dedicates a fixed path for the duration of the call. <strong>Packet-switched</strong> (MPLS, internet) shares infrastructure dynamically — more efficient.'
+      },
+      {
+        q: 'Which protocol is used by Cisco SD-WAN for the management plane?',
+        a: ['vBond','vEdge','vManage','vSmart'],
+        correct: 2,
+        explain: '<strong>vManage</strong> is the Cisco SD-WAN management dashboard. vBond handles orchestration, vSmart is the control plane, and vEdge/cEdge are the WAN edge devices.'
+      },
+      {
+        q: 'DSL performance degrades significantly beyond what distance from the DSLAM?',
+        a: ['1,000 feet','5,000 feet','18,000 feet','50,000 feet'],
+        correct: 2,
+        explain: '<strong>~18,000 feet (about 3.4 miles)</strong> from the DSLAM is the typical limit for reliable DSL. Beyond that, signal quality drops significantly and speeds decrease.'
+      },
+      {
+        q: 'What technology does cable internet use for its infrastructure?',
+        a: ['Pure fiber optic','Pure coaxial cable','HFC (Hybrid Fiber-Coaxial)','Copper telephone lines'],
+        correct: 2,
+        explain: '<strong>HFC (Hybrid Fiber-Coaxial)</strong> — fiber runs from the head-end to neighborhood nodes, then coaxial cable connects homes. Cable internet uses <strong>DOCSIS</strong> standard over this infrastructure.'
+      },
+      {
+        q: 'What is the purpose of MPLS Traffic Engineering (MPLS-TE)?',
+        a: ['Encrypt traffic on MPLS networks','Route specific traffic types along specific paths ignoring normal routing','Provide QoS to MPLS customers','Replace OSPF in MPLS networks'],
+        correct: 1,
+        explain: '<strong>MPLS-TE</strong> allows network administrators to route specific traffic types along manually specified paths — for example, sending video traffic over a low-latency link instead of the shortest path.'
+      },
+      {
+        q: 'What command configures PPP encapsulation on a Cisco serial interface?',
+        a: ['encapsulation serial ppp','interface ppp serial','encapsulation ppp','set encapsulation ppp'],
+        correct: 2,
+        explain: 'Under the interface configuration: <strong>encapsulation ppp</strong>. Default is HDLC, so this must be explicitly set. Both ends must use the same encapsulation.'
+      },
+      {
+        q: 'Which broadband technology offers the highest performance with symmetric speeds?',
+        a: ['ADSL','Cable (HFC)','SDSL','Fiber (FTTH/FTTP)'],
+        correct: 3,
+        explain: '<strong>Fiber to the Home (FTTH/FTTP)</strong> offers the best performance — symmetric multi-gigabit speeds and low latency. It\'s the most expensive to deploy but provides the best service.'
+      },
+      {
+        q: 'What is the primary advantage of MPLS over the public internet for enterprise WAN?',
+        a: ['MPLS is free','MPLS provides predictable performance with QoS, dedicated bandwidth, and private routing','MPLS is faster than fiber','MPLS provides built-in encryption'],
+        correct: 1,
+        explain: '<strong>MPLS</strong> provides <strong>predictable, guaranteed performance</strong> with SLA-backed QoS — critical for voice and video. The public internet has variable latency and no quality guarantees.'
+      },
+    ]
+  },
+
+  // ── ADVANCED NETWORK SECURITY ────────────────────────────────────────────────
+  {
+    id: 'advanced_security',
+    name: 'Advanced Network Security',
+    icon: '🛡️',
+    color: '#a855f7',
+    lesson: [
+      {
+        title: 'Threat Landscape',
+        body: `<p>Understanding common attack types is essential for CCNA and real-world networking:</p>
+<p><strong>DoS (Denial of Service):</strong> Overwhelms a target with traffic to make it unavailable. Single attacker.</p>
+<p><strong>DDoS (Distributed DoS):</strong> Same as DoS but uses thousands of compromised devices (botnet). Much harder to stop.</p>
+<p><strong>MITM (Man-in-the-Middle):</strong> Attacker intercepts traffic between two parties — can eavesdrop or modify data. ARP spoofing is a common LAN-based MITM technique.</p>
+<p><strong>Phishing:</strong> Fraudulent emails/sites trick users into revealing credentials.</p>
+<p><strong>IP/MAC Spoofing:</strong> Attacker falsifies source IP or MAC address to impersonate another device.</p>
+<p><strong>Reconnaissance:</strong> Scanning and probing a network to gather info before an attack (ping sweeps, port scans).</p>
+<p><strong>Zero-Day:</strong> Exploiting a vulnerability that has no patch yet.</p>`
+      },
+      {
+        title: 'Firewalls',
+        body: `<p><strong>Firewalls</strong> control traffic based on rules. Types:</p>
+<p><strong>Stateless (Packet Filter):</strong> Inspects each packet independently based on source/destination IP and port. No awareness of connection state. Fast but limited.</p>
+<p><strong>Stateful:</strong> Tracks connection state — knows if a packet is part of an established session. Allows return traffic automatically. Default for most modern firewalls.</p>
+<p><strong>NGFW (Next-Generation Firewall):</strong> Deep packet inspection, application awareness, integrated IPS, URL filtering, identity-based policies.</p>
+<p><strong>Cisco Zone-Based Firewall (ZBF):</strong></p>
+<ul>
+  <li>Interfaces assigned to zones (inside, outside, DMZ)</li>
+  <li>Traffic between zones controlled by policy</li>
+  <li>Traffic within a zone is permitted by default</li>
+  <li>No policy between zones = traffic blocked by default</li>
+</ul>`
+      },
+      {
+        title: 'IPS and IDS',
+        type: 'table',
+        headers: ['Feature', 'IDS', 'IPS'],
+        rows: [
+          ['Placement', 'Out-of-band (copy of traffic)', 'Inline (in the traffic path)'],
+          ['Action on threat', 'Alert only — cannot block', 'Alert AND block traffic'],
+          ['Impact if fails', 'No traffic impact', 'Can block legitimate traffic'],
+          ['Performance impact', 'None on traffic', 'Adds latency'],
+          ['Use case', 'Monitoring/forensics', 'Active protection'],
+        ]
+      },
+      {
+        title: 'IPsec VPN Deep Dive',
+        body: `<p><strong>IPsec</strong> provides encryption and authentication for IP packets. Uses two phases:</p>
+<p><strong>IKE Phase 1 (IKE SA):</strong> Establishes a secure management channel</p>
+<ul>
+  <li>Authenticates peers (PSK or certificates)</li>
+  <li>Negotiates encryption, hashing, DH group</li>
+  <li>Two modes: <strong>Main Mode</strong> (6 messages, more secure) or <strong>Aggressive Mode</strong> (3 messages, faster but less secure)</li>
+</ul>
+<p><strong>IKE Phase 2 (IPsec SA):</strong> Establishes the actual data tunnel</p>
+<ul>
+  <li>Uses Quick Mode — 3 messages</li>
+  <li>Negotiates IPsec protocols: ESP or AH</li>
+</ul>
+<p><strong>ESP (Encapsulating Security Payload):</strong> Encrypts AND authenticates — most commonly used. Protocol 50.</p>
+<p><strong>AH (Authentication Header):</strong> Authenticates only — no encryption. Protocol 51. Rarely used alone.</p>
+<p><strong>Tunnel vs Transport mode:</strong><br>
+<strong>Tunnel:</strong> Encrypts the entire original IP packet (includes original headers) — used for site-to-site VPNs.<br>
+<strong>Transport:</strong> Only encrypts the payload — used for host-to-host VPNs.</p>`
+      },
+      {
+        title: 'Cryptography Fundamentals',
+        body: `<p><strong>Symmetric encryption:</strong> Same key encrypts and decrypts. Fast, but key distribution is a challenge.</p>
+<ul><li>Examples: AES (128/256-bit), 3DES</li></ul>
+<p><strong>Asymmetric encryption:</strong> Public key encrypts, private key decrypts (or vice versa). Solves key distribution but slow.</p>
+<ul><li>Examples: RSA, ECDH (Diffie-Hellman)</li></ul>
+<p><strong>Hashing:</strong> One-way function producing a fixed-length digest. Verifies integrity — cannot decrypt.</p>
+<ul><li>Examples: MD5 (128-bit, broken), SHA-1 (broken), SHA-256 (current standard)</li></ul>
+<p><strong>HMAC:</strong> Combines hashing with a secret key for message authentication.</p>
+<p><strong>PKI (Public Key Infrastructure):</strong></p>
+<ul>
+  <li><strong>CA (Certificate Authority):</strong> Trusted third party that signs digital certificates</li>
+  <li><strong>Digital Certificate:</strong> Binds a public key to an identity (like a digital ID card)</li>
+  <li>Used by SSL/TLS (HTTPS), IPsec, 802.1X</li>
+</ul>`
+      },
+      {
+        title: 'Network Access Control (NAC) & 802.1X',
+        body: `<p><strong>NAC (Network Access Control)</strong> ensures devices meet security requirements before connecting to the network.</p>
+<p><strong>Posture Assessment:</strong> Check if device has up-to-date AV, OS patches, correct config before granting full access.</p>
+<p><strong>802.1X Port-Based Authentication</strong> (wired networks):</p>
+<ul>
+  <li><strong>Supplicant:</strong> Client device</li>
+  <li><strong>Authenticator:</strong> Switch port (enforces access but doesn't validate)</li>
+  <li><strong>Authentication Server:</strong> RADIUS server (validates credentials)</li>
+</ul>
+<p><strong>RADIUS vs TACACS+:</strong></p>
+<table style="width:100%;border-collapse:collapse;margin-top:8px">
+  <tr style="background:rgba(255,255,255,0.07)"><th style="padding:6px;text-align:left">Feature</th><th style="padding:6px;text-align:left">RADIUS</th><th style="padding:6px;text-align:left">TACACS+</th></tr>
+  <tr><td style="padding:6px">Transport</td><td style="padding:6px">UDP</td><td style="padding:6px">TCP</td></tr>
+  <tr style="background:rgba(255,255,255,0.04)"><td style="padding:6px">Encryption</td><td style="padding:6px">Password only</td><td style="padding:6px">Entire payload</td></tr>
+  <tr><td style="padding:6px">AAA</td><td style="padding:6px">Combines AuthN+AuthZ</td><td style="padding:6px">Separates AuthN/AuthZ/Acct</td></tr>
+  <tr style="background:rgba(255,255,255,0.04)"><td style="padding:6px">Best for</td><td style="padding:6px">Network access (Wi-Fi, VPN)</td><td style="padding:6px">Device administration (CLI access)</td></tr>
+</table>`
+      },
+      {
+        title: 'Common LAN Attacks & Mitigations',
+        body: `<p><strong>ARP Spoofing/Poisoning:</strong> Attacker sends fake ARP replies, associating their MAC with a legitimate IP. Enables MITM.</p>
+<p>→ Mitigate with <strong>Dynamic ARP Inspection (DAI)</strong> on switches.</p>
+<p><strong>DHCP Spoofing:</strong> Rogue DHCP server hands out fake IP/gateway info, redirecting traffic.</p>
+<p>→ Mitigate with <strong>DHCP Snooping</strong> (trust only authorized ports).</p>
+<p><strong>MAC Flooding:</strong> Attacker fills switch CAM table with fake MACs, forcing switch to flood all frames.</p>
+<p>→ Mitigate with <strong>Port Security</strong> (limit MAC addresses per port).</p>
+<p><strong>VLAN Hopping:</strong> Attacker accesses VLANs they shouldn't — via switch spoofing or double tagging.</p>
+<p>→ Mitigate by disabling DTP, using dedicated native VLANs, and restricting trunk ports.</p>
+<p><strong>Rogue AP:</strong> Unauthorized AP connected to network, bypassing security.</p>
+<p>→ Mitigate with wireless intrusion detection and 802.1X on wired ports.</p>`
+      },
+      {
+        title: 'Defense in Depth',
+        body: `<p><strong>Defense in Depth</strong> uses multiple layers of security — if one fails, others provide protection:</p>
+<ol>
+  <li><strong>Perimeter:</strong> Firewall, IPS, DMZ</li>
+  <li><strong>Network:</strong> VLANs, ACLs, private addressing</li>
+  <li><strong>Host:</strong> OS hardening, antivirus, host-based firewall</li>
+  <li><strong>Application:</strong> Web Application Firewall, input validation</li>
+  <li><strong>Data:</strong> Encryption at rest and in transit</li>
+  <li><strong>User:</strong> Security training, least privilege, MFA</li>
+</ol>
+<p><strong>Principle of Least Privilege:</strong> Users and systems should have only the minimum access needed to do their job.</p>
+<p><strong>Security best practices for CCNA:</strong></p>
+<ul>
+  <li>Disable unused ports and services</li>
+  <li>Use SSH instead of Telnet</li>
+  <li>Use strong passwords + enable secret</li>
+  <li>Enable port security, DHCP snooping, DAI</li>
+  <li>Use SNMPv3 instead of v1/v2</li>
+  <li>Implement 802.1X for network access</li>
+</ul>`
+      },
+    ],
+    questions: [
+      {
+        q: 'What is the difference between IDS and IPS?',
+        a: ['IDS blocks traffic; IPS only alerts','IPS is placed inline and can block threats; IDS monitors out-of-band and only alerts','IDS is software-only; IPS is hardware-only','There is no functional difference'],
+        correct: 1,
+        explain: '<strong>IPS</strong> sits inline in the traffic path and actively blocks threats. <strong>IDS</strong> receives a copy of traffic (out-of-band) and can only generate alerts — it cannot block attacks.'
+      },
+      {
+        q: 'Which IPsec protocol provides both encryption AND authentication?',
+        a: ['AH (Authentication Header)','ESP (Encapsulating Security Payload)','GRE','IKE'],
+        correct: 1,
+        explain: '<strong>ESP (Protocol 50)</strong> provides both encryption and authentication — this is why it\'s preferred over AH. AH (Protocol 51) only authenticates, with no encryption.'
+      },
+      {
+        q: 'In IPsec, what is the purpose of IKE Phase 1?',
+        a: ['Encrypt user data','Establish the IPsec SA for data traffic','Build a secure management channel and authenticate peers','Exchange routing information'],
+        correct: 2,
+        explain: '<strong>IKE Phase 1</strong> establishes the IKE SA — a secure channel used for management. It authenticates the peers and negotiates encryption parameters. Phase 2 then builds the actual data tunnel.'
+      },
+      {
+        q: 'Which type of firewall tracks the state of network connections?',
+        a: ['Packet filter (stateless)','Stateful firewall','Proxy firewall','Application firewall'],
+        correct: 1,
+        explain: '<strong>Stateful firewalls</strong> track connection state — they allow return traffic automatically for established sessions. Stateless (packet filter) firewalls inspect each packet independently with no connection awareness.'
+      },
+      {
+        q: 'What hashing algorithm is recommended today for integrity verification?',
+        a: ['MD5','SHA-1','SHA-256','DES'],
+        correct: 2,
+        explain: '<strong>SHA-256</strong> is the current standard. MD5 and SHA-1 are both considered cryptographically broken and should not be used for security purposes.'
+      },
+      {
+        q: 'What is ARP spoofing used for by attackers?',
+        a: ['Overflow a switch\'s MAC table','Associate attacker\'s MAC with a legitimate IP to intercept traffic (MITM)','Exhaust DHCP address pool','Crash the router'],
+        correct: 1,
+        explain: '<strong>ARP spoofing</strong> sends fake ARP replies mapping the attacker\'s MAC to a victim\'s IP. Other devices update their ARP cache, sending traffic to the attacker — enabling a MITM attack.'
+      },
+      {
+        q: 'What Cisco switch feature mitigates ARP spoofing attacks?',
+        a: ['Port Security','DHCP Snooping','Dynamic ARP Inspection (DAI)','Spanning Tree'],
+        correct: 2,
+        explain: '<strong>Dynamic ARP Inspection (DAI)</strong> validates ARP packets against the DHCP snooping binding table, dropping ARP replies that don\'t match legitimate IP-MAC-port bindings.'
+      },
+      {
+        q: 'Which protocol is preferred for device administration (router/switch CLI access) in AAA?',
+        a: ['RADIUS','LDAP','TACACS+','Kerberos'],
+        correct: 2,
+        explain: '<strong>TACACS+</strong> is preferred for device administration because it uses TCP, encrypts the entire payload, and separates authentication from authorization (fine-grained command control). RADIUS is preferred for network access.'
+      },
+      {
+        q: 'What is a Zero-Day vulnerability?',
+        a: ['A vulnerability that has existed for zero days','A vulnerability with no available patch that attackers can exploit immediately','A vulnerability discovered on New Year\'s Day','A vulnerability in Day-Zero hardware'],
+        correct: 1,
+        explain: '<strong>Zero-Day</strong> means the vendor has zero days to prepare a fix — the vulnerability is being exploited before a patch exists. Extremely dangerous because traditional patching cannot protect against it.'
+      },
+      {
+        q: 'In Cisco Zone-Based Firewall, what happens to traffic between two zones with no policy defined?',
+        a: ['Traffic is permitted by default','Traffic is logged but permitted','Traffic is blocked by default','Traffic follows the default route'],
+        correct: 2,
+        explain: 'In <strong>Zone-Based Firewall (ZBF)</strong>, if no policy exists between two zones, all traffic between them is <strong>blocked by default</strong>. You must explicitly permit traffic with zone-pair policies.'
+      },
+      {
+        q: 'What is the difference between symmetric and asymmetric encryption?',
+        a: ['Symmetric uses public/private key pairs; asymmetric uses one shared key','Symmetric uses one shared key (fast); asymmetric uses public/private key pairs (slower but solves key distribution)','Symmetric is for hashing; asymmetric is for encryption','There is no difference'],
+        correct: 1,
+        explain: '<strong>Symmetric</strong> (AES, 3DES) uses one shared key — fast but key distribution is challenging. <strong>Asymmetric</strong> (RSA, DH) uses public/private key pairs — solves key distribution but computationally slower.'
+      },
+      {
+        q: 'What is the role of a Certificate Authority (CA) in PKI?',
+        a: ['Generate symmetric encryption keys','Sign and issue digital certificates that bind public keys to identities','Authenticate users with username/password','Route traffic between security zones'],
+        correct: 1,
+        explain: 'A <strong>CA (Certificate Authority)</strong> is a trusted third party that digitally signs certificates, binding a public key to an identity (device or user). Without a CA, you cannot verify if a public key really belongs to who they claim.'
+      },
+      {
+        q: 'What attack fills a switch\'s CAM table to force it to flood traffic?',
+        a: ['ARP spoofing','VLAN hopping','MAC flooding','DHCP starvation'],
+        correct: 2,
+        explain: '<strong>MAC flooding</strong> sends thousands of fake source MACs, exhausting the CAM table. Once full, the switch floods all frames to all ports (like a hub), allowing the attacker to capture traffic. Prevented by Port Security.'
+      },
+      {
+        q: 'In 802.1X, what role does the switch play?',
+        a: ['Supplicant','Authentication Server','Authenticator','Certificate Authority'],
+        correct: 2,
+        explain: 'The switch acts as the <strong>Authenticator</strong> in 802.1X — it enforces port access but passes credentials to the RADIUS server for validation. The client is the supplicant; RADIUS is the authentication server.'
+      },
+      {
+        q: 'Which IPsec mode encrypts the entire original IP packet including headers?',
+        a: ['Transport mode','Tunnel mode','Aggressive mode','Main mode'],
+        correct: 1,
+        explain: '<strong>Tunnel mode</strong> encrypts the entire original IP packet and adds a new outer IP header — used for site-to-site VPNs between routers. Transport mode only encrypts the payload, used for host-to-host VPNs.'
+      },
+      {
+        q: 'What is VLAN hopping and how is it prevented?',
+        a: ['Users moving between VLANs normally — prevented by disabling inter-VLAN routing','Attacker gaining access to VLANs they should not — prevented by disabling DTP and using dedicated native VLANs','Traffic exceeding VLAN limits — prevented by QoS','Routing loops in VLANs — prevented by STP'],
+        correct: 1,
+        explain: '<strong>VLAN hopping</strong> allows an attacker to send traffic to VLANs they shouldn\'t access via switch spoofing (negotiating a trunk) or double-tagging. Prevent by: disable DTP (<code>switchport nonegotiate</code>), dedicated native VLAN, restrict trunk ports.'
+      },
+      {
+        q: 'Which security principle states users should only have the minimum permissions needed?',
+        a: ['Defense in Depth','Principle of Least Privilege','Need to Know','Separation of Duties'],
+        correct: 1,
+        explain: '<strong>Principle of Least Privilege</strong> — grant users/systems only the minimum access required for their function. This limits damage if an account is compromised.'
+      },
+      {
+        q: 'What type of attack sends a massive volume of traffic from thousands of compromised devices?',
+        a: ['DoS','DDoS','MITM','Phishing'],
+        correct: 1,
+        explain: '<strong>DDoS (Distributed Denial of Service)</strong> uses a botnet — thousands of compromised devices — to overwhelm a target. Unlike a regular DoS (single attacker), DDoS is much harder to block because traffic comes from many sources.'
+      },
+      {
+        q: 'RADIUS uses which transport protocol?',
+        a: ['TCP','UDP','ICMP','ESP'],
+        correct: 1,
+        explain: '<strong>RADIUS uses UDP</strong> (ports 1812 for authentication, 1813 for accounting). TACACS+ uses TCP port 49. RADIUS only encrypts the password field; TACACS+ encrypts the entire body.'
+      },
+      {
+        q: 'What does "Defense in Depth" mean?',
+        a: ['Using a very deep packet inspection firewall','Using multiple overlapping layers of security controls so if one fails others protect the network','Defending only the network perimeter','Using only hardware-based security'],
+        correct: 1,
+        explain: '<strong>Defense in Depth</strong> means layering security controls (perimeter firewall, internal segmentation, host hardening, encryption, user training) so that no single failure compromises everything.'
+      },
+    ]
+  },
+
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
