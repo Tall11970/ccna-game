@@ -5397,22 +5397,7 @@ resource "aci_application_profile" "web" {
       },
       {
         title: 'Network Access Control (NAC) & 802.1X',
-        body: `<p><strong>NAC (Network Access Control)</strong> ensures devices meet security requirements before connecting to the network.</p>
-<p><strong>Posture Assessment:</strong> Check if device has up-to-date AV, OS patches, correct config before granting full access.</p>
-<p><strong>802.1X Port-Based Authentication</strong> (wired networks):</p>
-<ul>
-  <li><strong>Supplicant:</strong> Client device</li>
-  <li><strong>Authenticator:</strong> Switch port (enforces access but doesn't validate)</li>
-  <li><strong>Authentication Server:</strong> RADIUS server (validates credentials)</li>
-</ul>
-<p><strong>RADIUS vs TACACS+:</strong></p>
-<table style="width:100%;border-collapse:collapse;margin-top:8px">
-  <tr style="background:rgba(255,255,255,0.07)"><th style="padding:6px;text-align:left">Feature</th><th style="padding:6px;text-align:left">RADIUS</th><th style="padding:6px;text-align:left">TACACS+</th></tr>
-  <tr><td style="padding:6px">Transport</td><td style="padding:6px">UDP</td><td style="padding:6px">TCP</td></tr>
-  <tr style="background:rgba(255,255,255,0.04)"><td style="padding:6px">Encryption</td><td style="padding:6px">Password only</td><td style="padding:6px">Entire payload</td></tr>
-  <tr><td style="padding:6px">AAA</td><td style="padding:6px">Combines AuthN+AuthZ</td><td style="padding:6px">Separates AuthN/AuthZ/Acct</td></tr>
-  <tr style="background:rgba(255,255,255,0.04)"><td style="padding:6px">Best for</td><td style="padding:6px">Network access (Wi-Fi, VPN)</td><td style="padding:6px">Device administration (CLI access)</td></tr>
-</table>`
+        type: 'nac_cards',
       },
       {
         title: 'Common LAN Attacks & Mitigations',
@@ -9859,6 +9844,12 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildCryptoAnim(document.getElementById('crypto-cards-root'));
       continue;
+    } else if (section.type === 'nac_cards') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="nac-cards-root"></div>`;
+      container.appendChild(card);
+      buildNACCardsAnim(document.getElementById('nac-cards-root'));
+      continue;
     } else if (section.type === 'acl_placement_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="acl-place-root"></div>`;
@@ -13470,6 +13461,417 @@ function buildIPSecAnim(root) {
       detailContainer.scrollIntoView({ behavior:'smooth', block:'nearest' });
     });
     grid.appendChild(chip);
+  });
+}
+
+// ── NAC & 802.1X Interactive Cards ────────────────────────────────────────────
+function buildNACCardsAnim(root) {
+  const cards = [
+    { id: 'nac',    icon: '🛡️', label: 'NAC Overview' },
+    { id: 'dot1x',  icon: '🔌', label: '802.1X Authentication' },
+    { id: 'eap',    icon: '📡', label: 'EAP Methods' },
+    { id: 'radius', icon: '📶', label: 'RADIUS' },
+    { id: 'tacacs', icon: '🖥️', label: 'TACACS+' },
+    { id: 'cmp',    icon: '⚖️',  label: 'RADIUS vs TACACS+' },
+  ];
+
+  root.innerHTML = `
+<style>
+.nac-grid{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.nac-chip{padding:10px 16px;border-radius:10px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);
+          color:#00ff88;cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s;user-select:none}
+.nac-chip:hover{background:rgba(0,255,136,0.16);transform:translateY(-2px)}
+.nac-chip.active{background:rgba(0,255,136,0.22);border-color:#00ff88;box-shadow:0 0 14px rgba(0,255,136,.35)}
+.nac-detail{margin-top:14px;padding:18px;background:rgba(0,0,0,0.3);border-radius:12px;
+            border:1px solid rgba(0,255,136,0.15);animation:nac-fade .3s ease}
+@keyframes nac-fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* posture timeline */
+.posture-step{display:flex;align-items:flex-start;gap:10px;margin:6px 0;opacity:0;transform:translateX(-14px);transition:all .4s}
+.posture-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+             font-size:.75rem;font-weight:700;flex-shrink:0;margin-top:2px}
+.posture-line{width:2px;background:rgba(255,255,255,0.15);margin:0 13px;flex-shrink:0}
+
+/* 802.1X flow */
+.dot1x-flow{display:grid;grid-template-columns:1fr 40px 1fr 40px 1fr;gap:0;margin:12px 0;align-items:start}
+.dot1x-actor{text-align:center;padding:10px 6px;border-radius:10px;font-size:.82rem;font-weight:700}
+.dot1x-arrow{display:flex;align-items:center;justify-content:center;color:#aaa;font-size:1.3rem;padding-top:14px}
+.dot1x-msg{font-size:.72rem;text-align:center;padding:3px 5px;border-radius:5px;margin:3px 0;
+           opacity:0;transform:translateY(6px);transition:all .35s}
+
+/* EAP methods */
+.eap-card{padding:10px 14px;border-radius:8px;margin:5px 0;cursor:pointer;transition:all .2s}
+.eap-card:hover{filter:brightness(1.1)}
+.eap-detail-box{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:.8rem;color:#ccc;
+                display:none;background:rgba(0,0,0,0.25)}
+
+/* RADIUS/TACACS packet */
+.pkt-row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:.82rem}
+.pkt-field{padding:5px 10px;border-radius:6px;text-align:center;font-size:.78rem;font-weight:700}
+.pkt-enc{position:relative}
+.pkt-enc::after{content:'🔒';position:absolute;top:-8px;right:-8px;font-size:.7rem}
+
+/* comparison table */
+.cmp-tbl{width:100%;border-collapse:collapse;font-size:.83rem;margin-top:8px}
+.cmp-tbl th{padding:8px 10px;text-align:left;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1)}
+.cmp-tbl td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.05);color:#ccc}
+.cmp-tbl tr:hover td{background:rgba(255,255,255,0.04)}
+
+/* bar */
+.nac-bar{height:10px;border-radius:5px;background:rgba(255,255,255,0.08);overflow:hidden;margin:3px 0}
+.nac-bar-fill{height:100%;border-radius:5px;width:0;transition:width 1s ease}
+</style>
+<div class="nac-grid" id="nac-chip-row"></div>
+<div id="nac-detail-area"></div>`;
+
+  const chipRow = root.querySelector('#nac-chip-row');
+  const detailArea = root.querySelector('#nac-detail-area');
+  let activeId = null;
+  let animTimers = [];
+  function clearTimers(){ animTimers.forEach(clearTimeout); animTimers=[]; }
+
+  /* ── NAC Overview ── */
+  function nacDetail(){
+    return `<div class="nac-detail">
+<h3 style="color:#00ff88;margin:0 0 8px">🛡️ Network Access Control (NAC)</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">NAC is a security policy framework that enforces who and what can connect to your network — BEFORE and AFTER they join.</p>
+<div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px;letter-spacing:.05em">POSTURE ASSESSMENT FLOW</div>
+<div id="posture-timeline">
+  ${[
+    ['🖥️','Device Requests Access','Tries to connect to switch/Wi-Fi port','rgba(0,212,255,0.12)','#00d4ff'],
+    ['🔍','NAC Agent Checks Posture','AV up-to-date? OS patched? Encryption on? MDM enrolled?','rgba(255,200,0,0.1)','#ffc800'],
+    ['⚖️','Policy Decision Point','ISE / Cisco ISE evaluates compliance against policy','rgba(180,0,255,0.1)','#cc66ff'],
+    ['✅','Compliant → Full Access','Device passes all checks — placed in production VLAN','rgba(0,255,136,0.1)','#00ff88'],
+    ['⚠️','Non-Compliant → Quarantine','Device fails → placed in remediation VLAN (limited access)','rgba(255,100,0,0.1)','#ff8800'],
+    ['🔄','Re-assessment After Patch','Device fixes issues → re-scanned → promoted to full access','rgba(0,212,255,0.1)','#00d4ff'],
+  ].map(([icon,title,desc,bg,c],i)=>`
+  <div class="posture-step" id="ps-${i}">
+    <div class="posture-dot" style="background:${bg};border:1px solid ${c};color:${c}">${icon}</div>
+    <div style="flex:1">
+      <div style="color:${c};font-weight:700;font-size:.85rem">${title}</div>
+      <div style="color:#aaa;font-size:.78rem">${desc}</div>
+    </div>
+  </div>
+  ${i<5?'<div class="posture-line" style="height:12px"></div>':''}`).join('')}
+</div>
+<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+  <div style="flex:1;min-width:130px;padding:10px;border-radius:8px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25)">
+    <div style="color:#00ff88;font-weight:700;margin-bottom:5px">✅ Pre-admission NAC</div>
+    <div style="color:#ccc;font-size:.8rem">Check device BEFORE granting any network access. Most secure — blocks non-compliant endpoints immediately.</div>
+  </div>
+  <div style="flex:1;min-width:130px;padding:10px;border-radius:8px;background:rgba(255,200,0,0.08);border:1px solid rgba(255,200,0,0.25)">
+    <div style="color:#ffc800;font-weight:700;margin-bottom:5px">⚠️ Post-admission NAC</div>
+    <div style="color:#ccc;font-size:.8rem">Monitor device behavior AFTER access is granted. Can quarantine devices that become non-compliant mid-session.</div>
+  </div>
+</div>
+<div style="margin-top:12px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.04);font-size:.8rem;color:#aaa">
+  <strong style="color:#e0eeff">Cisco ISE (Identity Services Engine)</strong> is the industry-standard NAC solution for CCNA. Integrates with Active Directory, handles 802.1X, posture, and guest access.
+</div>
+</div>`;
+  }
+
+  /* ── 802.1X ── */
+  function dot1xDetail(){
+    const msgs = [
+      // [from (0=sup,1=auth,2=srv), to, label, color]
+      [0,1,'EAPOL-Start','#00d4ff'],
+      [1,0,'EAP-Request/Identity','#ffc800'],
+      [0,1,'EAP-Response/Identity','#00d4ff'],
+      [1,2,'RADIUS Access-Request','#cc66ff'],
+      [2,1,'RADIUS Access-Challenge','#cc66ff'],
+      [1,0,'EAP-Request/Challenge','#ffc800'],
+      [0,1,'EAP-Response/Credentials','#00d4ff'],
+      [1,2,'RADIUS Access-Request','#cc66ff'],
+      [2,1,'RADIUS Access-Accept ✅','#00ff88'],
+      [1,0,'EAP-Success — Port Opened 🎉','#00ff88'],
+    ];
+    return `<div class="nac-detail">
+<h3 style="color:#00d4ff;margin:0 0 8px">🔌 802.1X Port-Based Authentication</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">Three-party authentication: <strong style="color:#00d4ff">Supplicant</strong> ↔ <strong style="color:#ffc800">Authenticator</strong> ↔ <strong style="color:#cc66ff">Auth Server</strong>. Port stays BLOCKED until authentication succeeds.</p>
+<div class="dot1x-flow">
+  <div class="dot1x-actor" style="background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.35);color:#00d4ff">
+    💻 Supplicant<br><small style="font-weight:400;color:#aaa">Client Device<br>(Windows, Mac, phone)</small>
+  </div>
+  <div></div>
+  <div class="dot1x-actor" style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,0.35);color:#ffc800">
+    🔀 Authenticator<br><small style="font-weight:400;color:#aaa">Switch / AP<br>(enforces, doesn't decide)</small>
+  </div>
+  <div></div>
+  <div class="dot1x-actor" style="background:rgba(180,0,255,0.1);border:1px solid rgba(180,0,255,0.35);color:#cc66ff">
+    🖥️ Auth Server<br><small style="font-weight:400;color:#aaa">RADIUS (ISE)<br>(validates credentials)</small>
+  </div>
+</div>
+<div id="dot1x-msg-area" style="margin-top:8px;max-height:280px;overflow-y:auto"></div>
+<div style="margin-top:12px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
+  <div style="color:#e0eeff;font-weight:700;margin-bottom:6px;font-size:.85rem">🔒 Port States</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    ${[
+      ['Unauthorized','Port blocked — only EAPOL traffic allowed (authentication frames)','rgba(255,50,50,0.12)','#ff6666'],
+      ['Authorized','Authentication succeeded — full network access granted','rgba(0,255,136,0.1)','#00ff88'],
+      ['Guest VLAN','No 802.1X supplicant detected — device placed in limited guest VLAN','rgba(255,200,0,0.1)','#ffc800'],
+      ['Auth-Fail VLAN','Authentication failed — device placed in restricted VLAN','rgba(255,100,0,0.1)','#ff8800'],
+    ].map(([t,d,bg,c])=>`
+    <div style="flex:1;min-width:120px;padding:8px;border-radius:7px;background:${bg};border:1px solid ${c}40">
+      <div style="color:${c};font-weight:700;font-size:.8rem;margin-bottom:3px">${t}</div>
+      <div style="color:#aaa;font-size:.75rem">${d}</div>
+    </div>`).join('')}
+  </div>
+</div>
+<script>
+window._dot1x_msgs = ${JSON.stringify(msgs)};
+(function(){
+  var area = document.getElementById('dot1x-msg-area');
+  if(!area) return;
+  window._dot1x_msgs.forEach(function(m,i){
+    setTimeout(function(){
+      var cols = ['#00d4ff','#ffc800','#cc66ff'];
+      var labels = ['Supplicant','Authenticator','Auth Server'];
+      var from = m[0], to = m[1], txt = m[2], c = m[3];
+      var d = document.createElement('div');
+      d.className = 'dot1x-msg';
+      var arrow = from < to ? '→' : '←';
+      d.style.cssText = 'font-size:.78rem;padding:5px 10px;border-radius:6px;margin:3px 0;opacity:0;transform:translateY(6px);transition:all .35s;background:'+c+'18;border-left:3px solid '+c+';color:#ccc';
+      d.innerHTML = '<span style="color:'+cols[from]+';font-weight:700">'+labels[from]+'</span> <span style="color:'+c+'">'+arrow+'</span> <span style="color:'+cols[to]+';font-weight:700">'+labels[to]+'</span>: <span style="color:'+c+'">'+txt+'</span>';
+      area.appendChild(d);
+      requestAnimationFrame(function(){ d.style.opacity='1'; d.style.transform='translateY(0)'; });
+      area.scrollTop = area.scrollHeight;
+    }, i*550 + 300);
+  });
+})();
+<\/script>
+</div>`;
+  }
+
+  /* ── EAP Methods ── */
+  function eapDetail(){
+    const methods = [
+      { name:'EAP-TLS', badge:'💪 Most Secure', bg:'rgba(0,255,136,0.1)', bc:'rgba(0,255,136,0.4)', c:'#00ff88',
+        desc:'Mutual certificate-based auth. Both client AND server present certificates. Used in high-security environments (banking, gov). Requires PKI infrastructure.',
+        pros:'Strongest auth — certificate pinning, no passwords', cons:'Requires deploying client certs to every device (management overhead)' },
+      { name:'PEAP', badge:'✅ Most Common', bg:'rgba(0,212,255,0.1)', bc:'rgba(0,212,255,0.4)', c:'#00d4ff',
+        desc:'Protected EAP — TLS tunnel protects inner auth (MSCHAPv2). Server needs cert only. Client uses username/password inside tunnel. Most widely deployed.',
+        pros:'Easy to deploy — only server cert needed', cons:'Only server is authenticated by cert; client uses password inside tunnel' },
+      { name:'EAP-FAST', badge:'⚡ Cisco', bg:'rgba(180,0,255,0.1)', bc:'rgba(180,0,255,0.4)', c:'#cc66ff',
+        desc:'Flexible Authentication via Secure Tunneling — Cisco proprietary. Uses PAC (Protected Access Credential) instead of certs. Faster re-auth.',
+        pros:'No PKI required — uses PAC files', cons:'Cisco proprietary; PAC provisioning adds complexity' },
+      { name:'EAP-MD5', badge:'❌ Avoid', bg:'rgba(255,50,50,0.1)', bc:'rgba(255,50,50,0.4)', c:'#ff6666',
+        desc:'Challenge-response using MD5 hashing. No server authentication — client cannot verify server. Vulnerable to offline dictionary attacks.',
+        pros:'Simple, low overhead', cons:'No server auth; MD5 is broken; vulnerable to MITM. Never use.' },
+    ];
+    return `<div class="nac-detail">
+<h3 style="color:#cc66ff;margin:0 0 8px">📡 EAP Methods</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">EAP (Extensible Authentication Protocol) runs inside the 802.1X framework. There are many EAP types — click each to compare.</p>
+${methods.map((m,i)=>`
+<div class="eap-card" style="background:${m.bg};border:1px solid ${m.bc}" onclick="window.nacToggleEAP(${i})">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="color:${m.c};font-weight:700;font-size:.9rem">${m.name}</div>
+    <span style="padding:2px 10px;border-radius:12px;font-size:.75rem;font-weight:700;background:${m.bc};color:${m.c}">${m.badge}</span>
+    <span style="margin-left:auto;color:#aaa;font-size:.85rem" id="eap-arrow-${i}">▼</span>
+  </div>
+  <div class="eap-detail-box" id="eap-detail-${i}">
+    <div style="margin-bottom:6px;color:#e0eeff">${m.desc}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+      <div style="flex:1;min-width:110px;padding:7px;border-radius:6px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2)">
+        <div style="color:#00ff88;font-weight:700;font-size:.78rem;margin-bottom:3px">✅ Pro</div>
+        <div style="color:#ccc;font-size:.75rem">${m.pros}</div>
+      </div>
+      <div style="flex:1;min-width:110px;padding:7px;border-radius:6px;background:rgba(255,50,50,0.07);border:1px solid rgba(255,50,50,0.2)">
+        <div style="color:#ff6666;font-weight:700;font-size:.78rem;margin-bottom:3px">⚠️ Con</div>
+        <div style="color:#ccc;font-size:.75rem">${m.cons}</div>
+      </div>
+    </div>
+  </div>
+</div>`).join('')}
+<script>
+window.nacToggleEAP = function(i){
+  var box = document.getElementById('eap-detail-'+i);
+  var arrow = document.getElementById('eap-arrow-'+i);
+  if(!box) return;
+  var open = box.style.display === 'block';
+  document.querySelectorAll('.eap-detail-box').forEach(function(b){ b.style.display='none'; });
+  document.querySelectorAll('[id^="eap-arrow-"]').forEach(function(a){ a.textContent='▼'; });
+  if(!open){ box.style.display='block'; if(arrow) arrow.textContent='▲'; }
+};
+<\/script>
+</div>`;
+  }
+
+  /* ── RADIUS ── */
+  function radiusDetail(){
+    return `<div class="nac-detail">
+<h3 style="color:#00d4ff;margin:0 0 8px">📶 RADIUS — Remote Authentication Dial-In User Service</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">RFC 2865/2866. Client-server protocol for centralized AAA. Uses <strong style="color:#ffc800">UDP</strong> — port <strong style="color:#ffc800">1812</strong> (auth) / <strong style="color:#ffc800">1813</strong> (accounting).</p>
+<div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px">RADIUS PACKET STRUCTURE (Access-Request)</div>
+<div id="radius-pkt">
+  ${[
+    ['Code (1B)','Access-Request = 1','rgba(0,212,255,0.15)','#00d4ff',false],
+    ['Identifier (1B)','Match request/response pairs','rgba(0,212,255,0.1)','#00d4ff',false],
+    ['Length (2B)','Total packet length','rgba(0,212,255,0.08)','#00d4ff',false],
+    ['Authenticator (16B)','Random value; used in response verification','rgba(255,200,0,0.1)','#ffc800',false],
+    ['User-Name','Cleartext in Access-Request','rgba(255,100,0,0.1)','#ff8800',false],
+    ['User-Password','Encrypted with MD5 + shared secret 🔒','rgba(0,255,136,0.12)','#00ff88',true],
+    ['NAS-IP-Address','IP of the authenticator (switch/AP)','rgba(180,0,255,0.1)','#cc66ff',false],
+  ].map(([field,desc,bg,c,enc])=>`
+  <div class="pkt-row">
+    <div class="pkt-field ${enc?'pkt-enc':''}" style="background:${bg};border:1px solid ${c}60;color:${c};min-width:150px">${field}</div>
+    <div style="color:#aaa;font-size:.78rem">${desc}</div>
+  </div>`).join('')}
+</div>
+<div style="margin-top:14px;color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px">AAA MODEL</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+  ${[
+    ['Authentication 🔐','Who are you?','Validates username/password, certificate, or token','rgba(0,212,255,0.1)','#00d4ff'],
+    ['Authorization 📋','What can you do?','Grants VLAN, ACL, time limits based on policy','rgba(180,0,255,0.1)','#cc66ff'],
+    ['Accounting 📊','What did you do?','Logs session start/stop, bytes transferred, duration','rgba(0,255,136,0.1)','#00ff88'],
+  ].map(([t,sub,d,bg,c])=>`
+  <div style="flex:1;min-width:130px;padding:10px;border-radius:8px;background:${bg};border:1px solid ${c}40">
+    <div style="color:${c};font-weight:700;font-size:.88rem;margin-bottom:2px">${t}</div>
+    <div style="color:#ffc800;font-size:.78rem;margin-bottom:4px">"${sub}"</div>
+    <div style="color:#aaa;font-size:.78rem">${d}</div>
+  </div>`).join('')}
+</div>
+<div style="margin-top:12px">
+  <div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:6px">RADIUS RESPONSE CODES</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    ${[
+      ['Access-Accept','Authentication passed — user gets access','#00ff88'],
+      ['Access-Reject','Auth failed — credentials invalid','#ff6666'],
+      ['Access-Challenge','More info needed (MFA token, etc.)','#ffc800'],
+      ['Accounting-Response','Confirms accounting data received','#00d4ff'],
+    ].map(([t,d,c])=>`
+    <div style="flex:1;min-width:110px;padding:8px;border-radius:7px;background:${c}15;border:1px solid ${c}40;text-align:center">
+      <div style="color:${c};font-weight:700;font-size:.78rem;margin-bottom:3px">${t}</div>
+      <div style="color:#aaa;font-size:.73rem">${d}</div>
+    </div>`).join('')}
+  </div>
+</div>
+</div>`;
+  }
+
+  /* ── TACACS+ ── */
+  function tacacsDetail(){
+    return `<div class="nac-detail">
+<h3 style="color:#cc66ff;margin:0 0 8px">🖥️ TACACS+ — Terminal Access Controller Access Control System Plus</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">Cisco-proprietary (RFC 8907). Uses <strong style="color:#ffc800">TCP port 49</strong>. Encrypts the <strong style="color:#00ff88">entire payload</strong> — not just the password. Designed for device administration.</p>
+<div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px">TACACS+ vs RADIUS ENCRYPTION COMPARISON</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+  <div style="flex:1;min-width:140px">
+    <div style="color:#ffc800;font-weight:700;font-size:.85rem;margin-bottom:6px">RADIUS Packet</div>
+    ${[['Header','Cleartext','rgba(255,100,0,0.1)','#ff8800'],['Password','🔒 Encrypted','rgba(0,255,136,0.12)','#00ff88'],['Username','Cleartext','rgba(255,50,50,0.1)','#ff6666'],['Attributes','Cleartext','rgba(255,50,50,0.1)','#ff6666']].map(([f,l,bg,c])=>`
+    <div style="display:flex;align-items:center;gap:6px;margin:3px 0">
+      <div style="flex:1;padding:5px 8px;border-radius:5px;background:${bg};border:1px solid ${c}50;color:${c};font-size:.78rem;font-weight:600">${f}</div>
+      <div style="color:#aaa;font-size:.72rem;width:90px">${l}</div>
+    </div>`).join('')}
+  </div>
+  <div style="flex:1;min-width:140px">
+    <div style="color:#cc66ff;font-weight:700;font-size:.85rem;margin-bottom:6px">TACACS+ Packet</div>
+    ${[['Header','Cleartext (type/seq)','rgba(0,212,255,0.1)','#00d4ff'],['Body','🔒🔒🔒 Fully Encrypted','rgba(0,255,136,0.15)','#00ff88'],['','(username, password,','',''],['','commands, all attrs)','','']].map(([f,l,bg,c])=> f?`
+    <div style="display:flex;align-items:center;gap:6px;margin:3px 0">
+      <div style="flex:1;padding:5px 8px;border-radius:5px;background:${bg};border:1px solid ${c?c+'50':'transparent'};color:${c||'#aaa'};font-size:.78rem;font-weight:600">${f}</div>
+      <div style="color:#aaa;font-size:.72rem;width:90px">${l}</div>
+    </div>`:`<div style="color:#aaa;font-size:.72rem;padding-left:4px">${l}</div>`).join('')}
+  </div>
+</div>
+<div style="color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px">SEPARATED AAA — THE TACACS+ ADVANTAGE</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+  ${[
+    ['Authentication','Login validation only (username/password)','Can be handled by a different server/module','rgba(0,212,255,0.1)','#00d4ff'],
+    ['Authorization','Per-command authorization','Admin can run "show" but not "no shutdown"','rgba(180,0,255,0.1)','#cc66ff'],
+    ['Accounting','Logs every command typed','Full audit trail: who ran what, when','rgba(0,255,136,0.1)','#00ff88'],
+  ].map(([t,sub,d,bg,c])=>`
+  <div style="flex:1;min-width:130px;padding:10px;border-radius:8px;background:${bg};border:1px solid ${c}40">
+    <div style="color:${c};font-weight:700;font-size:.85rem;margin-bottom:2px">${t}</div>
+    <div style="color:#e0eeff;font-size:.78rem;margin-bottom:4px">${sub}</div>
+    <div style="color:#aaa;font-size:.75rem">${d}</div>
+  </div>`).join('')}
+</div>
+<div style="padding:10px 14px;border-radius:8px;background:rgba(255,200,0,0.08);border:1px solid rgba(255,200,0,0.3);font-size:.82rem">
+  <strong style="color:#ffc800">📌 CCNA Rule of Thumb:</strong>
+  <span style="color:#ccc"> Use <strong style="color:#00d4ff">RADIUS</strong> for network access (Wi-Fi, VPN, wired 802.1X). Use <strong style="color:#cc66ff">TACACS+</strong> for device administration (router/switch CLI management).</span>
+</div>
+</div>`;
+  }
+
+  /* ── Comparison ── */
+  function cmpDetail(){
+    const rows = [
+      ['Transport Protocol','UDP (1812/1813)','TCP (49)'],
+      ['Payload Encryption','Password only 🔒','Entire body 🔒🔒🔒'],
+      ['AAA Model','Combined AuthN+AuthZ','Separated (independent)'],
+      ['Command Authorization','❌ Not supported','✅ Per-command granularity'],
+      ['Primary Use Case','Network access (Wi-Fi, VPN)','Device admin (router/switch CLI)'],
+      ['Standard','RFC 2865/2866 (Open)','Cisco proprietary (RFC 8907)'],
+      ['Multivendor','✅ Universal','⚠️ Mostly Cisco environments'],
+      ['Typical Server','Cisco ISE, FreeRADIUS','Cisco ISE, ACS (legacy)'],
+    ];
+    return `<div class="nac-detail">
+<h3 style="color:#ffc800;margin:0 0 8px">⚖️ RADIUS vs TACACS+ — Head-to-Head</h3>
+<p style="color:#ccc;font-size:.88rem;margin-bottom:12px">Both provide AAA services but for <strong>different use cases</strong>. Knowing which to use is a key CCNA exam topic.</p>
+<table class="cmp-tbl">
+  <tr>
+    <th style="color:#aaa;width:35%">Feature</th>
+    <th style="color:#00d4ff">📶 RADIUS</th>
+    <th style="color:#cc66ff">🖥️ TACACS+</th>
+  </tr>
+  ${rows.map(([f,r,t],i)=>`
+  <tr style="${i%2===0?'background:rgba(255,255,255,0.02)':''}">
+    <td style="color:#e0eeff;font-weight:600">${f}</td>
+    <td style="color:#ccc">${r}</td>
+    <td style="color:#ccc">${t}</td>
+  </tr>`).join('')}
+</table>
+<div style="margin-top:14px;color:#aaa;font-size:.8rem;font-weight:600;margin-bottom:8px">DEPLOYMENT SCENARIO GUIDE</div>
+<div style="display:flex;flex-direction:column;gap:6px" id="cmp-scenarios">
+  ${[
+    ['📱 Corporate Wi-Fi authentication','Use RADIUS — 802.1X + PEAP/EAP-TLS','#00d4ff'],
+    ['🔐 VPN user authentication (AnyConnect)','Use RADIUS — standard AAA for remote access','#00d4ff'],
+    ['⚙️ Network engineer SSH into router','Use TACACS+ — per-command authorization + full audit','#cc66ff'],
+    ['👔 Help desk needs read-only switch access','Use TACACS+ — restrict to "show" commands only','#cc66ff'],
+    ['🏢 Cisco-only enterprise network','Either works; TACACS+ preferred for device mgmt','#ffc800'],
+    ['🌐 Multi-vendor environment','RADIUS preferred — works with all vendors','#00d4ff'],
+  ].map(([scenario,choice,c],i)=>`
+  <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:7px;background:rgba(255,255,255,0.03);border-left:3px solid ${c};opacity:0;transform:translateX(-10px);transition:all .4s ${i*0.1}s" data-cmp-row="true">
+    <div style="flex:1;color:#ccc;font-size:.82rem">${scenario}</div>
+    <div style="color:${c};font-weight:700;font-size:.78rem;white-space:nowrap">→ ${choice}</div>
+  </div>`).join('')}
+</div>
+</div>`;
+  }
+
+  const builders = { nac:nacDetail, dot1x:dot1xDetail, eap:eapDetail, radius:radiusDetail, tacacs:tacacsDetail, cmp:cmpDetail };
+
+  function startNacAnim(){
+    for(let i=0;i<6;i++){
+      const t = setTimeout(()=>{
+        const el = root.querySelector('#ps-'+i);
+        if(el){ el.style.opacity='1'; el.style.transform='translateX(0)'; }
+      }, i*200+200);
+      animTimers.push(t);
+    }
+  }
+
+  function startCmpAnim(){
+    root.querySelectorAll('[data-cmp-row]').forEach((el,i)=>{
+      const t = setTimeout(()=>{ el.style.opacity='1'; el.style.transform='translateX(0)'; }, i*120+300);
+      animTimers.push(t);
+    });
+  }
+
+  cards.forEach(card => {
+    const chip = document.createElement('div');
+    chip.className = 'nac-chip';
+    chip.textContent = card.icon + ' ' + card.label;
+    chip.onclick = () => {
+      clearTimers();
+      if(activeId === card.id){ activeId=null; detailArea.innerHTML=''; chip.classList.remove('active'); return; }
+      root.querySelectorAll('.nac-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      activeId = card.id;
+      detailArea.innerHTML = builders[card.id]();
+      if(card.id==='nac') startNacAnim();
+      if(card.id==='cmp') startCmpAnim();
+    };
+    chipRow.appendChild(chip);
   });
 }
 
