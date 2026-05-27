@@ -5381,17 +5381,7 @@ resource "aci_application_profile" "web" {
       },
       {
         title: 'Firewalls',
-        body: `<p><strong>Firewalls</strong> control traffic based on rules. Types:</p>
-<p><strong>Stateless (Packet Filter):</strong> Inspects each packet independently based on source/destination IP and port. No awareness of connection state. Fast but limited.</p>
-<p><strong>Stateful:</strong> Tracks connection state — knows if a packet is part of an established session. Allows return traffic automatically. Default for most modern firewalls.</p>
-<p><strong>NGFW (Next-Generation Firewall):</strong> Deep packet inspection, application awareness, integrated IPS, URL filtering, identity-based policies.</p>
-<p><strong>Cisco Zone-Based Firewall (ZBF):</strong></p>
-<ul>
-  <li>Interfaces assigned to zones (inside, outside, DMZ)</li>
-  <li>Traffic between zones controlled by policy</li>
-  <li>Traffic within a zone is permitted by default</li>
-  <li>No policy between zones = traffic blocked by default</li>
-</ul>`
+        type: 'firewall_cards',
       },
       {
         title: 'IPS and IDS',
@@ -9881,6 +9871,12 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildThreatCardsAnim(document.getElementById('threat-cards-root'));
       continue;
+    } else if (section.type === 'firewall_cards') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="fw-cards-root"></div>`;
+      container.appendChild(card);
+      buildFirewallCardsAnim(document.getElementById('fw-cards-root'));
+      continue;
     } else if (section.type === 'acl_placement_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="acl-place-root"></div>`;
@@ -12292,6 +12288,400 @@ function buildThreatCardsAnim(root) {
       const animEl = detailContainer.querySelector(`[id$="-anim"]`);
       if (animEl) threat.animInit(animEl);
       detailContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    grid.appendChild(chip);
+  });
+}
+
+// ── Firewall Types Interactive Cards ─────────────────────────────────────────
+function buildFirewallCardsAnim(root) {
+  const firewalls = [
+    {
+      id: 'stateless',
+      icon: '📋',
+      name: 'Stateless Firewall',
+      subtitle: 'Packet Filter',
+      color: '#00d4ff',
+      tagline: 'Checks each packet independently',
+      pros: ['Very fast — minimal CPU overhead','Simple rule sets','Good for basic perimeter filtering'],
+      cons: ['No connection awareness — can\'t track state','Must explicitly allow return traffic','Easily bypassed by crafting packets that match rules'],
+      anim: `
+<div id="sl-anim" style="background:rgba(0,212,255,0.05);border-radius:12px;border:1px solid rgba(0,212,255,0.2);padding:14px;margin:10px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="text-align:center;"><div style="font-size:1.6rem;">💻</div><div style="font-size:0.65rem;color:#8ba3c0;">Client</div></div>
+    <div style="flex:1;margin:0 12px;">
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;border:2px solid rgba(0,212,255,0.4);padding:8px;text-align:center;">
+        <div style="font-size:0.7rem;font-weight:700;color:#00d4ff;margin-bottom:6px;">📋 ACL RULES</div>
+        <div style="display:flex;flex-direction:column;gap:3px;" id="sl-rules">
+          <div style="font-size:0.62rem;padding:3px 6px;border-radius:4px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88;">✅ PERMIT tcp any any eq 80</div>
+          <div style="font-size:0.62rem;padding:3px 6px;border-radius:4px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88;">✅ PERMIT tcp any any eq 443</div>
+          <div style="font-size:0.62rem;padding:3px 6px;border-radius:4px;background:rgba(255,68,102,0.1);border:1px solid rgba(255,68,102,0.3);color:#ff4466;">❌ DENY ip any any</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;"><div style="font-size:1.6rem;">🌐</div><div style="font-size:0.65rem;color:#8ba3c0;">Server</div></div>
+  </div>
+  <div style="position:relative;height:44px;overflow:hidden;">
+    <div id="sl-packet" style="position:absolute;left:32px;top:8px;opacity:0;transition:none;font-size:0.62rem;background:rgba(0,212,255,0.15);border:1px solid #00d4ff;border-radius:6px;padding:3px 7px;color:#e0eeff;white-space:nowrap;"></div>
+    <div id="sl-verdict" style="position:absolute;right:32px;top:8px;opacity:0;font-size:0.75rem;font-weight:800;"></div>
+  </div>
+  <div id="sl-note" style="font-size:0.68rem;color:#8ba3c0;text-align:center;margin-top:2px;min-height:16px;"></div>
+</div>`,
+      animInit: function(el) {
+        const pkt = el.querySelector('#sl-packet');
+        const verdict = el.querySelector('#sl-verdict');
+        const note = el.querySelector('#sl-note');
+        const packets = [
+          { label:'SRC:10.0.0.1 DST:8.8.8.8 TCP:80', allow:true, why:'Matches rule 1 → PERMIT' },
+          { label:'SRC:10.0.0.1 DST:8.8.8.8 TCP:443', allow:true, why:'Matches rule 2 → PERMIT' },
+          { label:'SRC:ATTACKER DST:10.0.0.1 TCP:22', allow:false, why:'No match → implicit DENY' },
+          { label:'REPLY: DST:10.0.0.1 TCP:80 SRC:80', allow:false, why:'⚠️ Return traffic BLOCKED too! No state.' },
+        ];
+        let i = 0;
+        function next() {
+          if (!document.contains(el)) return;
+          const p = packets[i % packets.length];
+          pkt.style.transition = 'none'; pkt.style.left = '32px'; pkt.style.opacity = '0';
+          verdict.style.opacity = '0'; note.textContent = '';
+          setTimeout(() => {
+            if (!document.contains(el)) return;
+            pkt.textContent = p.label; pkt.style.opacity = '1';
+            pkt.style.transition = 'left 0.9s ease, opacity 0.3s';
+            pkt.style.left = p.allow ? 'calc(100% - 180px)' : '50%';
+          }, 200);
+          setTimeout(() => {
+            if (!document.contains(el)) return;
+            verdict.textContent = p.allow ? '✅ PERMIT' : '❌ DENY';
+            verdict.style.color = p.allow ? '#00ff88' : '#ff4466';
+            verdict.style.opacity = '1';
+            note.textContent = p.why;
+            note.style.color = p.allow ? '#00ff88' : '#ff4466';
+          }, 1200);
+          i++;
+          setTimeout(next, 3000);
+        }
+        setTimeout(next, 400);
+      }
+    },
+    {
+      id: 'stateful',
+      icon: '🧠',
+      name: 'Stateful Firewall',
+      subtitle: 'Connection Tracking',
+      color: '#00ff88',
+      tagline: 'Tracks every connection in a state table',
+      pros: ['Knows if a packet belongs to an established session','Automatically allows return traffic — no extra rules needed','Detects attacks like TCP session hijacking'],
+      cons: ['More CPU/memory intensive than packet filter','State table can be exhausted by DoS attacks','Slight latency overhead vs stateless'],
+      anim: `
+<div id="sf-anim" style="background:rgba(0,255,136,0.05);border-radius:12px;border:1px solid rgba(0,255,136,0.2);padding:14px;margin:10px 0;">
+  <div style="display:flex;gap:12px;">
+    <div style="flex:1;">
+      <div style="font-size:0.68rem;font-weight:700;color:#00ff88;margin-bottom:6px;">📡 TRAFFIC FLOW</div>
+      <div style="position:relative;height:100px;">
+        <div style="position:absolute;left:0;top:10px;text-align:center;width:40px;"><div style="font-size:1.3rem;">💻</div><div style="font-size:0.58rem;color:#8ba3c0;">Client</div></div>
+        <div style="position:absolute;right:0;top:10px;text-align:center;width:40px;"><div style="font-size:1.3rem;">🌐</div><div style="font-size:0.58rem;color:#8ba3c0;">Server</div></div>
+        <div id="sf-fw" style="position:absolute;left:50%;top:8px;transform:translateX(-50%);text-align:center;width:50px;"><div style="font-size:1.3rem;">🧱</div><div style="font-size:0.58rem;color:#00ff88;font-weight:700;">FW</div></div>
+        <div id="sf-pkt1" style="position:absolute;left:44px;top:22px;opacity:0;font-size:0.58rem;background:rgba(0,212,255,0.2);border:1px solid #00d4ff;border-radius:4px;padding:2px 5px;color:#00d4ff;white-space:nowrap;transition:all 0.7s;"></div>
+        <div id="sf-pkt2" style="position:absolute;right:44px;top:50px;opacity:0;font-size:0.58rem;background:rgba(0,255,136,0.2);border:1px solid #00ff88;border-radius:4px;padding:2px 5px;color:#00ff88;white-space:nowrap;transition:all 0.7s;"></div>
+        <div id="sf-status" style="position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:0.62rem;color:#8ba3c0;"></div>
+      </div>
+    </div>
+    <div style="width:170px;">
+      <div style="font-size:0.68rem;font-weight:700;color:#00ff88;margin-bottom:6px;">📊 STATE TABLE</div>
+      <div id="sf-table" style="background:rgba(0,0,0,0.3);border-radius:8px;border:1px solid rgba(0,255,136,0.2);padding:6px;font-size:0.58rem;min-height:80px;">
+        <div style="color:#8ba3c0;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:3px;margin-bottom:4px;">SRC → DST | STATE</div>
+      </div>
+    </div>
+  </div>
+</div>`,
+      animInit: function(el) {
+        const p1 = el.querySelector('#sf-pkt1');
+        const p2 = el.querySelector('#sf-pkt2');
+        const status = el.querySelector('#sf-status');
+        const table = el.querySelector('#sf-table');
+        const tableHeader = table.querySelector('div');
+        function clearRows() {
+          Array.from(table.children).slice(1).forEach(c => c.remove());
+        }
+        function addRow(text, color) {
+          const r = document.createElement('div');
+          r.style.cssText = `color:${color};padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);animation:threat-slide-in 0.2s ease;`;
+          r.textContent = text;
+          table.appendChild(r);
+        }
+        function runCycle() {
+          if (!document.contains(el)) return;
+          clearRows(); p1.style.opacity='0'; p2.style.opacity='0'; status.textContent='';
+          // Step 1: SYN
+          setTimeout(() => {
+            if(!document.contains(el)) return;
+            p1.textContent='→ SYN :80'; p1.style.left='44px'; p1.style.opacity='1';
+            p1.style.transition='left 0.6s ease'; setTimeout(()=>{ p1.style.left='calc(50% - 10px)'; },50);
+            status.textContent='Client initiates connection...';
+          }, 300);
+          setTimeout(() => {
+            if(!document.contains(el)) return;
+            addRow('10.0.0.1→8.8.8.8:80 | SYN', '#ffcc00');
+            status.textContent='FW creates state entry: SYN';
+            p1.style.opacity='0';
+          }, 1100);
+          // Step 2: SYN-ACK reply
+          setTimeout(() => {
+            if(!document.contains(el)) return;
+            p2.textContent='← SYN-ACK'; p2.style.right='44px'; p2.style.opacity='1';
+            p2.style.transition='right 0.6s ease'; setTimeout(()=>{ p2.style.right='calc(50% - 10px)'; },50);
+            status.textContent='Server replies — FW checks state table...';
+          }, 2000);
+          setTimeout(() => {
+            if(!document.contains(el)) return;
+            clearRows(); addRow('10.0.0.1→8.8.8.8:80 | ESTAB', '#00ff88');
+            status.textContent='✅ Return traffic ALLOWED (state: ESTABLISHED)';
+            p2.style.opacity='0';
+          }, 2800);
+          // Step 3: unknown return
+          setTimeout(() => {
+            if(!document.contains(el)) return;
+            p1.textContent='← UNSOLICITED PKT'; p1.style.left='calc(50% + 10px)'; p1.style.opacity='1';
+            p1.style.transition='left 0.6s ease'; setTimeout(()=>{ p1.style.left='calc(50% - 10px)'; },50);
+            status.textContent='Unknown packet — no matching state entry...';
+          }, 4200);
+          setTimeout(() => {
+            if(!document.contains(el)) return;
+            status.textContent='❌ DROPPED — no state entry found'; status.style.color='#ff4466';
+            p1.style.opacity='0';
+          }, 5100);
+          setTimeout(() => { if(!document.contains(el)) return; status.style.color='#8ba3c0'; runCycle(); }, 7000);
+        }
+        runCycle();
+      }
+    },
+    {
+      id: 'ngfw',
+      icon: '🔬',
+      name: 'Next-Gen Firewall',
+      subtitle: 'NGFW — Deep Packet Inspection',
+      color: '#a855f7',
+      tagline: 'Inspects application layer, not just ports',
+      pros: ['Application-aware: blocks BitTorrent even on port 80','Integrated IPS, URL filtering, sandboxing','User identity-based policies (block social media for some users, allow others)'],
+      cons: ['Much more expensive than basic firewalls','Higher latency due to deep inspection','Requires ongoing signature/app updates'],
+      anim: `
+<div id="ngfw-anim" style="background:rgba(168,85,247,0.05);border-radius:12px;border:1px solid rgba(168,85,247,0.25);padding:14px;margin:10px 0;">
+  <div style="font-size:0.68rem;font-weight:700;color:#a855f7;margin-bottom:8px;text-align:center;">🔬 NGFW — Packet Inspection Layers</div>
+  <div id="ngfw-pkt-display" style="background:rgba(0,0,0,0.3);border-radius:8px;border:1px solid rgba(168,85,247,0.3);padding:8px;margin-bottom:8px;font-size:0.62rem;color:#e0eeff;min-height:30px;text-align:center;"></div>
+  <div style="display:flex;flex-direction:column;gap:4px;" id="ngfw-layers">
+    <div class="ngfw-layer" data-label="L3: IP Header" data-check="Src/Dst IP · Spoofed IP check" style="border-color:rgba(0,212,255,0.4);color:#00d4ff;">🌐 Layer 3: IP Header</div>
+    <div class="ngfw-layer" data-label="L4: TCP/UDP" data-check="Port numbers · SYN flood · TCP state" style="border-color:rgba(0,255,136,0.4);color:#00ff88;">📦 Layer 4: TCP/UDP Port</div>
+    <div class="ngfw-layer" data-label="L7: Application" data-check="App ID: Netflix / BitTorrent / YouTube / SSH" style="border-color:rgba(255,204,0,0.4);color:#ffcc00;">📱 Layer 7: Application ID</div>
+    <div class="ngfw-layer" data-label="Threat Intel" data-check="Known malware signatures · C2 domains · URL reputation" style="border-color:rgba(255,68,102,0.4);color:#ff4466;">⚠️ Threat Intelligence</div>
+    <div class="ngfw-layer" data-label="Identity" data-check="User: jsmith · Policy: Sales → Allow streaming" style="border-color:rgba(168,85,247,0.4);color:#a855f7;">👤 User Identity Policy</div>
+  </div>
+  <div id="ngfw-verdict" style="margin-top:8px;text-align:center;font-size:0.75rem;font-weight:800;opacity:0;transition:opacity 0.4s;"></div>
+</div>
+<style>
+.ngfw-layer {
+  font-size:0.65rem;padding:5px 10px;border-radius:6px;border:1px solid;
+  background:rgba(0,0,0,0.2);transition:all 0.3s;cursor:default;
+}
+.ngfw-layer.active { filter:brightness(1.4); transform:translateX(4px); }
+.ngfw-layer .ngfw-check { font-size:0.6rem;color:#8ba3c0;display:none;margin-top:2px; }
+.ngfw-layer.active .ngfw-check { display:block; }
+</style>`,
+      animInit: function(el) {
+        const layers = el.querySelectorAll('.ngfw-layer');
+        const pktDisplay = el.querySelector('#ngfw-pkt-display');
+        const verdict = el.querySelector('#ngfw-verdict');
+        layers.forEach(l => {
+          const check = document.createElement('div');
+          check.className = 'ngfw-check';
+          check.textContent = '→ ' + l.dataset.check;
+          l.appendChild(check);
+        });
+        const scenarios = [
+          { pkt:'HTTP GET port 80 — App detected: BitTorrent peer exchange', allow:false, policy:'Policy: P2P → BLOCK' },
+          { pkt:'HTTPS port 443 — App: Salesforce.com — User: jsmith (Sales)', allow:true, policy:'Policy: SaaS apps → PERMIT' },
+          { pkt:'DNS query → known C2 domain (malware beacon)', allow:false, policy:'Threat Intel: C2 domain → BLOCK + ALERT' },
+          { pkt:'SSH port 22 — App: SSH — User: admin (IT Team)', allow:true, policy:'Policy: IT admin SSH → PERMIT' },
+        ];
+        let si = 0;
+        function runScenario() {
+          if (!document.contains(el)) return;
+          layers.forEach(l => l.classList.remove('active'));
+          verdict.style.opacity = '0';
+          const s = scenarios[si % scenarios.length];
+          pktDisplay.textContent = '📨 ' + s.pkt;
+          let li = 0;
+          function lightNext() {
+            if (!document.contains(el) || li >= layers.length) {
+              setTimeout(() => {
+                if(!document.contains(el)) return;
+                verdict.textContent = s.allow ? '✅ PERMIT — ' + s.policy : '❌ BLOCK — ' + s.policy;
+                verdict.style.color = s.allow ? '#00ff88' : '#ff4466';
+                verdict.style.opacity = '1';
+              }, 300);
+              si++;
+              setTimeout(runScenario, 3500);
+              return;
+            }
+            layers[li].classList.add('active');
+            if (li > 0) layers[li-1].classList.remove('active');
+            li++;
+            setTimeout(lightNext, 500);
+          }
+          lightNext();
+        }
+        setTimeout(runScenario, 300);
+      }
+    },
+    {
+      id: 'zbf',
+      icon: '🗺️',
+      name: 'Zone-Based Firewall',
+      subtitle: 'Cisco ZBF — Zone Policy Model',
+      color: '#ff8c00',
+      tagline: 'Traffic controlled by zone-pair policies',
+      pros: ['Interfaces grouped into zones — policy per zone-pair','Simpler to manage than per-interface ACLs','Default deny between zones = secure by default','Supports stateful inspection per zone-pair'],
+      cons: ['More complex initial config vs basic ACLs','Interfaces in the same zone = no filtering between them','Must explicitly define every zone-pair you want to permit'],
+      anim: `
+<div id="zbf-anim" style="background:rgba(255,140,0,0.05);border-radius:12px;border:1px solid rgba(255,140,0,0.2);padding:14px;margin:10px 0;">
+  <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;margin-bottom:10px;">
+    <div id="zbf-inside" style="background:rgba(0,255,136,0.08);border:2px solid rgba(0,255,136,0.4);border-radius:10px;padding:8px;text-align:center;">
+      <div style="font-size:0.65rem;font-weight:700;color:#00ff88;margin-bottom:4px;">🏢 INSIDE</div>
+      <div style="font-size:1rem;">💻</div><div style="font-size:1rem;">💻</div>
+      <div style="font-size:0.58rem;color:#8ba3c0;margin-top:2px;">Trusted LAN</div>
+    </div>
+    <div style="text-align:center;">
+      <div id="zbf-arrow1" style="font-size:1.2rem;transition:all 0.3s;">⟶</div>
+      <div id="zbf-policy1" style="font-size:0.6rem;border-radius:4px;padding:2px 5px;margin-top:2px;"></div>
+    </div>
+    <div id="zbf-dmz" style="background:rgba(255,204,0,0.08);border:2px solid rgba(255,204,0,0.4);border-radius:10px;padding:8px;text-align:center;">
+      <div style="font-size:0.65rem;font-weight:700;color:#ffcc00;margin-bottom:4px;">🔶 DMZ</div>
+      <div style="font-size:1rem;">🖥️</div>
+      <div style="font-size:0.58rem;color:#8ba3c0;margin-top:2px;">Web Server</div>
+    </div>
+    <div style="text-align:center;">
+      <div id="zbf-arrow2" style="font-size:1.2rem;transition:all 0.3s;">⟶</div>
+      <div id="zbf-policy2" style="font-size:0.6rem;border-radius:4px;padding:2px 5px;margin-top:2px;"></div>
+    </div>
+    <div id="zbf-outside" style="background:rgba(255,68,102,0.08);border:2px solid rgba(255,68,102,0.4);border-radius:10px;padding:8px;text-align:center;">
+      <div style="font-size:0.65rem;font-weight:700;color:#ff4466;margin-bottom:4px;">🌍 OUTSIDE</div>
+      <div style="font-size:1rem;">👤</div>
+      <div style="font-size:0.58rem;color:#8ba3c0;margin-top:2px;">Internet</div>
+    </div>
+  </div>
+  <div id="zbf-scenario" style="background:rgba(0,0,0,0.3);border-radius:8px;padding:8px;font-size:0.65rem;min-height:40px;">
+    <div id="zbf-scenario-text" style="color:#e0eeff;"></div>
+    <div id="zbf-scenario-result" style="font-weight:700;margin-top:3px;"></div>
+  </div>
+</div>`,
+      animInit: function(el) {
+        const a1 = el.querySelector('#zbf-arrow1');
+        const a2 = el.querySelector('#zbf-arrow2');
+        const p1 = el.querySelector('#zbf-policy1');
+        const p2 = el.querySelector('#zbf-policy2');
+        const scenText = el.querySelector('#zbf-scenario-text');
+        const scenResult = el.querySelector('#zbf-scenario-result');
+        const scenarios = [
+          { text:'Inside → Outside: Web browsing (HTTP/HTTPS)', arrow:'1→2', allow:true, result:'✅ Zone-pair: inside→outside INSPECT policy — ALLOWED', p1:'✅ inspect', p2:'✅ inspect' },
+          { text:'Outside → Inside: Unsolicited inbound connection', arrow:'2→1', allow:false, result:'❌ Zone-pair: outside→inside — NO POLICY = DEFAULT DENY', p1:'', p2:'❌ deny' },
+          { text:'Outside → DMZ: HTTP port 80 to web server', arrow:'2→dmz', allow:true, result:'✅ Zone-pair: outside→dmz — policy PERMIT tcp port 80', p1:'', p2:'✅ permit :80' },
+          { text:'Inside → DMZ: Admin SSH to web server', arrow:'1→dmz', allow:true, result:'✅ Zone-pair: inside→dmz — policy PERMIT tcp port 22', p1:'✅ permit :22', p2:'' },
+        ];
+        let i = 0;
+        function runScenario() {
+          if (!document.contains(el)) return;
+          const s = scenarios[i % scenarios.length];
+          scenText.textContent = '🔀 ' + s.text;
+          scenResult.textContent = '';
+          p1.textContent = ''; p2.textContent = '';
+          a1.style.color = '#8ba3c0'; a2.style.color = '#8ba3c0';
+          setTimeout(() => {
+            if(!document.contains(el)) return;
+            if (s.arrow === '1→2') { a1.style.color='#00d4ff'; a2.style.color='#00d4ff'; }
+            else if (s.arrow === '2→1') { a1.style.color='#ff4466'; a2.style.color='#ff4466'; }
+            else if (s.arrow === '2→dmz') { a2.style.color = s.allow ? '#00d4ff' : '#ff4466'; }
+            else if (s.arrow === '1→dmz') { a1.style.color = s.allow ? '#00d4ff' : '#ff4466'; }
+            p1.textContent = s.p1; p1.style.color = s.allow ? '#00ff88' : '#ff4466';
+            p2.textContent = s.p2; p2.style.color = s.allow ? '#00ff88' : '#ff4466';
+          }, 300);
+          setTimeout(() => {
+            if(!document.contains(el)) return;
+            scenResult.textContent = s.result;
+            scenResult.style.color = s.allow ? '#00ff88' : '#ff4466';
+          }, 1100);
+          i++;
+          setTimeout(runScenario, 4000);
+        }
+        runScenario();
+      }
+    },
+  ];
+
+  root.innerHTML = `
+<style>
+.fw-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:10px; margin:4px 0 14px; }
+.fw-chip {
+  background:rgba(255,255,255,0.04); border-radius:12px; padding:12px 10px;
+  cursor:pointer; border:2px solid rgba(255,255,255,0.08); transition:all 0.22s;
+  text-align:center; user-select:none;
+}
+.fw-chip:hover { transform:translateY(-2px); border-color:var(--fw-color,#00d4ff); background:rgba(255,255,255,0.07); }
+.fw-chip.active { border-color:var(--fw-color,#00d4ff); background:rgba(0,0,0,0.25); box-shadow:0 0 18px -4px var(--fw-color,#00d4ff); }
+.fw-detail {
+  display:none; background:rgba(0,0,0,0.25); border-radius:14px; padding:16px;
+  border:1px solid rgba(255,255,255,0.08); margin-bottom:8px; animation:threat-slide-in 0.28s ease;
+}
+.fw-detail.visible { display:block; }
+.fw-pro-con { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+.fw-pro-con-col { background:rgba(0,0,0,0.2); border-radius:8px; padding:10px; }
+.fw-pro-con-title { font-size:0.72rem; font-weight:700; margin-bottom:6px; }
+.fw-pro-con-item { font-size:0.76rem; color:#c8daf0; display:flex; gap:6px; margin-bottom:5px; }
+</style>
+<div style="font-size:0.82rem;color:#8ba3c0;margin-bottom:10px;">👇 Tap a firewall type to explore with an interactive demo</div>
+<div class="fw-grid" id="fw-grid"></div>
+<div id="fw-detail-container"></div>`;
+
+  const grid = root.querySelector('#fw-grid');
+  const detailContainer = root.querySelector('#fw-detail-container');
+  let activeId = null;
+
+  firewalls.forEach(fw => {
+    const chip = document.createElement('div');
+    chip.className = 'fw-chip';
+    chip.style.setProperty('--fw-color', fw.color);
+    chip.innerHTML = `
+      <div style="font-size:1.8rem;margin-bottom:4px;">${fw.icon}</div>
+      <div style="font-size:0.78rem;font-weight:700;color:#e0eeff;margin-bottom:2px;">${fw.name}</div>
+      <div style="font-size:0.62rem;color:${fw.color};font-weight:600;margin-bottom:5px;">${fw.subtitle}</div>
+      <div style="font-size:0.63rem;color:#8ba3c0;">${fw.tagline}</div>`;
+    chip.addEventListener('click', () => {
+      if (activeId === fw.id) {
+        chip.classList.remove('active');
+        detailContainer.innerHTML = '';
+        activeId = null;
+        return;
+      }
+      grid.querySelectorAll('.fw-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeId = fw.id;
+      detailContainer.innerHTML = `
+        <div class="fw-detail visible">
+          <div style="font-size:1rem;font-weight:800;color:${fw.color};margin-bottom:4px;">${fw.icon} ${fw.name} <span style="font-size:0.75rem;opacity:0.7;">— ${fw.subtitle}</span></div>
+          <div style="font-size:0.8rem;color:#8ba3c0;margin-bottom:10px;">${fw.tagline}</div>
+          ${fw.anim}
+          <div class="fw-pro-con">
+            <div class="fw-pro-con-col" style="border:1px solid rgba(0,255,136,0.2);">
+              <div class="fw-pro-con-title" style="color:#00ff88;">✅ Advantages</div>
+              ${fw.pros.map(p=>`<div class="fw-pro-con-item"><span style="color:#00ff88;flex-shrink:0;">+</span>${p}</div>`).join('')}
+            </div>
+            <div class="fw-pro-con-col" style="border:1px solid rgba(255,68,102,0.2);">
+              <div class="fw-pro-con-title" style="color:#ff4466;">⚠️ Limitations</div>
+              ${fw.cons.map(c=>`<div class="fw-pro-con-item"><span style="color:#ff4466;flex-shrink:0;">−</span>${c}</div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+      const animEl = detailContainer.querySelector(`[id$="-anim"]`);
+      if (animEl) fw.animInit(animEl);
+      detailContainer.scrollIntoView({ behavior:'smooth', block:'nearest' });
     });
     grid.appendChild(chip);
   });
