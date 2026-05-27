@@ -5377,14 +5377,7 @@ resource "aci_application_profile" "web" {
     lesson: [
       {
         title: 'Threat Landscape',
-        body: `<p>Understanding common attack types is essential for CCNA and real-world networking:</p>
-<p><strong>DoS (Denial of Service):</strong> Overwhelms a target with traffic to make it unavailable. Single attacker.</p>
-<p><strong>DDoS (Distributed DoS):</strong> Same as DoS but uses thousands of compromised devices (botnet). Much harder to stop.</p>
-<p><strong>MITM (Man-in-the-Middle):</strong> Attacker intercepts traffic between two parties — can eavesdrop or modify data. ARP spoofing is a common LAN-based MITM technique.</p>
-<p><strong>Phishing:</strong> Fraudulent emails/sites trick users into revealing credentials.</p>
-<p><strong>IP/MAC Spoofing:</strong> Attacker falsifies source IP or MAC address to impersonate another device.</p>
-<p><strong>Reconnaissance:</strong> Scanning and probing a network to gather info before an attack (ping sweeps, port scans).</p>
-<p><strong>Zero-Day:</strong> Exploiting a vulnerability that has no patch yet.</p>`
+        type: 'threat_cards',
       },
       {
         title: 'Firewalls',
@@ -9882,6 +9875,12 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildVlanHoppingAnim(document.getElementById('vlan-hopping-root'));
       continue;
+    } else if (section.type === 'threat_cards') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="threat-cards-root"></div>`;
+      container.appendChild(card);
+      buildThreatCardsAnim(document.getElementById('threat-cards-root'));
+      continue;
     } else if (section.type === 'acl_placement_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="acl-place-root"></div>`;
@@ -11881,6 +11880,421 @@ function buildVlanHoppingAnim(root) {
   }
 
   renderStep();
+}
+
+// ── Threat Landscape Interactive Cards ───────────────────────────────────────
+function buildThreatCardsAnim(root) {
+  const threats = [
+    {
+      id: 'dos',
+      icon: '💥',
+      name: 'DoS Attack',
+      severity: 'HIGH',
+      severityColor: '#ff4466',
+      tagline: 'One attacker overwhelms a target',
+      color: '#ff4466',
+      steps: ['Attacker identifies target server','Sends massive flood of requests/packets','Server resources exhausted (CPU, memory, bandwidth)','Legitimate users cannot connect'],
+      defense: ['Rate limiting on routers/firewalls','ISP-level traffic scrubbing','Blackhole routing for attack source IP','Null-route the attacker\'s IP'],
+      anim: `
+<div id="dos-anim" style="position:relative;height:160px;background:rgba(255,68,102,0.06);border-radius:14px;border:1px solid rgba(255,68,102,0.2);overflow:hidden;margin:12px 0;">
+  <div style="position:absolute;left:32px;top:50%;transform:translateY(-50%);text-align:center;">
+    <div style="font-size:2rem;">🖥️</div><div style="font-size:0.7rem;color:#ff8899;margin-top:2px;">Attacker</div>
+  </div>
+  <div id="dos-server" style="position:absolute;right:32px;top:50%;transform:translateY(-50%);text-align:center;transition:all 0.3s;">
+    <div style="font-size:2rem;">🖥️</div><div style="font-size:0.7rem;color:#8ba3c0;margin-top:2px;">Server</div>
+  </div>
+  <div id="dos-packets-container" style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;"></div>
+  <div id="dos-status" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:0.72rem;color:#ff4466;font-weight:700;white-space:nowrap;"></div>
+</div>`,
+      animInit: function(el) {
+        const container = el.querySelector('#dos-packets-container');
+        const server = el.querySelector('#dos-server');
+        const status = el.querySelector('#dos-status');
+        let count = 0;
+        const msgs = ['Flooding...','Server stressed...','100% CPU!','Service DOWN ❌'];
+        const interval = setInterval(() => {
+          if (!document.contains(el)) { clearInterval(interval); return; }
+          const p = document.createElement('div');
+          p.style.cssText = `position:absolute;left:72px;top:${30+Math.random()*100}px;width:10px;height:10px;background:#ff4466;border-radius:50%;font-size:9px;line-height:10px;text-align:center;animation:dos-fly 0.8s linear forwards;`;
+          p.textContent = '⚡';
+          container.appendChild(p);
+          count++;
+          status.textContent = msgs[Math.min(Math.floor(count/6), msgs.length-1)];
+          if (count > 6) server.style.filter = `hue-rotate(${Math.min((count-6)*10,120)}deg) brightness(${Math.max(1.5 - count*0.05, 0.6)})`;
+          setTimeout(() => p.remove(), 800);
+        }, 120);
+      }
+    },
+    {
+      id: 'ddos',
+      icon: '🌊',
+      name: 'DDoS Attack',
+      severity: 'CRITICAL',
+      severityColor: '#ff2244',
+      tagline: 'Botnet of thousands floods one target',
+      color: '#ff2244',
+      steps: ['Attacker infects thousands of devices (botnet)','Command & Control server sends attack order','All bots simultaneously flood the target','Traffic is so distributed it\'s nearly impossible to block by IP'],
+      defense: ['CDN with DDoS scrubbing (Cloudflare, Akamai)','Anycast diffusion spreads attack across PoPs','BGP blackholing at upstream provider','On-premise: rate limiting + syn cookies'],
+      anim: `
+<div id="ddos-anim" style="position:relative;height:180px;background:rgba(255,34,68,0.06);border-radius:14px;border:1px solid rgba(255,34,68,0.2);overflow:hidden;margin:12px 0;">
+  <div id="ddos-target" style="position:absolute;right:32px;top:50%;transform:translateY(-50%);text-align:center;">
+    <div style="font-size:2.2rem;">🏦</div><div style="font-size:0.7rem;color:#8ba3c0;margin-top:2px;">Target</div>
+  </div>
+  <div id="ddos-bots" style="position:absolute;left:8px;top:0;width:80px;height:100%;display:flex;flex-direction:column;justify-content:space-around;align-items:center;"></div>
+  <div id="ddos-pkt-container" style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;"></div>
+  <div id="ddos-status" style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:0.72rem;color:#ff2244;font-weight:700;white-space:nowrap;"></div>
+</div>`,
+      animInit: function(el) {
+        const botsEl = el.querySelector('#ddos-bots');
+        const pktContainer = el.querySelector('#ddos-pkt-container');
+        const status = el.querySelector('#ddos-status');
+        const target = el.querySelector('#ddos-target');
+        const botEmojis = ['💻','📱','📡','🖥️','💻','📟'];
+        botEmojis.forEach((e,i) => {
+          const b = document.createElement('div');
+          b.style.cssText = 'font-size:1.1rem;opacity:0.8;';
+          b.textContent = e;
+          botsEl.appendChild(b);
+        });
+        const msgs = ['Bots activating...','Attack coordinated!','Flooding from all IPs!','UNREACHABLE 🚫'];
+        let count = 0;
+        const interval = setInterval(() => {
+          if (!document.contains(el)) { clearInterval(interval); return; }
+          const botNodes = botsEl.children;
+          for (let i = 0; i < botNodes.length; i++) {
+            const rect = botNodes[i].getBoundingClientRect();
+            const rootRect = el.getBoundingClientRect();
+            const startY = rect.top - rootRect.top + 10;
+            const p = document.createElement('div');
+            p.style.cssText = `position:absolute;left:70px;top:${startY}px;font-size:9px;animation:ddos-fly-${i} 0.9s linear forwards;`;
+            p.textContent = '💥';
+            pktContainer.appendChild(p);
+            const endY = 80 - startY;
+            p.animate([{left:'70px',top:`${startY}px`,opacity:1},{left:'calc(100% - 80px)',top:`${startY + endY*0.5}px`,opacity:0.9}],{duration:900,fill:'forwards'});
+            setTimeout(()=>p.remove(), 900);
+          }
+          count++;
+          status.textContent = msgs[Math.min(Math.floor(count/3), msgs.length-1)];
+          if (count > 4) target.style.filter = `brightness(${Math.max(1.5 - count*0.08, 0.5)}) saturate(${Math.max(2-count*0.1,0.3)})`;
+        }, 200);
+      }
+    },
+    {
+      id: 'mitm',
+      icon: '🕵️',
+      name: 'Man-in-the-Middle',
+      severity: 'HIGH',
+      severityColor: '#ff8c00',
+      tagline: 'Attacker intercepts traffic silently',
+      color: '#ff8c00',
+      steps: ['Attacker uses ARP spoofing to poison victims\' ARP caches','Victim A thinks attacker\'s MAC = Gateway IP','All of Victim A\'s traffic flows through attacker','Attacker reads/modifies data, forwards it to real destination'],
+      defense: ['Dynamic ARP Inspection (DAI) on switches','Use encrypted protocols (HTTPS, SSH, TLS)','802.1X port authentication','HSTS (HTTP Strict Transport Security) on web servers'],
+      anim: `
+<div id="mitm-anim" style="position:relative;height:160px;background:rgba(255,140,0,0.06);border-radius:14px;border:1px solid rgba(255,140,0,0.2);overflow:hidden;margin:12px 0;">
+  <div style="position:absolute;left:16px;top:50%;transform:translateY(-50%);text-align:center;">
+    <div style="font-size:1.8rem;">👤</div><div style="font-size:0.65rem;color:#8ba3c0;">Alice</div>
+  </div>
+  <div id="mitm-attacker" style="position:absolute;left:50%;top:20px;transform:translateX(-50%);text-align:center;opacity:0;transition:opacity 0.5s;">
+    <div style="font-size:1.8rem;">🕵️</div><div style="font-size:0.65rem;color:#ff8c00;font-weight:700;">ATTACKER</div>
+  </div>
+  <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);text-align:center;">
+    <div style="font-size:1.8rem;">🌐</div><div style="font-size:0.65rem;color:#8ba3c0;">Server</div>
+  </div>
+  <div id="mitm-arrow1" style="position:absolute;left:52px;top:54%;width:calc(50% - 68px);height:2px;background:linear-gradient(90deg,#00ff88,#00ff88);transform-origin:left;transform:scaleX(0);transition:transform 0.6s;"></div>
+  <div id="mitm-arrow2" style="position:absolute;right:52px;top:54%;width:calc(50% - 68px);height:2px;background:linear-gradient(90deg,#00ff88,#00ff88);transform-origin:right;transform:scaleX(0);transition:transform 0.6s;"></div>
+  <div id="mitm-arrow3" style="position:absolute;left:52px;top:42%;width:calc(50% - 36px);height:2px;background:#ff8c00;transform-origin:left;transform:scaleX(0);transition:transform 0.6s;"></div>
+  <div id="mitm-arrow4" style="position:absolute;right:52px;top:42%;width:calc(50% - 36px);height:2px;background:#ff8c00;transform-origin:right;transform:scaleX(0);transition:transform 0.6s;"></div>
+  <div id="mitm-status" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:#ff8c00;font-weight:700;white-space:nowrap;text-align:center;width:90%;"></div>
+</div>`,
+      animInit: function(el) {
+        const attacker = el.querySelector('#mitm-attacker');
+        const a1 = el.querySelector('#mitm-arrow1');
+        const a2 = el.querySelector('#mitm-arrow2');
+        const a3 = el.querySelector('#mitm-arrow3');
+        const a4 = el.querySelector('#mitm-arrow4');
+        const status = el.querySelector('#mitm-status');
+        const steps = [
+          [0, ()=>{ status.textContent = 'Normal: Alice → Server (direct)'; a1.style.transform='scaleX(1)'; a2.style.transform='scaleX(1)'; }],
+          [1400, ()=>{ status.textContent = 'ARP Poison: Attacker inserts himself...'; attacker.style.opacity='1'; }],
+          [2600, ()=>{ a1.style.background='#ff8c00'; a2.style.background='#ff8c00'; a3.style.transform='scaleX(1)'; a4.style.transform='scaleX(1)'; }],
+          [3200, ()=>{ status.textContent = '⚠️ All traffic now routes through attacker!'; }],
+          [5000, ()=>{ attacker.style.opacity='0'; a1.style.transform='scaleX(0)'; a2.style.transform='scaleX(0)'; a3.style.transform='scaleX(0)'; a4.style.transform='scaleX(0)'; a1.style.background='#00ff88'; a2.style.background='#00ff88'; }],
+          [5600, ()=>{ steps.forEach(([t,fn],i) => { const id = setTimeout(fn, t); timeouts.push(id); }); }],
+        ];
+        const timeouts = [];
+        function run() {
+          steps.forEach(([t, fn]) => { const id = setTimeout(() => { if(document.contains(el)) fn(); }, t); timeouts.push(id); });
+        }
+        run();
+      }
+    },
+    {
+      id: 'phishing',
+      icon: '🎣',
+      name: 'Phishing',
+      severity: 'MEDIUM',
+      severityColor: '#ffcc00',
+      tagline: 'Fake emails/sites steal credentials',
+      color: '#ffcc00',
+      steps: ['Attacker crafts email impersonating a trusted sender','Email contains link to fake login page (looks identical to real site)','Victim enters credentials on fake site','Attacker captures username + password'],
+      defense: ['Email filtering and anti-spoofing (SPF, DKIM, DMARC)','User security awareness training','Multi-Factor Authentication (MFA) — even stolen password is useless','Browser anti-phishing warnings'],
+      anim: `
+<div id="phish-anim" style="position:relative;height:160px;background:rgba(255,204,0,0.06);border-radius:14px;border:1px solid rgba(255,204,0,0.2);overflow:hidden;margin:12px 0;display:flex;align-items:center;justify-content:space-around;padding:0 20px;">
+  <div style="text-align:center;">
+    <div style="font-size:1.8rem;">😈</div><div style="font-size:0.65rem;color:#ff4466;">Attacker</div>
+  </div>
+  <div id="phish-email" style="opacity:0;transition:all 0.5s;text-align:center;">
+    <div style="font-size:1.4rem;">📧</div>
+    <div style="font-size:0.6rem;background:rgba(255,204,0,0.2);border:1px solid #ffcc00;border-radius:6px;padding:4px 6px;margin-top:4px;color:#ffcc00;">From: security@bank.com<br>⚠️ Verify your account!</div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:1.8rem;">😊</div><div style="font-size:0.65rem;color:#8ba3c0;">Victim</div>
+  </div>
+  <div id="phish-site" style="opacity:0;transition:all 0.5s;position:absolute;right:20px;bottom:20px;background:rgba(0,0,0,0.7);border:1px solid #ffcc00;border-radius:8px;padding:8px 12px;font-size:0.65rem;color:#e0eeff;">
+    🔒 bank-secure-login.xyz<br>
+    <span style="color:#aaa;">Username: ████████<br>Password: ████████</span><br>
+    <span style="color:#ff4466;font-weight:700;">✓ Credentials captured!</span>
+  </div>
+  <div id="phish-status" style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:#ffcc00;font-weight:700;white-space:nowrap;"></div>
+</div>`,
+      animInit: function(el) {
+        const email = el.querySelector('#phish-email');
+        const site = el.querySelector('#phish-site');
+        const status = el.querySelector('#phish-status');
+        function runAnim() {
+          if (!document.contains(el)) return;
+          email.style.opacity = '0'; site.style.opacity = '0'; status.textContent = '';
+          setTimeout(() => { if(!document.contains(el)) return; email.style.opacity = '1'; status.textContent = 'Fake email sent...'; }, 600);
+          setTimeout(() => { if(!document.contains(el)) return; status.textContent = 'Victim clicks link...'; }, 2000);
+          setTimeout(() => { if(!document.contains(el)) return; site.style.opacity = '1'; status.textContent = 'Victim logs in to FAKE site!'; }, 3000);
+          setTimeout(() => { if(!document.contains(el)) return; status.textContent = ''; email.style.opacity='0'; site.style.opacity='0'; setTimeout(runAnim, 600); }, 5500);
+        }
+        runAnim();
+      }
+    },
+    {
+      id: 'spoofing',
+      icon: '🎭',
+      name: 'IP / MAC Spoofing',
+      severity: 'HIGH',
+      severityColor: '#a855f7',
+      tagline: 'Attacker fakes their identity',
+      color: '#a855f7',
+      steps: ['Attacker crafts packets with a forged source IP or MAC address','Receiver trusts the packet because it appears to come from a legitimate source','Attacker can bypass IP-based ACLs or impersonate devices','Often used as a component of other attacks (DoS, MITM)'],
+      defense: ['Ingress/Egress filtering (RFC 2827) — ISPs block spoofed source IPs','IP Source Guard on switches — validates IP+MAC against DHCP snooping table','uRPF (Unicast Reverse Path Forwarding) — drops packets that wouldn\'t be routed back the same way','DAI for ARP spoofing specifically'],
+      anim: `
+<div id="spoof-anim" style="position:relative;height:160px;background:rgba(168,85,247,0.06);border-radius:14px;border:1px solid rgba(168,85,247,0.3);overflow:hidden;margin:12px 0;display:flex;align-items:center;justify-content:space-around;padding:0 16px;">
+  <div style="text-align:center;">
+    <div style="font-size:1.8rem;">😈</div><div style="font-size:0.65rem;color:#ff4466;">Attacker<br><span style="color:#8ba3c0;">192.168.1.50</span></div>
+  </div>
+  <div id="spoof-packet" style="opacity:0;transition:all 0.4s;text-align:center;">
+    <div id="spoof-pkt-box" style="background:rgba(168,85,247,0.2);border:2px solid #a855f7;border-radius:8px;padding:6px 10px;font-size:0.62rem;color:#e0eeff;">
+      Src IP: <span id="spoof-src" style="color:#a855f7;font-weight:700;">192.168.1.1</span><br>
+      Dst IP: 10.0.0.1<br>
+      <span id="spoof-label" style="color:#a855f7;">⚠️ SPOOFED!</span>
+    </div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:1.8rem;">🖥️</div><div style="font-size:0.65rem;color:#8ba3c0;">Firewall<br><span style="color:#8ba3c0;">Allows 1.1</span></div>
+  </div>
+  <div id="spoof-status" style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:#a855f7;font-weight:700;white-space:nowrap;"></div>
+</div>`,
+      animInit: function(el) {
+        const pkt = el.querySelector('#spoof-packet');
+        const src = el.querySelector('#spoof-src');
+        const lbl = el.querySelector('#spoof-label');
+        const status = el.querySelector('#spoof-status');
+        function runAnim() {
+          if (!document.contains(el)) return;
+          pkt.style.opacity = '0'; status.textContent = '';
+          setTimeout(() => { if(!document.contains(el)) return; src.textContent='192.168.1.50'; lbl.textContent='Real IP'; lbl.style.color='#00ff88'; pkt.style.opacity='1'; status.textContent='Real packet — firewall blocks attacker IP'; }, 500);
+          setTimeout(() => { if(!document.contains(el)) return; src.textContent='192.168.1.1'; lbl.textContent='⚠️ SPOOFED!'; lbl.style.color='#a855f7'; status.textContent='Spoofed packet — looks like trusted IP → ALLOWED'; }, 2500);
+          setTimeout(() => { if(!document.contains(el)) return; pkt.style.opacity='0'; setTimeout(runAnim,600); }, 5000);
+        }
+        runAnim();
+      }
+    },
+    {
+      id: 'recon',
+      icon: '🔍',
+      name: 'Reconnaissance',
+      severity: 'LOW',
+      severityColor: '#00d4ff',
+      tagline: 'Scanning before the real attack',
+      color: '#00d4ff',
+      steps: ['Passive recon: OSINT, public records, DNS lookups — no direct contact','Active recon: ping sweeps, port scans (nmap), OS fingerprinting','Map the network: identify live hosts, open ports, services, OS versions','Plan targeted attack based on discovered vulnerabilities'],
+      defense: ['IDS/IPS to detect port scan patterns','Disable ICMP echo responses on edge routers','Firewall to block unsolicited probes','Honeypots — attract and detect reconnaissance activity'],
+      anim: `
+<div id="recon-anim" style="position:relative;height:160px;background:rgba(0,212,255,0.04);border-radius:14px;border:1px solid rgba(0,212,255,0.2);overflow:hidden;margin:12px 0;">
+  <div style="position:absolute;left:16px;top:50%;transform:translateY(-50%);text-align:center;">
+    <div style="font-size:1.8rem;">🔍</div><div style="font-size:0.65rem;color:#8ba3c0;">Scanner</div>
+  </div>
+  <div id="recon-network" style="position:absolute;right:16px;top:10px;bottom:10px;width:180px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;align-content:center;"></div>
+  <div id="recon-probe" style="position:absolute;left:60px;top:50%;width:8px;height:8px;background:#00d4ff;border-radius:50%;opacity:0;"></div>
+  <div id="recon-status" style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:#00d4ff;font-weight:700;white-space:nowrap;"></div>
+</div>`,
+      animInit: function(el) {
+        const network = el.querySelector('#recon-network');
+        const status = el.querySelector('#recon-status');
+        const hosts = [
+          {label:'10.0.0.1',open:true,ports:'22,80'},
+          {label:'10.0.0.2',open:false,ports:''},
+          {label:'10.0.0.3',open:true,ports:'443,8080'},
+          {label:'10.0.0.4',open:false,ports:''},
+          {label:'10.0.0.5',open:true,ports:'21,22'},
+          {label:'10.0.0.6',open:false,ports:''},
+        ];
+        hosts.forEach(h => {
+          const d = document.createElement('div');
+          d.style.cssText = `text-align:center;font-size:0.6rem;opacity:0;transition:opacity 0.3s;`;
+          d.innerHTML = `<div style="font-size:1.1rem;">${h.open?'🖥️':'💀'}</div><div style="color:${h.open?'#00ff88':'#ff4466'}">${h.label}</div><div id="ports-${h.label.replace(/\./g,'-')}" style="color:#00d4ff;font-size:0.55rem;"></div>`;
+          network.appendChild(d);
+        });
+        const nodes = network.querySelectorAll('div');
+        let i = 0;
+        function scanNext() {
+          if (!document.contains(el) || i >= hosts.length) return;
+          nodes[i].style.opacity = '1';
+          status.textContent = `Scanning ${hosts[i].label}... ${hosts[i].open ? '✅ OPEN' : '❌ filtered'}`;
+          if (hosts[i].open) {
+            setTimeout(() => {
+              if(!document.contains(el)) return;
+              const pd = nodes[i].querySelector(`#ports-${hosts[i].label.replace(/\./g,'-')}`);
+              if(pd) pd.textContent = `⚡${hosts[i].ports}`;
+            }, 400);
+          }
+          i++;
+          setTimeout(scanNext, 700);
+        }
+        setTimeout(scanNext, 300);
+      }
+    },
+    {
+      id: 'zeroday',
+      icon: '💀',
+      name: 'Zero-Day Exploit',
+      severity: 'CRITICAL',
+      severityColor: '#ff2244',
+      tagline: 'Unknown flaw — no patch exists yet',
+      color: '#ff2244',
+      steps: ['Researcher (or attacker) discovers unknown vulnerability in software','Vendor has ZERO days of warning — no patch exists','Attacker crafts exploit targeting the vulnerability','Systems worldwide are vulnerable until vendor releases a patch'],
+      defense: ['Defense in depth — assume breach, limit lateral movement','Behavioral IPS — detect unusual activity even without signatures','Network segmentation — limit blast radius','Patch quickly when vendor releases fix','Bug bounty programs encourage responsible disclosure'],
+      anim: `
+<div id="zero-anim" style="position:relative;height:160px;background:rgba(255,34,68,0.06);border-radius:14px;border:1px solid rgba(255,34,68,0.2);overflow:hidden;margin:12px 0;padding:12px 16px;">
+  <div style="font-size:0.72rem;color:#8ba3c0;margin-bottom:8px;">Timeline from discovery to patch:</div>
+  <div id="zero-timeline" style="position:relative;height:40px;background:rgba(255,255,255,0.04);border-radius:8px;overflow:hidden;">
+    <div id="zero-bar-vulnerable" style="position:absolute;left:0;top:0;height:100%;width:0%;background:linear-gradient(90deg,#ff2244,#ff4466);transition:width 1s ease;border-radius:8px;"></div>
+    <div id="zero-bar-patch" style="position:absolute;left:0;top:0;height:100%;width:0%;background:linear-gradient(90deg,#00ff88,#00d4ff);opacity:0.6;transition:width 0.8s ease;border-radius:8px;"></div>
+    <div id="zero-marker-disc" style="position:absolute;top:0;left:0;height:100%;width:2px;background:#ffcc00;opacity:0;transition:all 0.5s;"></div>
+    <div id="zero-marker-pub" style="position:absolute;top:0;left:0;height:100%;width:2px;background:#ff4466;opacity:0;transition:all 0.5s;"></div>
+    <div id="zero-marker-patch" style="position:absolute;top:0;left:0;height:100%;width:2px;background:#00ff88;opacity:0;transition:all 0.5s;"></div>
+  </div>
+  <div id="zero-labels" style="display:flex;justify-content:space-between;margin-top:4px;font-size:0.6rem;color:#8ba3c0;"></div>
+  <div id="zero-status" style="margin-top:8px;font-size:0.72rem;color:#ff2244;font-weight:700;text-align:center;"></div>
+  <div id="zero-counter" style="text-align:center;margin-top:4px;">
+    <span id="zero-days" style="font-size:1.6rem;font-weight:900;color:#ff2244;">0</span>
+    <span style="font-size:0.7rem;color:#8ba3c0;"> days exposed</span>
+  </div>
+</div>`,
+      animInit: function(el) {
+        const vulnBar = el.querySelector('#zero-bar-vulnerable');
+        const patchBar = el.querySelector('#zero-bar-patch');
+        const disc = el.querySelector('#zero-marker-disc');
+        const pub = el.querySelector('#zero-marker-pub');
+        const patchM = el.querySelector('#zero-marker-patch');
+        const status = el.querySelector('#zero-status');
+        const counter = el.querySelector('#zero-days');
+        const labels = el.querySelector('#zero-labels');
+        let animating = true;
+        function runAnim() {
+          if (!document.contains(el)) return;
+          vulnBar.style.width='0%'; patchBar.style.width='0%';
+          disc.style.opacity='0'; pub.style.opacity='0'; patchM.style.opacity='0';
+          counter.textContent='0'; labels.innerHTML='';
+          status.textContent = 'Vulnerability exists — unknown to all...';
+          setTimeout(()=>{ if(!document.contains(el)) return; disc.style.left='15%'; disc.style.opacity='1'; vulnBar.style.width='15%'; status.textContent='🔍 Discovered by attacker (Day 0)'; labels.innerHTML='<span style="color:#ffcc00">Day 0: Discovered</span>'; }, 800);
+          let d = 0;
+          const ctr = setInterval(()=>{ if(!document.contains(el)){clearInterval(ctr);return;} if(d<47){d+=2;counter.textContent=d;} }, 80);
+          setTimeout(()=>{ if(!document.contains(el)) return; pub.style.left='60%'; pub.style.opacity='1'; vulnBar.style.width='60%'; status.textContent='💥 Exploits spreading in the wild!'; labels.innerHTML+=' <span style="color:#ff4466;margin-left:30%">Day ~60: Public</span>'; }, 2000);
+          setTimeout(()=>{ if(!document.contains(el)) return; patchM.style.left='85%'; patchM.style.opacity='1'; patchBar.style.width='85%'; status.textContent='✅ Vendor releases patch (finally!)'; labels.innerHTML+=' <span style="color:#00ff88;margin-left:10%">Day ~90: Patch</span>'; clearInterval(ctr); counter.textContent=90; }, 3400);
+          setTimeout(()=>{ if(!document.contains(el)) return; runAnim(); }, 6500);
+        }
+        runAnim();
+      }
+    },
+  ];
+
+  root.innerHTML = `
+<style>
+.threat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin:4px 0 16px; }
+.threat-chip {
+  background:rgba(255,255,255,0.04); border-radius:12px; padding:12px 10px;
+  cursor:pointer; border:2px solid rgba(255,255,255,0.08); transition:all 0.22s;
+  text-align:center; user-select:none;
+}
+.threat-chip:hover { transform:translateY(-2px); border-color:var(--chip-color,#00d4ff); background:rgba(255,255,255,0.07); }
+.threat-chip.active { border-color:var(--chip-color,#00d4ff); background:rgba(0,0,0,0.25); box-shadow:0 0 18px -4px var(--chip-color,#00d4ff); }
+.threat-chip-icon { font-size:1.8rem; margin-bottom:4px; }
+.threat-chip-name { font-size:0.78rem; font-weight:700; color:#e0eeff; margin-bottom:4px; }
+.threat-chip-badge { font-size:0.6rem; font-weight:800; padding:2px 7px; border-radius:20px; display:inline-block; }
+.threat-detail {
+  display:none; background:rgba(0,0,0,0.25); border-radius:14px; padding:16px;
+  border:1px solid rgba(255,255,255,0.08); margin-bottom:8px; animation:threat-slide-in 0.28s ease;
+}
+.threat-detail.visible { display:block; }
+@keyframes threat-slide-in { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes dos-fly { from{left:72px;opacity:1} to{left:calc(100% - 60px);opacity:0} }
+.threat-detail-title { font-size:1rem; font-weight:800; margin-bottom:10px; }
+.threat-how-title { font-size:0.78rem; font-weight:700; color:#8ba3c0; text-transform:uppercase; letter-spacing:.06em; margin:12px 0 6px; }
+.threat-steps { list-style:none; padding:0; margin:0 0 4px; display:flex; flex-direction:column; gap:5px; }
+.threat-steps li { font-size:0.82rem; color:#c8daf0; display:flex; gap:8px; }
+.threat-steps li::before { content:''; display:inline-block; width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,0.1); text-align:center; line-height:18px; font-size:0.65rem; flex-shrink:0; }
+.threat-defense { display:flex; flex-direction:column; gap:5px; }
+.threat-defense-item { font-size:0.81rem; color:#c8daf0; display:flex; gap:8px; align-items:flex-start; }
+.threat-defense-item::before { content:'🛡️'; font-size:0.75rem; flex-shrink:0; margin-top:1px; }
+</style>
+<div style="font-size:0.82rem;color:#8ba3c0;margin-bottom:10px;">👇 Tap any threat to explore it with an interactive animation</div>
+<div class="threat-grid" id="threat-grid"></div>
+<div id="threat-detail-container"></div>`;
+
+  const grid = root.querySelector('#threat-grid');
+  const detailContainer = root.querySelector('#threat-detail-container');
+  let activeId = null;
+
+  threats.forEach(threat => {
+    const chip = document.createElement('div');
+    chip.className = 'threat-chip';
+    chip.style.setProperty('--chip-color', threat.color);
+    chip.innerHTML = `
+      <div class="threat-chip-icon">${threat.icon}</div>
+      <div class="threat-chip-name">${threat.name}</div>
+      <div class="threat-chip-badge" style="background:${threat.severityColor}22;color:${threat.severityColor};border:1px solid ${threat.severityColor}55;">${threat.severity}</div>
+      <div style="font-size:0.65rem;color:#8ba3c0;margin-top:5px;">${threat.tagline}</div>`;
+    chip.addEventListener('click', () => {
+      if (activeId === threat.id) {
+        chip.classList.remove('active');
+        detailContainer.innerHTML = '';
+        activeId = null;
+        return;
+      }
+      grid.querySelectorAll('.threat-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeId = threat.id;
+      detailContainer.innerHTML = `
+        <div class="threat-detail visible">
+          <div class="threat-detail-title" style="color:${threat.color}">${threat.icon} ${threat.name}</div>
+          ${threat.anim}
+          <div class="threat-how-title">⚙️ How it works</div>
+          <ol class="threat-steps">${threat.steps.map((s,i)=>`<li><span style="background:${threat.color}33;color:${threat.color};width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;">${i+1}</span>${s}</li>`).join('')}</ol>
+          <div class="threat-how-title">🛡️ How to defend</div>
+          <div class="threat-defense">${threat.defense.map(d=>`<div class="threat-defense-item">${d}</div>`).join('')}</div>
+        </div>`;
+      const animEl = detailContainer.querySelector(`[id$="-anim"]`);
+      if (animEl) threat.animInit(animEl);
+      detailContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    grid.appendChild(chip);
+  });
 }
 
 // ── ACL Placement Animation ───────────────────────────────────────────────────
