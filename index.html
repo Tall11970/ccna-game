@@ -5393,19 +5393,7 @@ resource "aci_application_profile" "web" {
       },
       {
         title: 'Cryptography Fundamentals',
-        body: `<p><strong>Symmetric encryption:</strong> Same key encrypts and decrypts. Fast, but key distribution is a challenge.</p>
-<ul><li>Examples: AES (128/256-bit), 3DES</li></ul>
-<p><strong>Asymmetric encryption:</strong> Public key encrypts, private key decrypts (or vice versa). Solves key distribution but slow.</p>
-<ul><li>Examples: RSA, ECDH (Diffie-Hellman)</li></ul>
-<p><strong>Hashing:</strong> One-way function producing a fixed-length digest. Verifies integrity — cannot decrypt.</p>
-<ul><li>Examples: MD5 (128-bit, broken), SHA-1 (broken), SHA-256 (current standard)</li></ul>
-<p><strong>HMAC:</strong> Combines hashing with a secret key for message authentication.</p>
-<p><strong>PKI (Public Key Infrastructure):</strong></p>
-<ul>
-  <li><strong>CA (Certificate Authority):</strong> Trusted third party that signs digital certificates</li>
-  <li><strong>Digital Certificate:</strong> Binds a public key to an identity (like a digital ID card)</li>
-  <li>Used by SSL/TLS (HTTPS), IPsec, 802.1X</li>
-</ul>`
+        type: 'crypto_cards',
       },
       {
         title: 'Network Access Control (NAC) & 802.1X',
@@ -9865,6 +9853,12 @@ function renderLesson(topic) {
       container.appendChild(card);
       buildIPSecAnim(document.getElementById('ipsec-cards-root'));
       continue;
+    } else if (section.type === 'crypto_cards') {
+      card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
+        <div id="crypto-cards-root"></div>`;
+      container.appendChild(card);
+      buildCryptoAnim(document.getElementById('crypto-cards-root'));
+      continue;
     } else if (section.type === 'acl_placement_anim') {
       card.innerHTML = `<div class="lesson-section-title">${section.title}</div>
         <div id="acl-place-root"></div>`;
@@ -13476,6 +13470,401 @@ function buildIPSecAnim(root) {
       detailContainer.scrollIntoView({ behavior:'smooth', block:'nearest' });
     });
     grid.appendChild(chip);
+  });
+}
+
+// ── Cryptography Fundamentals Interactive Cards ───────────────────────────────
+function buildCryptoAnim(root) {
+  const cards = [
+    { id: 'sym',  icon: '🔐', label: 'Symmetric Encryption' },
+    { id: 'asym', icon: '🔑', label: 'Asymmetric Encryption' },
+    { id: 'hash', icon: '#️⃣', label: 'Hashing' },
+    { id: 'hmac', icon: '🔏', label: 'HMAC' },
+    { id: 'pki',  icon: '🏛️', label: 'PKI & Certificates' },
+  ];
+
+  root.innerHTML = `
+<style>
+.cr-grid{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.cr-chip{padding:10px 16px;border-radius:10px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);
+         color:#00d4ff;cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s;user-select:none}
+.cr-chip:hover{background:rgba(0,212,255,0.2);transform:translateY(-2px)}
+.cr-chip.active{background:rgba(0,212,255,0.25);border-color:#00d4ff;box-shadow:0 0 14px rgba(0,212,255,.4)}
+.cr-detail{margin-top:14px;padding:18px;background:rgba(0,0,0,0.3);border-radius:12px;
+           border:1px solid rgba(0,212,255,0.15);animation:cr-fade .3s ease}
+@keyframes cr-fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Symmetric */
+.sym-demo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+.sym-box{padding:10px 14px;border-radius:8px;font-size:.85rem;font-weight:600;text-align:center;min-width:80px}
+.sym-arrow{color:#aaa;font-size:1.4rem}
+.sym-key-badge{background:rgba(255,200,0,0.2);border:1px solid rgba(255,200,0,0.5);color:#ffc800;
+               border-radius:20px;padding:4px 12px;font-size:.8rem;font-weight:700}
+.sym-progress{height:8px;border-radius:4px;background:rgba(255,255,255,0.1);overflow:hidden;margin:6px 0}
+.sym-progress-bar{height:100%;border-radius:4px;transition:width .4s ease}
+
+/* Asymmetric / DH */
+.dh-row{display:flex;align-items:flex-start;gap:10px;margin:6px 0;font-size:.85rem}
+.dh-block{padding:8px 12px;border-radius:8px;text-align:center;min-width:90px;font-size:.8rem;font-weight:600}
+.dh-arrow-right{flex:1;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:1.2rem;padding-top:12px}
+
+/* Hash */
+.hash-demo{display:flex;align-items:center;gap:8px;margin:10px 0;flex-wrap:wrap}
+.hash-input{background:rgba(255,255,255,0.08);padding:8px 12px;border-radius:8px;font-family:monospace;font-size:.82rem;color:#e0eeff}
+.hash-fn{background:rgba(180,0,255,0.2);border:1px solid rgba(180,0,255,0.4);color:#cc66ff;
+          padding:8px 14px;border-radius:8px;font-weight:700;font-size:.85rem}
+.hash-out{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88;
+           padding:8px 12px;border-radius:8px;font-family:monospace;font-size:.75rem;word-break:break-all}
+.hash-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.hash-badge{padding:6px 14px;border-radius:20px;font-size:.8rem;font-weight:700}
+.hash-broken{background:rgba(255,50,50,0.15);border:1px solid rgba(255,50,50,0.4);color:#ff6666}
+.hash-ok{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.4);color:#00ff88}
+
+/* HMAC */
+.hmac-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.hmac-box{padding:8px 12px;border-radius:8px;font-size:.82rem;font-weight:600;text-align:center}
+.hmac-plus{color:#aaa;font-size:1.3rem;font-weight:700}
+.hmac-eq{color:#aaa;font-size:1.3rem;font-weight:700}
+
+/* PKI */
+.pki-chain{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.pki-node{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-size:.85rem}
+.pki-connector{width:2px;height:16px;background:rgba(255,255,255,0.2);margin-left:24px}
+.pki-step-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.pki-step{flex:1;min-width:130px;padding:10px;border-radius:8px;font-size:.8rem;text-align:center;font-weight:600}
+</style>
+<div class="cr-grid" id="cr-chip-row"></div>
+<div id="cr-detail-area"></div>`;
+
+  const chipRow = root.querySelector('#cr-chip-row');
+  const detailArea = root.querySelector('#cr-detail-area');
+  let activeId = null;
+  let animTimers = [];
+
+  function clearTimers() { animTimers.forEach(t => clearTimeout(t)); animTimers = []; }
+
+  function symDetail() {
+    return `<div class="cr-detail">
+<h3 style="color:#00d4ff;margin:0 0 10px">🔐 Symmetric Encryption</h3>
+<p style="color:#ccc;margin-bottom:4px">One key encrypts AND decrypts. Both parties must have the same secret key.</p>
+<div class="sym-demo" id="sym-anim-area">
+  <div class="sym-box" style="background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.3);color:#00d4ff" id="sym-plaintext">📄 Plaintext</div>
+  <div class="sym-arrow">➜</div>
+  <div class="sym-box" style="background:rgba(255,200,0,0.15);border:1px solid rgba(255,200,0,0.4);color:#ffc800" id="sym-enc-box">🔐 AES-256<br><small style="font-weight:400;color:#aaa">encrypting...</small></div>
+  <div class="sym-arrow">➜</div>
+  <div class="sym-box" style="background:rgba(180,0,255,0.15);border:1px solid rgba(180,0,255,0.4);color:#cc66ff" id="sym-cipher">🔒 Ciphertext</div>
+  <div class="sym-arrow">➜</div>
+  <div class="sym-box" style="background:rgba(255,200,0,0.15);border:1px solid rgba(255,200,0,0.4);color:#ffc800" id="sym-dec-box">🔑 AES-256<br><small style="font-weight:400;color:#aaa">decrypting...</small></div>
+  <div class="sym-arrow">➜</div>
+  <div class="sym-box" style="background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:#00ff88" id="sym-recovered">📄 Recovered</div>
+</div>
+<div style="margin:6px 0 2px"><span class="sym-key-badge">🗝 Same Key Used Both Ways</span></div>
+<div class="sym-progress" style="margin-top:12px"><div class="sym-progress-bar" id="sym-prog" style="width:0%;background:linear-gradient(90deg,#ffc800,#00d4ff)"></div></div>
+<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+  <div style="flex:1;min-width:120px;padding:10px;border-radius:8px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25)">
+    <div style="color:#00ff88;font-weight:700;margin-bottom:4px">✅ Pros</div>
+    <div style="color:#ccc;font-size:.82rem">• Very fast (hardware-accelerated)<br>• Ideal for bulk data encryption<br>• Low CPU overhead</div>
+  </div>
+  <div style="flex:1;min-width:120px;padding:10px;border-radius:8px;background:rgba(255,50,50,0.08);border:1px solid rgba(255,50,50,0.25)">
+    <div style="color:#ff6666;font-weight:700;margin-bottom:4px">⚠️ Challenge</div>
+    <div style="color:#ccc;font-size:.82rem">• Key distribution problem<br>• How do you securely share the key?<br>• Solved by asymmetric crypto</div>
+  </div>
+</div>
+<div style="margin-top:12px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
+  <div style="color:#aaa;font-size:.82rem;font-weight:600;margin-bottom:6px">ALGORITHM COMPARISON</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div style="flex:1;min-width:100px;padding:8px;border-radius:6px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);text-align:center">
+      <div style="color:#00ff88;font-weight:700;font-size:.85rem">AES-256</div>
+      <div style="color:#aaa;font-size:.75rem">Gold standard<br>128/192/256-bit</div>
+    </div>
+    <div style="flex:1;min-width:100px;padding:8px;border-radius:6px;background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,0.3);text-align:center">
+      <div style="color:#ffc800;font-weight:700;font-size:.85rem">AES-128</div>
+      <div style="color:#aaa;font-size:.75rem">Still secure<br>Faster than 256</div>
+    </div>
+    <div style="flex:1;min-width:100px;padding:8px;border-radius:6px;background:rgba(255,50,50,0.1);border:1px solid rgba(255,50,50,0.3);text-align:center">
+      <div style="color:#ff6666;font-weight:700;font-size:.85rem">3DES</div>
+      <div style="color:#aaa;font-size:.75rem">Legacy/deprecated<br>Avoid in new designs</div>
+    </div>
+  </div>
+</div>
+</div>`;
+  }
+
+  function asymDetail() {
+    return `<div class="cr-detail">
+<h3 style="color:#cc66ff;margin:0 0 10px">🔑 Asymmetric Encryption</h3>
+<p style="color:#ccc;margin-bottom:4px">Two mathematically linked keys: <span style="color:#00d4ff;font-weight:700">Public Key</span> (share freely) + <span style="color:#cc66ff;font-weight:700">Private Key</span> (keep secret).</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0">
+  <div style="flex:1;min-width:140px;padding:10px;border-radius:8px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3)">
+    <div style="color:#00d4ff;font-weight:700;margin-bottom:6px">🌐 Public Key</div>
+    <div style="color:#ccc;font-size:.82rem">• Given to everyone<br>• Encrypts data or verifies signatures<br>• Cannot decrypt what it encrypts</div>
+  </div>
+  <div style="flex:1;min-width:140px;padding:10px;border-radius:8px;background:rgba(180,0,255,0.1);border:1px solid rgba(180,0,255,0.3)">
+    <div style="color:#cc66ff;font-weight:700;margin-bottom:6px">🔒 Private Key</div>
+    <div style="color:#ccc;font-size:.82rem">• Never shared<br>• Decrypts data or creates signatures<br>• If stolen, all security is broken</div>
+  </div>
+</div>
+<div style="color:#aaa;font-size:.82rem;font-weight:600;margin:12px 0 6px">DIFFIE-HELLMAN KEY EXCHANGE — Paint Mixing Analogy</div>
+<div id="dh-anim-area">
+  <div style="display:flex;gap:8px;margin:6px 0;flex-wrap:wrap">
+    <div class="dh-block" style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,0.3);color:#ffc800" id="dh-alice">Alice 👩</div>
+    <div class="dh-arrow-right" id="dh-mid-arrow">⟷</div>
+    <div class="dh-block" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:#00d4ff" id="dh-bob">Bob 👨</div>
+  </div>
+  <div id="dh-steps" style="font-size:.82rem;color:#ccc;margin-top:8px"></div>
+  <div id="dh-shared" style="display:none;margin-top:10px;padding:10px;border-radius:8px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.4);text-align:center;color:#00ff88;font-weight:700">
+    🎉 Shared Secret Established — Without Ever Transmitting It!
+  </div>
+</div>
+<div style="margin-top:14px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
+  <div style="color:#aaa;font-size:.82rem;font-weight:600;margin-bottom:6px">RSA KEY SIZES</div>
+  <div id="rsa-bar-area">
+    ${[['RSA-1024','⚠️ Weak','#ff6666',40],['RSA-2048','✅ Minimum','#ffc800',60],['RSA-4096','💪 Strong','#00ff88',100]].map(([name,label,color,pct])=>`
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <div style="width:80px;font-size:.8rem;color:#ccc;text-align:right">${name}</div>
+      <div style="flex:1;height:14px;background:rgba(255,255,255,0.07);border-radius:7px;overflow:hidden">
+        <div style="width:0%;height:100%;border-radius:7px;background:${color};transition:width 1s ease" data-w="${pct}" class="rsa-bar"></div>
+      </div>
+      <div style="width:90px;font-size:.78rem;color:${color};font-weight:600">${label}</div>
+    </div>`).join('')}
+  </div>
+</div>
+</div>`;
+  }
+
+  function hashDetail() {
+    const samples = [
+      ['Hello', 'SHA-256', '185f8db32921bd46d35...8c849dc5'],
+      ['Hello!', 'SHA-256', 'b45cffe084dd3d20d928...1ecc4f94'],
+      ['NetQuest', 'SHA-256', 'f2ca1bb6c7e907d06da5...b3c7e9c4'],
+    ];
+    let hi = 0;
+    return `<div class="cr-detail">
+<h3 style="color:#cc66ff;margin:0 0 10px">#️⃣ Hashing</h3>
+<p style="color:#ccc;margin-bottom:4px">One-way function: any input → fixed-length digest. You <strong>cannot reverse</strong> a hash back to the original.</p>
+<div style="margin:12px 0">
+  <div class="hash-demo">
+    <div class="hash-input" id="hash-input-box">Hello</div>
+    <div class="hash-fn" style="font-size:1.3rem">⟶ SHA-256 ⟶</div>
+    <div class="hash-out" id="hash-out-box">185f8db32921bd46d35...8c849dc5</div>
+  </div>
+  <div style="margin-top:6px">
+    <button onclick="window.crHashNext()" style="padding:5px 14px;background:rgba(180,0,255,0.2);border:1px solid rgba(180,0,255,0.4);color:#cc66ff;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600">▶ Try Different Input</button>
+    <span style="color:#aaa;font-size:.8rem;margin-left:8px">Notice: tiny change → completely different hash (Avalanche Effect)</span>
+  </div>
+</div>
+<div style="color:#aaa;font-size:.82rem;font-weight:600;margin:12px 0 6px">ALGORITHM STATUS</div>
+<div class="hash-badge-row">
+  <div class="hash-badge hash-broken">MD5 — ❌ Broken (collision attacks)</div>
+  <div class="hash-badge hash-broken">SHA-1 — ❌ Broken (avoid)</div>
+  <div class="hash-badge hash-ok">SHA-256 — ✅ Current Standard</div>
+  <div class="hash-badge hash-ok">SHA-3 — ✅ Modern Alternative</div>
+</div>
+<div style="margin-top:12px;padding:10px;border-radius:8px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15)">
+  <div style="color:#00d4ff;font-weight:700;margin-bottom:6px">📌 Where Hashes Are Used</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    ${[['Password Storage','bcrypt/SHA hash stored, not plaintext'],['File Integrity','MD5/SHA-256 checksums verify downloads'],['Digital Signatures','Hash is signed, not the whole message'],['IPsec/TLS','HMAC-SHA for data integrity in VPNs']].map(([t,d])=>`
+    <div style="flex:1;min-width:130px;padding:8px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
+      <div style="color:#e0eeff;font-weight:600;font-size:.8rem;margin-bottom:3px">${t}</div>
+      <div style="color:#aaa;font-size:.75rem">${d}</div>
+    </div>`).join('')}
+  </div>
+</div>
+<script>
+window._cr_hash_samples = ${JSON.stringify(samples)};
+window._cr_hash_idx = 0;
+window.crHashNext = function() {
+  window._cr_hash_idx = (window._cr_hash_idx + 1) % window._cr_hash_samples.length;
+  var s = window._cr_hash_samples[window._cr_hash_idx];
+  var inp = document.getElementById('hash-input-box');
+  var out = document.getElementById('hash-out-box');
+  if(inp) inp.textContent = s[0];
+  if(out){ out.style.opacity='0'; setTimeout(function(){ out.textContent=s[2]; out.style.opacity='1'; out.style.transition='opacity .4s'; },200); }
+};
+<\/script>
+</div>`;
+  }
+
+  function hmacDetail() {
+    return `<div class="cr-detail">
+<h3 style="color:#ffc800;margin:0 0 10px">🔏 HMAC — Hash-based Message Authentication Code</h3>
+<p style="color:#ccc;margin-bottom:8px">HMAC = <strong>Hashing</strong> + <strong>Secret Key</strong>. Provides both <span style="color:#00ff88">integrity</span> and <span style="color:#00d4ff">authentication</span>.</p>
+<div class="hmac-flow" id="hmac-anim">
+  <div class="hmac-box" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:#00d4ff">📄 Message</div>
+  <div class="hmac-plus">+</div>
+  <div class="hmac-box" style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,0.4);color:#ffc800">🗝 Secret Key</div>
+  <div class="hmac-eq">⟶</div>
+  <div class="hmac-box" style="background:rgba(180,0,255,0.15);border:1px solid rgba(180,0,255,0.4);color:#cc66ff">SHA-256 / MD5</div>
+  <div class="hmac-eq">⟶</div>
+  <div class="hmac-box" style="background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.4);color:#00ff88" id="hmac-output">✅ HMAC Tag</div>
+</div>
+<div id="hmac-verify-area" style="margin:14px 0">
+  <div style="color:#aaa;font-size:.82rem;font-weight:600;margin-bottom:8px">VERIFICATION FLOW</div>
+  <div style="display:flex;flex-direction:column;gap:6px" id="hmac-steps">
+    ${[
+      ['Sender computes HMAC(message + key) → appends tag to message','rgba(0,212,255,0.1)','#00d4ff'],
+      ['Message + HMAC tag travels across the network','rgba(255,200,0,0.08)','#ffc800'],
+      ['Receiver recomputes HMAC(message + same key)','rgba(180,0,255,0.1)','#cc66ff'],
+      ['If tags match → message is authentic and unmodified ✅','rgba(0,255,136,0.1)','#00ff88'],
+    ].map(([t,bg,c],i)=>`
+    <div class="hmac-step-row" style="padding:8px 12px;border-radius:8px;background:${bg};border-left:3px solid ${c};color:#ccc;font-size:.83rem;opacity:0;transform:translateX(-16px);transition:all .4s ${i*0.18}s" data-step="hmac">
+      <span style="color:${c};font-weight:700;margin-right:8px">${i+1}.</span>${t}
+    </div>`).join('')}
+  </div>
+</div>
+<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+  <div style="flex:1;min-width:130px;padding:10px;border-radius:8px;background:rgba(255,50,50,0.08);border:1px solid rgba(255,50,50,0.25)">
+    <div style="color:#ff6666;font-weight:700;margin-bottom:4px">❌ Plain Hash (no key)</div>
+    <div style="color:#ccc;font-size:.82rem">Attacker can modify message AND recompute hash. No authentication.</div>
+  </div>
+  <div style="flex:1;min-width:130px;padding:10px;border-radius:8px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25)">
+    <div style="color:#00ff88;font-weight:700;margin-bottom:4px">✅ HMAC (with key)</div>
+    <div style="color:#ccc;font-size:.82rem">Attacker can't forge HMAC without the secret key. Both integrity + auth guaranteed.</div>
+  </div>
+</div>
+<div style="margin-top:12px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.04);font-size:.82rem;color:#aaa">
+  <strong style="color:#ffc800">Used in:</strong> IPsec (HMAC-SHA-256), TLS, SSH, API authentication tokens (JWT), network routing protocols (OSPF, BGP MD5)
+</div>
+</div>`;
+  }
+
+  function pkiDetail() {
+    return `<div class="cr-detail">
+<h3 style="color:#00ff88;margin:0 0 10px">🏛️ PKI — Public Key Infrastructure</h3>
+<p style="color:#ccc;margin-bottom:8px">PKI is the system that manages digital certificates — enabling trust at scale across the internet.</p>
+<div style="color:#aaa;font-size:.82rem;font-weight:600;margin-bottom:6px">CERTIFICATE CHAIN OF TRUST</div>
+<div class="pki-chain" id="pki-chain">
+  <div class="pki-node" style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,0.4)">
+    <span style="font-size:1.5rem">🏛️</span>
+    <div><div style="color:#ffc800;font-weight:700;font-size:.9rem">Root CA</div><div style="color:#aaa;font-size:.78rem">Self-signed, ultimate trust anchor. Stored in your OS/browser.</div></div>
+  </div>
+  <div class="pki-connector"></div>
+  <div class="pki-node" style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25)">
+    <span style="font-size:1.3rem">🏢</span>
+    <div><div style="color:#00d4ff;font-weight:700;font-size:.9rem">Intermediate CA</div><div style="color:#aaa;font-size:.78rem">Signed by Root CA. Issues certificates to end entities. Keeps Root CA offline.</div></div>
+  </div>
+  <div class="pki-connector"></div>
+  <div class="pki-node" style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25)">
+    <span style="font-size:1.3rem">📜</span>
+    <div><div style="color:#00ff88;font-weight:700;font-size:.9rem">End-Entity Certificate</div><div style="color:#aaa;font-size:.78rem">e.g., server.example.com — contains subject name, public key, validity dates, CA signature</div></div>
+  </div>
+</div>
+<div style="color:#aaa;font-size:.82rem;font-weight:600;margin:12px 0 6px">TLS CERTIFICATE VERIFICATION FLOW</div>
+<div class="pki-step-row">
+  ${[
+    ['1','Client connects to server','rgba(0,212,255,0.1)','#00d4ff'],
+    ['2','Server sends certificate','rgba(180,0,255,0.1)','#cc66ff'],
+    ['3','Client checks CA signature','rgba(255,200,0,0.1)','#ffc800'],
+    ['4','Client verifies expiry & hostname','rgba(255,100,0,0.1)','#ff8800'],
+    ['5','Trusted! Secure channel opens','rgba(0,255,136,0.1)','#00ff88'],
+  ].map(([n,t,bg,c])=>`
+  <div class="pki-step" style="background:${bg};border:1px solid ${c}30;color:${c}">
+    <div style="font-size:1.1rem;margin-bottom:3px">${n}</div>
+    <div style="color:#ccc;font-weight:400;font-size:.75rem">${t}</div>
+  </div>`).join('')}
+</div>
+<div style="margin-top:12px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
+  <div style="color:#e0eeff;font-weight:600;margin-bottom:6px;font-size:.85rem">📌 PKI IS EVERYWHERE</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    ${[['HTTPS/TLS','Secures every website with 🔒'],['IPsec','Certificate auth instead of PSK'],['802.1X','Client certs for EAP-TLS Wi-Fi'],['SSH','Host key fingerprints'],['Code Signing','Verifies software hasn\'t been tampered']].map(([t,d])=>`
+    <div style="flex:1;min-width:100px;padding:7px;border-radius:6px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);text-align:center">
+      <div style="color:#00ff88;font-weight:700;font-size:.8rem">${t}</div>
+      <div style="color:#aaa;font-size:.73rem">${d}</div>
+    </div>`).join('')}
+  </div>
+</div>
+</div>`;
+  }
+
+  const detailBuilders = { sym: symDetail, asym: asymDetail, hash: hashDetail, hmac: hmacDetail, pki: pkiDetail };
+
+  function startSymAnim() {
+    const stages = ['sym-enc-box','sym-cipher','sym-dec-box','sym-recovered'];
+    const progs = [25,50,75,100];
+    const prog = root.querySelector('#sym-prog');
+    stages.forEach((id,i) => {
+      const t = setTimeout(() => {
+        const el = root.querySelector('#'+id);
+        if(el){ el.style.boxShadow='0 0 14px rgba(255,200,0,0.6)'; el.style.transform='scale(1.05)'; el.style.transition='all .3s'; }
+        if(prog) prog.style.width = progs[i]+'%';
+        if(i > 0){
+          const prev = root.querySelector('#'+stages[i-1]);
+          if(prev){ prev.style.boxShadow='none'; prev.style.transform='scale(1)'; }
+        }
+      }, i * 700 + 300);
+      animTimers.push(t);
+    });
+  }
+
+  function startAsymAnim() {
+    const steps = [
+      '1. Alice and Bob agree on public parameters (large prime p, generator g)',
+      '2. Alice chooses secret <strong style="color:#ffc800">a</strong>, computes A = g^a mod p → sends <span style="color:#00d4ff">A</span> to Bob',
+      '3. Bob chooses secret <strong style="color:#cc66ff">b</strong>, computes B = g^b mod p → sends <span style="color:#00d4ff">B</span> to Alice',
+      '4. Alice computes: B^a mod p = <span style="color:#00ff88">shared secret</span>',
+      '5. Bob computes:  A^b mod p = <span style="color:#00ff88">same shared secret!</span>',
+    ];
+    const container = root.querySelector('#dh-steps');
+    const sharedBox = root.querySelector('#dh-shared');
+    if(!container) return;
+    steps.forEach((txt,i) => {
+      const t = setTimeout(() => {
+        const d = document.createElement('div');
+        d.innerHTML = txt;
+        d.style.cssText='padding:4px 0;color:#ccc;font-size:.82rem;opacity:0;transition:opacity .4s';
+        container.appendChild(d);
+        requestAnimationFrame(() => d.style.opacity='1');
+        if(i===steps.length-1 && sharedBox){ sharedBox.style.display='block'; sharedBox.style.animation='cr-fade .5s ease'; }
+      }, i*550 + 200);
+      animTimers.push(t);
+    });
+    // RSA bars
+    const t2 = setTimeout(() => {
+      root.querySelectorAll('.rsa-bar').forEach(b => { b.style.width = b.dataset.w + '%'; });
+    }, 400);
+    animTimers.push(t2);
+  }
+
+  function startHmacAnim() {
+    root.querySelectorAll('[data-step="hmac"]').forEach((el,i) => {
+      const t = setTimeout(() => {
+        el.style.opacity = '1';
+        el.style.transform = 'translateX(0)';
+      }, i * 250 + 300);
+      animTimers.push(t);
+    });
+  }
+
+  function startPkiAnim() {
+    root.querySelectorAll('.pki-connector').forEach((c,i) => {
+      c.style.cssText = 'width:2px;height:0;background:linear-gradient(#ffc800,#00d4ff);margin-left:24px;transition:height .5s ease';
+      const t = setTimeout(() => { c.style.height='16px'; }, i*300+200);
+      animTimers.push(t);
+    });
+    root.querySelectorAll('.pki-step').forEach((el,i) => {
+      el.style.cssText += ';opacity:0;transform:translateY(10px);transition:all .4s ease ' + (i*0.12) + 's';
+      const t = setTimeout(() => { el.style.opacity='1'; el.style.transform='translateY(0)'; }, i*120+400);
+      animTimers.push(t);
+    });
+  }
+
+  cards.forEach(card => {
+    const chip = document.createElement('div');
+    chip.className = 'cr-chip';
+    chip.textContent = card.icon + ' ' + card.label;
+    chip.onclick = () => {
+      clearTimers();
+      if(activeId === card.id){ activeId = null; detailArea.innerHTML=''; chip.classList.remove('active'); return; }
+      root.querySelectorAll('.cr-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      activeId = card.id;
+      detailArea.innerHTML = detailBuilders[card.id]();
+      if(card.id==='sym') startSymAnim();
+      if(card.id==='asym') startAsymAnim();
+      if(card.id==='hmac') startHmacAnim();
+      if(card.id==='pki') startPkiAnim();
+    };
+    chipRow.appendChild(chip);
   });
 }
 
